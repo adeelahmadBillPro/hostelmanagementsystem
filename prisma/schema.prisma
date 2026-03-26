@@ -1,0 +1,740 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== ENUMS ====================
+
+enum UserRole {
+  SUPER_ADMIN
+  TENANT_ADMIN
+  HOSTEL_MANAGER
+  RESIDENT
+  STAFF
+}
+
+enum HostelType {
+  GOVERNMENT
+  UNIVERSITY
+  PRIVATE
+}
+
+enum RoomType {
+  SINGLE
+  DOUBLE
+  TRIPLE
+  QUAD
+}
+
+enum BedStatus {
+  VACANT
+  OCCUPIED
+  RESERVED
+  MAINTENANCE
+}
+
+enum ResidentStatus {
+  ACTIVE
+  CHECKED_OUT
+  SUSPENDED
+}
+
+enum BillStatus {
+  PAID
+  PARTIAL
+  UNPAID
+  OVERDUE
+}
+
+enum PaymentMethod {
+  CASH
+  BANK
+  JAZZCASH
+  EASYPAISA
+}
+
+enum MealType {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+}
+
+enum ExpenseType {
+  HOSTEL_LEVEL
+  RESIDENT_LEVEL
+}
+
+enum StaffType {
+  SECURITY
+  COOKING
+  LAUNDRY
+  CLEANING
+  MAINTENANCE
+  ADMIN_STAFF
+  OTHER
+}
+
+enum ShiftType {
+  DAY
+  NIGHT
+  FULL
+}
+
+enum ComplaintStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum GatePassStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  RETURNED
+}
+
+enum VehicleType {
+  BIKE
+  CAR
+  BICYCLE
+  OTHER
+}
+
+enum TenantStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum HostelStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum RoomStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
+// ==================== MODELS ====================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  phone         String?
+  cnic          String?
+  password      String
+  role          UserRole
+  image         String?
+  emailVerified DateTime?
+
+  tenantId String?
+  tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  hostelId String?
+  hostel   Hostel? @relation(fields: [hostelId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  resident         Resident?
+  expensesCreated  Expense[]       @relation("ExpenseCreator")
+  paymentsRecorded Payment[]       @relation("PaymentRecorder")
+  noticesCreated   Notice[]        @relation("NoticeCreator")
+  complaintsResolved Complaint[]   @relation("ComplaintResolver")
+  gatePassesApproved GatePass[]    @relation("GatePassApprover")
+  auditLogs        AuditLog[]
+  managerHostels   ManagerHostel[]
+
+  @@index([tenantId])
+  @@index([role])
+}
+
+model Tenant {
+  id        String       @id @default(cuid())
+  name      String
+  email     String       @unique
+  phone     String?
+  logo      String?
+  status    TenantStatus @default(ACTIVE)
+
+  planId String?
+  plan   SubscriptionPlan? @relation(fields: [planId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  users   User[]
+  hostels Hostel[]
+}
+
+model SubscriptionPlan {
+  id           String  @id @default(cuid())
+  name         String
+  price        Float
+  maxHostels   Int
+  maxResidents Int
+  features     String[] // Array of feature strings
+  isActive     Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenants Tenant[]
+}
+
+model Hostel {
+  id      String       @id @default(cuid())
+  name    String
+  type    HostelType
+  address String
+  city    String?
+  contact String?
+  status  HostelStatus @default(ACTIVE)
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  users             User[]
+  buildings         Building[]
+  residents         Resident[]
+  expenseCategories ExpenseCategory[]
+  expenses          Expense[]
+  foodMenuItems     FoodMenu[]
+  foodOrders        FoodOrder[]
+  monthlyBills      MonthlyBill[]
+  payments          Payment[]
+  notices           Notice[]
+  parking           Parking[]
+  staff             Staff[]
+  complaints        Complaint[]
+  gatePasses        GatePass[]
+  visitors          Visitor[]
+  meterReadings     MeterReading[]
+  managerHostels    ManagerHostel[]
+
+  @@index([tenantId])
+}
+
+model ManagerHostel {
+  id       String @id @default(cuid())
+  userId   String
+  hostelId String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hostel Hostel @relation(fields: [hostelId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, hostelId])
+}
+
+model Building {
+  id          String @id @default(cuid())
+  name        String
+  totalFloors Int
+
+  hostelId String
+  hostel   Hostel @relation(fields: [hostelId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  floors Floor[]
+
+  @@index([hostelId])
+}
+
+model Floor {
+  id          String @id @default(cuid())
+  floorNumber Int
+  name        String
+
+  buildingId String
+  building   Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rooms Room[]
+
+  @@index([buildingId])
+}
+
+model Room {
+  id         String     @id @default(cuid())
+  roomNumber String
+  type       RoomType
+  totalBeds  Int
+  rentPerBed Float
+  rentPerRoom Float?
+  status     RoomStatus @default(ACTIVE)
+
+  floorId String
+  floor   Floor @relation(fields: [floorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  beds          Bed[]
+  residents     Resident[]
+  roomInventory RoomInventory[]
+  meterReadings MeterReading[]
+  roomTransfers RoomTransfer[]
+
+  @@index([floorId])
+}
+
+model Bed {
+  id        String    @id @default(cuid())
+  bedNumber String
+  status    BedStatus @default(VACANT)
+
+  roomId String
+  room   Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  residents     Resident[]
+  roomTransfers RoomTransfer[]
+
+  @@index([roomId])
+}
+
+model Resident {
+  id               String         @id @default(cuid())
+  emergencyContact String?
+  emergencyPhone   String?
+  institution      String?
+  gender           String?
+  bloodGroup       String?
+  medicalCondition String?
+  photo            String?
+  moveInDate       DateTime
+  moveOutDate      DateTime?
+  advancePaid      Float          @default(0)
+  securityDeposit  Float          @default(0)
+  status           ResidentStatus @default(ACTIVE)
+
+  userId   String  @unique
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  hostelId String
+  hostel   Hostel @relation(fields: [hostelId], references: [id])
+
+  roomId String
+  room   Room @relation(fields: [roomId], references: [id])
+
+  bedId String
+  bed   Bed @relation(fields: [bedId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  foodOrders    FoodOrder[]
+  monthlyBills  MonthlyBill[]
+  payments      Payment[]
+  parking       Parking[]
+  complaints    Complaint[]
+  gatePasses    GatePass[]
+  visitors      Visitor[]
+  roomTransfers RoomTransfer[]
+
+  @@index([hostelId])
+  @@index([userId])
+  @@index([status])
+}
+
+model ExpenseCategory {
+  id   String      @id @default(cuid())
+  name String
+  type ExpenseType @default(HOSTEL_LEVEL)
+
+  hostelId String
+  hostel   Hostel @relation(fields: [hostelId], references: [id], onDelete: Cascade)
+
+  expenses Expense[]
+
+  @@index([hostelId])
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  amount      Float
+  date        DateTime
+  description String?
+  receiptUrl  String?
+
+  hostelId   String
+  hostel     Hostel @relation(fields: [hostelId], references: [id], onDelete: Cascade)
+
+  categoryId String
+  category   ExpenseCategory @relation(fields: [categoryId], references: [id])
+
+  createdById String
+  createdBy   User @relation("ExpenseCreator", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([hostelId])
+  @@index([date])
+}
+
+model FoodMenu {
+  id            String   @id @default(cuid())
+  mealType      MealType
+  itemName      String
+  rate          Float
+  availableDays String[] // ["monday","tuesday",...]
+  isActive      Boolean  @default(true)
+
+  hostelId String
+  hostel   Hostel @relation(fields: [hostelId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  foodOrders FoodOrder[]
+
+  @@index([hostelId])
+}
+
+model FoodOrder {
+  id          String   @id @default(cuid())
+  quantity    Int      @default(1)
+  totalAmount Float
+  orderDate   DateTime @default(now())
+
+  residentId String
+  resident   Resident @relation(fields: [residentId], references: [id])
+
+  hostelId String
+  hostel   Hostel @relation(fields: [hostelId], references: [id])
+
+  menuId String
+  menu   FoodMenu @relation(fields: [menuId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([hostelId])
+  @@index([residentId])
+  @@index([orderDate])
+}
+
+model MonthlyBill {
+  id           String     @id @default(cuid())
+  month        Int
+  year         Int
+  roomRent     Float
+  foodCharges  Float      @default(0)
+  otherCharges Float      @default(0)
+  meterCharges Float      @default(0)
+  parkingFee   Float      @default(0)
+  previousBalance Float   @default(0)
+  advanceDeduction Float  @default(0)
+  totalAmount  Float
+  paidAmount   Float      @default(0)
+  balance      Float
+  status       BillStatus @default(UNPAID)
+
+  residentId String
+  resident   Resident @relation(fields: [residentId], references: [id])
+
+  hostelId String
+  hostel   Hostel @relation(fields: [hostelId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payments Payment[]
+
+  @@unique([residentId, month, year])
+  @@index([hostelId])
+  @@index([status])
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  amount        Float
+  method        PaymentMethod
+  date          DateTime      @default(now())
+  receiptNumber String?
+  notes         String?
+
+  residentId String
+  resident   Resident @relation(fields: [residentId], references: [id])
+
+  billId String
+  bill   MonthlyBill @relation(fields: [billId], references: [id])
+
+  hostelId String
+  hostel   Hostel @relation(fields: [hostelId], references: [id])
+
+  recordedById String
+  recordedBy   User @relation("PaymentRecorder", fields: [recordedById], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([hostelId])
+  @@index([residentId])
+  @@index([date])
+}
+
+model Notice {
+  id      String @id @default(cuid())
+  title   String
+  content String
+
+  hostelId String
+  hostel   Hostel @relation(fields: [hostelId], references: [id], onDelete: Cascade)
+
+  createdById String
+  createdBy   User @relation("NoticeCreator", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([hostelId])
+}
+
+model Parking {
+  id           String      @id @default(cuid())
+  vehicleType  VehicleType
+  vehicleNumber String
+  monthlyFee   Float
+
+  hostelId String
+  hostel   Hostel @relation(fields: [hostelId], references: [id], onDelete: Cascade)
+
+  residentId String
+  resident   Resident @relation(fields: [residentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([hostelId])
+}
+
+// ==================== STAFF MODULE ====================
+
+model Staff {
+  id               String    @id @default(cuid())
+  name             String
+  cnic             String?
+  phone            String?
+  photo            String?
+  address          String?
+  staffType        StaffType
+  shift            ShiftType @default(FULL)
+  salary           Float
+  joiningDate      DateTime
+  leavingDate      DateTime?
+  emergencyContact String?
+  emergencyPhone   String?
+  isActive         Boolean   @default(true)
+
+  hostelId String
+  hostel   Hostel @relation(fields: [hostelId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  salaryRecords StaffSalary[]
+
+  @@index([hostelId])
+}
+
+model StaffSalary {
+  id      String   @id @default(cuid())
+  month   Int
+  year    Int
+  amount  Float
+  bonus   Float    @default(0)
+  deduction Float  @default(0)
+  netAmount Float
+  isPaid  Boolean  @default(false)
+  paidDate DateTime?
+  method  PaymentMethod?
+  notes   String?
+
+  staffId String
+  staff   Staff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([staffId, month, year])
+}
+
+// ==================== VISITOR MODULE ====================
+
+model Visitor {
+  id       String   @id @default(cuid())
+  name     String
+  cnic     String?
+  phone    String?
+  purpose  String?
+  timeIn   DateTime @default(now())
+  timeOut  DateTime?
+
+  residentId String
+  resident   Resident @relation(fields: [residentId], references: [id])
+
+  hostelId String
+  hostel   Hostel @relation(fields: [hostelId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([hostelId])
+  @@index([residentId])
+}
+
+// ==================== COMPLAINT MODULE ====================
+
+model Complaint {
+  id          String          @id @default(cuid())
+  category    String
+  description String
+  photo       String?
+  status      ComplaintStatus @default(OPEN)
+  resolvedAt  DateTime?
+
+  residentId String
+  resident   Resident @relation(fields: [residentId], references: [id])
+
+  hostelId String
+  hostel   Hostel @relation(fields: [hostelId], references: [id])
+
+  resolvedById String?
+  resolvedBy   User? @relation("ComplaintResolver", fields: [resolvedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([hostelId])
+  @@index([status])
+}
+
+// ==================== GATE PASS MODULE ====================
+
+model GatePass {
+  id         String         @id @default(cuid())
+  leaveDate  DateTime
+  returnDate DateTime
+  actualReturn DateTime?
+  reason     String?
+  status     GatePassStatus @default(PENDING)
+
+  residentId String
+  resident   Resident @relation(fields: [residentId], references: [id])
+
+  hostelId String
+  hostel   Hostel @relation(fields: [hostelId], references: [id])
+
+  approvedById String?
+  approvedBy   User? @relation("GatePassApprover", fields: [approvedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([hostelId])
+  @@index([residentId])
+}
+
+// ==================== ROOM TRANSFER ====================
+
+model RoomTransfer {
+  id       String   @id @default(cuid())
+  date     DateTime @default(now())
+  reason   String?
+
+  residentId String
+  resident   Resident @relation(fields: [residentId], references: [id])
+
+  fromRoomId String
+  fromRoom   Room @relation(fields: [fromRoomId], references: [id])
+
+  toBedId String
+  toBed   Bed @relation(fields: [toBedId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([residentId])
+}
+
+// ==================== ROOM INVENTORY ====================
+
+model RoomInventory {
+  id        String  @id @default(cuid())
+  itemName  String
+  quantity  Int     @default(1)
+  condition String? // good, damaged, needs_repair
+
+  roomId String
+  room   Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  lastChecked DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([roomId])
+}
+
+// ==================== METER READING ====================
+
+model MeterReading {
+  id              String   @id @default(cuid())
+  readingDate     DateTime
+  previousReading Float
+  currentReading  Float
+  units           Float
+  ratePerUnit     Float
+  amount          Float
+
+  roomId String
+  room   Room @relation(fields: [roomId], references: [id])
+
+  hostelId String
+  hostel   Hostel @relation(fields: [hostelId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([roomId])
+  @@index([hostelId])
+}
+
+// ==================== AUDIT LOG ====================
+
+model AuditLog {
+  id       String @id @default(cuid())
+  action   String
+  entity   String
+  entityId String
+  details  String?
+
+  userId String
+  user   User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity])
+  @@index([createdAt])
+}
