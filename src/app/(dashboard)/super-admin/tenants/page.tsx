@@ -5,7 +5,7 @@ import DashboardLayout from "@/components/layout/dashboard-layout";
 import DataTable from "@/components/ui/data-table";
 import Modal from "@/components/ui/modal";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
-import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight } from "lucide-react";
+import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight, Copy, Check, KeyRound } from "lucide-react";
 
 interface Tenant {
   id: string;
@@ -45,6 +45,8 @@ export default function TenantsPage() {
     planId: "",
   });
   const [formError, setFormError] = useState("");
+  const [createdCreds, setCreatedCreds] = useState<{ email: string; password: string } | null>(null);
+  const [copied, setCopied] = useState("");
 
   const fetchTenants = async () => {
     try {
@@ -94,8 +96,8 @@ export default function TenantsPage() {
         }),
       });
 
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
         setFormError(data.error || "Failed to create tenant");
         return;
       }
@@ -103,6 +105,11 @@ export default function TenantsPage() {
       setModalOpen(false);
       setFormData({ name: "", email: "", phone: "", planId: "" });
       fetchTenants();
+
+      // Show credentials
+      if (data.loginCredentials) {
+        setCreatedCreds(data.loginCredentials);
+      }
     } catch (error) {
       setFormError("An error occurred. Please try again.");
     } finally {
@@ -390,6 +397,62 @@ export default function TenantsPage() {
           loading={actionLoading}
         />
       )}
+
+      {/* Credentials Modal */}
+      <Modal
+        isOpen={!!createdCreds}
+        onClose={() => setCreatedCreds(null)}
+        title="Tenant Created Successfully"
+        maxWidth="max-w-[440px]"
+      >
+        {createdCreds && (
+          <div className="space-y-4">
+            <p className="text-sm text-text-muted">
+              Share these login credentials with the tenant admin.
+            </p>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between bg-slate-50 dark:bg-[#0B1222] rounded-xl px-4 py-3">
+                <div>
+                  <p className="text-[10px] text-text-muted font-semibold uppercase tracking-wider">Email</p>
+                  <p className="text-sm font-medium text-text-primary dark:text-white">{createdCreds.email}</p>
+                </div>
+                <button onClick={() => { navigator.clipboard.writeText(createdCreds.email); setCopied("email"); setTimeout(() => setCopied(""), 2000); }} className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-colors">
+                  {copied === "email" ? <Check size={15} className="text-emerald-500" /> : <Copy size={15} className="text-text-muted" />}
+                </button>
+              </div>
+              <div className="flex items-center justify-between bg-slate-50 dark:bg-[#0B1222] rounded-xl px-4 py-3">
+                <div>
+                  <p className="text-[10px] text-text-muted font-semibold uppercase tracking-wider">Password</p>
+                  <p className="text-sm font-mono font-bold text-primary">{createdCreds.password}</p>
+                </div>
+                <button onClick={() => { navigator.clipboard.writeText(createdCreds.password); setCopied("pass"); setTimeout(() => setCopied(""), 2000); }} className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-colors">
+                  {copied === "pass" ? <Check size={15} className="text-emerald-500" /> : <Copy size={15} className="text-text-muted" />}
+                </button>
+              </div>
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => {
+                  const msg = encodeURIComponent(`Your HostelHub admin account is ready.\n\nLogin: ${window.location.origin}/login\nEmail: ${createdCreds.email}\nPassword: ${createdCreds.password}\n\nPlease change your password after login.`);
+                  window.open(`https://wa.me/?text=${msg}`, "_blank");
+                }}
+                className="btn-success flex-1"
+              >
+                WhatsApp
+              </button>
+              <button
+                onClick={() => { navigator.clipboard.writeText(`Email: ${createdCreds.email}\nPassword: ${createdCreds.password}`); setCopied("all"); setTimeout(() => setCopied(""), 2000); }}
+                className="btn-secondary flex-1"
+              >
+                {copied === "all" ? "Copied!" : "Copy All"}
+              </button>
+              <button onClick={() => setCreatedCreds(null)} className="btn-primary flex-1">
+                Done
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </DashboardLayout>
   );
 }

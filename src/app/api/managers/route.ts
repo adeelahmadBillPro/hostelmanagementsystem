@@ -158,7 +158,14 @@ export async function POST(request: NextRequest) {
       assignedHostels: manager.managerHostels.map((mh) => mh.hostel),
     };
 
-    return NextResponse.json(result, { status: 201 });
+    return NextResponse.json({
+      ...result,
+      loginCredentials: {
+        email,
+        password,
+        message: "Share these credentials with the manager",
+      },
+    }, { status: 201 });
   } catch (error) {
     console.error("Create manager error:", error);
     return NextResponse.json(

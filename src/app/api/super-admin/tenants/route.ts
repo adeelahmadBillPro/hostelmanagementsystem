@@ -47,18 +47,59 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const tenant = await prisma.tenant.create({
-    data: {
-      name,
-      email,
-      phone: phone || null,
-      planId: planId || null,
-    },
-    include: {
-      plan: { select: { id: true, name: true } },
-      _count: { select: { hostels: true, users: true } },
-    },
+  const existingUser = await prisma.user.findUnique({ where: { email } });
+  if (existingUser) {
+    return NextResponse.json(
+      { error: "A user with this email already exists" },
+      { status: 409 }
+    );
+  }
+
+  // Generate password for tenant admin
+  const { randomBytes } = require("crypto");
+  const bcrypt = require("bcryptjs");
+  const defaultPassword = randomBytes(4).toString("hex");
+  const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+
+  const result = await prisma.$transaction(async (tx: any) => {
+    // Create tenant
+    const tenant = await tx.tenant.create({
+      data: {
+        name,
+        email,
+        phone: phone || null,
+        planId: planId || null,
+      },
+    });
+
+    // Create TENANT_ADMIN user account
+    await tx.user.create({
+      data: {
+        name,
+        email,
+        phone: phone || null,
+        password: hashedPassword,
+        role: "TENANT_ADMIN",
+        tenantId: tenant.id,
+      },
+    });
+
+    // Re-fetch with includes
+    return await tx.tenant.findUnique({
+      where: { id: tenant.id },
+      include: {
+        plan: { select: { id: true, name: true } },
+        _count: { select: { hostels: true, users: true } },
+      },
+    });
   });
 
-  return NextResponse.json(tenant, { status: 201 });
+  return NextResponse.json({
+    ...result,
+    loginCredentials: {
+      email,
+      password: defaultPassword,
+      message: "Share these credentials with the tenant so they can login",
+    },
+  }, { status: 201 });
 }
