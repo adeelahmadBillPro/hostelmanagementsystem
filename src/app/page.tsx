@@ -400,7 +400,7 @@ export default function LandingPage() {
                     {/* Content */}
                     <div className="flex-1 p-4 space-y-3">
                       {/* Stat cards */}
-                      <div className="grid grid-cols-4 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {[
                           { label: 'Total Rooms', val: '48', color: 'bg-primary/30' },
                           { label: 'Residents', val: '156', color: 'bg-success/30' },
@@ -722,7 +722,7 @@ export default function LandingPage() {
                         </div>
                         <div className="mt-4">
                           <div className="text-xs text-gray-400 mb-2">Payment Method</div>
-                          <div className="grid grid-cols-4 gap-2">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             {['Cash', 'Bank', 'JazzCash', 'EasyPaisa'].map((m) => (
                               <div
                                 key={m}

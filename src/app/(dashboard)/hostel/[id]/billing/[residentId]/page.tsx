@@ -323,13 +323,13 @@ export default function ResidentBillDetailPage() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={handleWhatsAppShare}
             className="btn-success flex items-center gap-2"
           >
             <MessageCircle size={16} />
-            WhatsApp
+            <span className="hidden sm:inline">WhatsApp</span>
           </button>
           <button
             onClick={handleDownloadReceipt}
@@ -341,7 +341,7 @@ export default function ResidentBillDetailPage() {
             ) : (
               <Download size={16} />
             )}
-            PDF Receipt
+            <span className="hidden sm:inline">PDF</span> Receipt
           </button>
           {bill.balance > 0 && (
             <button
@@ -352,7 +352,7 @@ export default function ResidentBillDetailPage() {
               className="btn-primary flex items-center gap-2"
             >
               <CreditCard size={16} />
-              Record Payment
+              <span className="hidden sm:inline">Record</span> Payment
             </button>
           )}
         </div>

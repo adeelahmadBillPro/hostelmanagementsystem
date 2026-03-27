@@ -199,7 +199,7 @@ export default function MeterReadingsPage() {
               Enter electricity meter readings for all rooms
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <button
               onClick={fetchRooms}
               className="btn-secondary flex items-center gap-2"
@@ -299,8 +299,8 @@ export default function MeterReadingsPage() {
             No rooms found in this hostel
           </div>
         ) : (
-          <div className="card overflow-x-auto">
-            <table className="w-full">
+          <div className="card overflow-x-auto -mx-4 sm:mx-0">
+            <table className="w-full min-w-[700px]">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-[#1E2D42]">
                   <th className="text-left p-4 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-slate-400">

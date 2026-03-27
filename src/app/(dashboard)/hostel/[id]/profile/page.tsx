@@ -121,7 +121,7 @@ export default function HostelProfilePage() {
     <DashboardLayout title="Hostel Profile" hostelId={hostelId}>
       <div className="space-y-6">
         {/* Header with save */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="page-title">Hostel Profile</h1>
             <p className="text-sm text-text-secondary dark:text-slate-400 mt-1">
@@ -137,7 +137,7 @@ export default function HostelProfilePage() {
         </div>
 
         {/* Stats bar */}
-        <div className="flex items-center gap-4 text-sm">
+        <div className="flex flex-wrap items-center gap-4 text-sm">
           <div className="flex items-center gap-2">
             <CheckCircle2 size={18} className="text-success" />
             <span className="font-semibold text-success">{stats.available}</span>
@@ -148,7 +148,7 @@ export default function HostelProfilePage() {
             <span className="font-semibold text-text-muted">{stats.total - stats.available}</span>
             <span className="text-text-secondary dark:text-slate-400">Not Available</span>
           </div>
-          <div className="ml-auto text-text-muted text-xs">
+          <div className="sm:ml-auto text-text-muted text-xs">
             {stats.available}/{stats.total} facilities enabled
           </div>
         </div>
@@ -162,7 +162,7 @@ export default function HostelProfilePage() {
                 <label className="label">Hostel Name</label>
                 <p className="text-lg font-semibold text-text-primary dark:text-white">{hostel?.name}</p>
               </div>
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 <div>
                   <label className="label">Type</label>
                   <span className="badge-primary">{hostel?.type}</span>
