@@ -11,6 +11,9 @@ import {
   ArrowLeft,
   User,
   Search,
+  Paperclip,
+  FileText,
+  Loader2,
 } from "lucide-react";
 
 interface MessageData {
@@ -74,6 +77,8 @@ export default function HostelMessagesPage() {
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileShowChat, setMobileShowChat] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -179,6 +184,68 @@ export default function HostelMessagesPage() {
       minute: "2-digit",
       hour12: true,
     });
+  };
+
+  function renderMessageContent(content: string) {
+    const fileMatch = content.match(/\[FILE:(image|document|video):(.+?):(.+?)\]/);
+    if (fileMatch) {
+      const [, type, url, name] = fileMatch;
+      if (type === "image") {
+        return <img src={url} alt={name} className="max-w-[240px] rounded-lg cursor-pointer" onClick={() => window.open(url)} />;
+      }
+      if (type === "video") {
+        return <video src={url} controls className="max-w-[280px] rounded-lg" />;
+      }
+      return (
+        <a href={url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-blue-400 underline">
+          <FileText size={16} />{name}
+        </a>
+      );
+    }
+    return <span>{content}</span>;
+  }
+
+  const handleFileAttachment = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedId) return;
+
+    if (file.size > 10 * 1024 * 1024) return;
+
+    setUploadingFile(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        setUploadingFile(false);
+        return;
+      }
+
+      const uploadData = await uploadRes.json();
+      const fileType = uploadData.fileType || "document";
+      const fileMessage = `[FILE:${fileType}:${uploadData.url}:${uploadData.fileName}]`;
+
+      const res = await fetch(`/api/hostels/${hostelId}/messages/${selectedId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: fileMessage }),
+      });
+
+      if (res.ok) {
+        fetchMessages(selectedId);
+        fetchConversations();
+      }
+    } catch (error) {
+      console.error("Failed to upload file:", error);
+    } finally {
+      setUploadingFile(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const getInitials = (name: string) => {
@@ -385,9 +452,9 @@ export default function HostelMessagesPage() {
                                     {isResident ? "(Resident)" : ""}
                                   </p>
                                 )}
-                                <p className="text-sm whitespace-pre-wrap break-words">
-                                  {msg.content}
-                                </p>
+                                <div className="text-sm whitespace-pre-wrap break-words">
+                                  {renderMessageContent(msg.content)}
+                                </div>
                                 <p
                                   className={`text-[10px] mt-1 ${
                                     isMine
@@ -408,7 +475,27 @@ export default function HostelMessagesPage() {
                     {/* Message Input */}
                     {selectedConversation.isActive && (
                       <div className="p-4 border-t border-gray-200 dark:border-[#1E2D42] bg-white dark:bg-[#111C2E]">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*,.pdf,video/*,.doc,.docx"
+                          onChange={handleFileAttachment}
+                          className="hidden"
+                        />
                         <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploadingFile}
+                            className="p-2.5 rounded-xl text-gray-400 hover:text-primary hover:bg-gray-100 dark:hover:bg-[#0B1222] transition-colors disabled:opacity-50"
+                            title="Attach file"
+                          >
+                            {uploadingFile ? (
+                              <Loader2 size={18} className="animate-spin" />
+                            ) : (
+                              <Paperclip size={18} />
+                            )}
+                          </button>
                           <input
                             type="text"
                             value={newMessage}

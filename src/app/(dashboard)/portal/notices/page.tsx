@@ -43,9 +43,9 @@ export default function PortalNoticesPage() {
         </div>
 
         {loading ? (
-          <div className="text-center py-12 text-gray-500">Loading notices...</div>
+          <div className="text-center py-12 text-gray-500 dark:text-slate-400">Loading notices...</div>
         ) : notices.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-gray-500 dark:text-slate-400">
             <Megaphone size={48} className="mx-auto mb-4 text-gray-300" />
             <p>No notices at this time</p>
           </div>
@@ -53,9 +53,9 @@ export default function PortalNoticesPage() {
           <div className="space-y-4">
             {notices.map((notice) => (
               <div key={notice.id} className="card hover:shadow-lg transition-shadow">
-                <h3 className="font-semibold text-lg text-gray-900 mb-2">{notice.title}</h3>
-                <p className="text-gray-600 text-sm whitespace-pre-wrap">{notice.content}</p>
-                <div className="flex items-center justify-between text-xs text-gray-400 pt-4 mt-4 border-t">
+                <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">{notice.title}</h3>
+                <p className="text-gray-600 dark:text-slate-300 text-sm whitespace-pre-wrap">{notice.content}</p>
+                <div className="flex items-center justify-between text-xs text-gray-400 dark:text-slate-500 pt-4 mt-4 border-t dark:border-[#1E2D42]">
                   <span>By: {notice.authorName}</span>
                   <span>{formatDate(notice.createdAt)}</span>
                 </div>

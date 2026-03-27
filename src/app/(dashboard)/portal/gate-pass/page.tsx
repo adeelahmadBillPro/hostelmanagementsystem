@@ -92,9 +92,9 @@ export default function MyGatePassesPage() {
         </div>
 
         {loading ? (
-          <div className="text-center py-12 text-gray-500">Loading gate passes...</div>
+          <div className="text-center py-12 text-gray-500 dark:text-slate-400">Loading gate passes...</div>
         ) : gatePasses.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-gray-500 dark:text-slate-400">
             <Ticket size={48} className="mx-auto mb-4 text-gray-300" />
             <p>No gate passes yet</p>
           </div>
@@ -104,7 +104,7 @@ export default function MyGatePassesPage() {
               <div key={gp.id} className="card">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <p className="text-sm text-gray-500">Applied on: {formatDate(gp.createdAt)}</p>
+                    <p className="text-sm text-gray-500 dark:text-slate-400">Applied on: {formatDate(gp.createdAt)}</p>
                   </div>
                   <span className={statusBadge[gp.status] || 'badge-primary'}>
                     {gp.status.replace('_', ' ')}
@@ -113,24 +113,24 @@ export default function MyGatePassesPage() {
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-3">
                   <div>
-                    <p className="text-xs text-gray-500">Leave Date</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">Leave Date</p>
                     <p className="font-medium">{formatDate(gp.leaveDate)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Expected Return</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400">Expected Return</p>
                     <p className="font-medium">{formatDate(gp.returnDate)}</p>
                   </div>
                   {gp.actualReturn && (
                     <div>
-                      <p className="text-xs text-gray-500">Actual Return</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400">Actual Return</p>
                       <p className="font-medium">{formatDate(gp.actualReturn)}</p>
                     </div>
                   )}
                 </div>
 
                 <div className="pt-3 border-t">
-                  <p className="text-xs text-gray-500">Reason</p>
-                  <p className="text-sm text-gray-700">{gp.reason}</p>
+                  <p className="text-xs text-gray-500 dark:text-slate-400">Reason</p>
+                  <p className="text-sm text-gray-700 dark:text-slate-300">{gp.reason}</p>
                 </div>
               </div>
             ))}

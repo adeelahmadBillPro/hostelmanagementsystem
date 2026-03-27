@@ -1,0 +1,229 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const user = session.user as any;
+    const role = user.role;
+    const userId = user.id;
+    const hostelId = user.hostelId;
+    const residentId = user.residentId;
+
+    const notifications: {
+      type: string;
+      text: string;
+      link: string;
+      count: number;
+      icon: string;
+    }[] = [];
+
+    if (role === "RESIDENT" && residentId) {
+      // Get resident's hostelId
+      const resident = await prisma.resident.findUnique({
+        where: { id: residentId },
+        select: { hostelId: true },
+      });
+
+      if (resident) {
+        // Unread messages
+        const unreadMsgs = await prisma.message.count({
+          where: {
+            conversation: {
+              residentId: residentId,
+            },
+            isRead: false,
+            senderId: { not: userId },
+          },
+        });
+        if (unreadMsgs > 0) {
+          notifications.push({
+            type: "message",
+            text: `${unreadMsgs} unread message${unreadMsgs > 1 ? "s" : ""}`,
+            link: "/portal/messages",
+            count: unreadMsgs,
+            icon: "message",
+          });
+        }
+
+        // Unpaid bills
+        const unpaidBills = await prisma.monthlyBill.count({
+          where: {
+            residentId: residentId,
+            status: { in: ["UNPAID", "PARTIAL", "OVERDUE"] },
+          },
+        });
+        if (unpaidBills > 0) {
+          notifications.push({
+            type: "bill",
+            text: `${unpaidBills} unpaid bill${unpaidBills > 1 ? "s" : ""}`,
+            link: "/portal/pay",
+            count: unpaidBills,
+            icon: "bill",
+          });
+        }
+
+        // Complaint updates (resolved recently)
+        const recentComplaints = await prisma.complaint.count({
+          where: {
+            residentId: residentId,
+            status: { in: ["RESOLVED", "CLOSED"] },
+            updatedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+          },
+        });
+        if (recentComplaints > 0) {
+          notifications.push({
+            type: "complaint",
+            text: `${recentComplaints} complaint${recentComplaints > 1 ? "s" : ""} updated`,
+            link: "/portal/complaints",
+            count: recentComplaints,
+            icon: "complaint",
+          });
+        }
+
+        // Gate pass status changes (approved/rejected recently)
+        const recentGatePasses = await prisma.gatePass.count({
+          where: {
+            residentId: residentId,
+            status: { in: ["APPROVED", "REJECTED"] },
+            updatedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+          },
+        });
+        if (recentGatePasses > 0) {
+          notifications.push({
+            type: "gatepass",
+            text: `${recentGatePasses} gate pass${recentGatePasses > 1 ? "es" : ""} updated`,
+            link: "/portal/gate-passes",
+            count: recentGatePasses,
+            icon: "gatepass",
+          });
+        }
+      }
+    } else if (
+      role === "HOSTEL_MANAGER" ||
+      role === "TENANT_ADMIN"
+    ) {
+      // Get hostel IDs for this manager
+      let hostelIds: string[] = [];
+
+      if (hostelId) {
+        hostelIds = [hostelId];
+      }
+
+      // Also check ManagerHostel assignments
+      const managerHostels = await prisma.managerHostel.findMany({
+        where: { userId },
+        select: { hostelId: true },
+      });
+      const additionalIds = managerHostels.map((mh) => mh.hostelId);
+      hostelIds = [...new Set([...hostelIds, ...additionalIds])];
+
+      if (hostelIds.length > 0) {
+        const primaryHostelId = hostelIds[0];
+
+        // Unread messages
+        const unreadMsgs = await prisma.message.count({
+          where: {
+            conversation: {
+              hostelId: { in: hostelIds },
+            },
+            isRead: false,
+            senderId: { not: userId },
+          },
+        });
+        if (unreadMsgs > 0) {
+          notifications.push({
+            type: "message",
+            text: `${unreadMsgs} unread message${unreadMsgs > 1 ? "s" : ""}`,
+            link: `/hostel/${primaryHostelId}/messages`,
+            count: unreadMsgs,
+            icon: "message",
+          });
+        }
+
+        // Pending payment proofs
+        const pendingProofs = await prisma.paymentProof.count({
+          where: {
+            bill: { hostelId: { in: hostelIds } },
+            status: "PENDING",
+          },
+        });
+        if (pendingProofs > 0) {
+          notifications.push({
+            type: "payment",
+            text: `${pendingProofs} payment proof${pendingProofs > 1 ? "s" : ""} to review`,
+            link: `/hostel/${primaryHostelId}/payment-proofs`,
+            count: pendingProofs,
+            icon: "payment",
+          });
+        }
+
+        // New/open complaints
+        const openComplaints = await prisma.complaint.count({
+          where: {
+            hostelId: { in: hostelIds },
+            status: "OPEN",
+          },
+        });
+        if (openComplaints > 0) {
+          notifications.push({
+            type: "complaint",
+            text: `${openComplaints} open complaint${openComplaints > 1 ? "s" : ""}`,
+            link: `/hostel/${primaryHostelId}/complaints`,
+            count: openComplaints,
+            icon: "complaint",
+          });
+        }
+
+        // Pending gate pass requests
+        const pendingPasses = await prisma.gatePass.count({
+          where: {
+            hostelId: { in: hostelIds },
+            status: "PENDING",
+          },
+        });
+        if (pendingPasses > 0) {
+          notifications.push({
+            type: "gatepass",
+            text: `${pendingPasses} gate pass request${pendingPasses > 1 ? "s" : ""}`,
+            link: `/hostel/${primaryHostelId}/gate-passes`,
+            count: pendingPasses,
+            icon: "gatepass",
+          });
+        }
+      }
+    } else if (role === "SUPER_ADMIN") {
+      // New tenants (last 7 days)
+      const newTenants = await prisma.tenant.count({
+        where: {
+          createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+        },
+      });
+      if (newTenants > 0) {
+        notifications.push({
+          type: "tenant",
+          text: `${newTenants} new tenant${newTenants > 1 ? "s" : ""} this week`,
+          link: "/super-admin/dashboard",
+          count: newTenants,
+          icon: "tenant",
+        });
+      }
+    }
+
+    const totalUnread = notifications.reduce((s, n) => s + n.count, 0);
+
+    return NextResponse.json({ notifications, totalUnread });
+  } catch (error) {
+    console.error("Notifications error:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch notifications" },
+      { status: 500 }
+    );
+  }
+}

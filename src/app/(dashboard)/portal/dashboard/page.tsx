@@ -60,7 +60,7 @@ export default function PortalDashboardPage() {
   if (loading) {
     return (
       <DashboardLayout title="Portal Dashboard" hostelId="">
-        <div className="text-center py-12 text-gray-500">Loading dashboard...</div>
+        <div className="text-center py-12 text-gray-500 dark:text-slate-400">Loading dashboard...</div>
       </DashboardLayout>
     );
   }
@@ -68,7 +68,7 @@ export default function PortalDashboardPage() {
   if (!data) {
     return (
       <DashboardLayout title="Portal Dashboard" hostelId="">
-        <div className="text-center py-12 text-gray-500">Failed to load dashboard data.</div>
+        <div className="text-center py-12 text-gray-500 dark:text-slate-400">Failed to load dashboard data.</div>
       </DashboardLayout>
     );
   }
@@ -117,15 +117,15 @@ export default function PortalDashboardPage() {
             </div>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-500">Room Number</span>
+                <span className="text-gray-500 dark:text-slate-400">Room Number</span>
                 <span className="font-semibold">{data.resident.roomNumber}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Bed Number</span>
+                <span className="text-gray-500 dark:text-slate-400">Bed Number</span>
                 <span className="font-semibold">{data.resident.bedNumber}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Hostel</span>
+                <span className="text-gray-500 dark:text-slate-400">Hostel</span>
                 <span className="font-semibold">{data.resident.hostelName}</span>
               </div>
             </div>
@@ -142,15 +142,15 @@ export default function PortalDashboardPage() {
             {data.currentBill ? (
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Month</span>
+                  <span className="text-gray-500 dark:text-slate-400">Month</span>
                   <span className="font-semibold">{data.currentBill.month}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Amount</span>
+                  <span className="text-gray-500 dark:text-slate-400">Amount</span>
                   <span className="text-2xl font-bold">{formatCurrency(data.currentBill.amount)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Status</span>
+                  <span className="text-gray-500 dark:text-slate-400">Status</span>
                   <span
                     className={
                       data.currentBill.status === 'PAID' ? 'badge-success' : 'badge-warning'
@@ -160,7 +160,7 @@ export default function PortalDashboardPage() {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Due Date</span>
+                  <span className="text-gray-500 dark:text-slate-400">Due Date</span>
                   <span>{formatDate(data.currentBill.dueDate)}</span>
                 </div>
                 {data.currentBill.status !== 'PAID' && (
@@ -198,7 +198,7 @@ export default function PortalDashboardPage() {
             <div className="space-y-3">
               {data.recentNotices.map((notice) => (
                 <div key={notice.id} className="p-3 bg-gray-50 rounded-lg">
-                  <h4 className="font-medium text-gray-900">{notice.title}</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-white">{notice.title}</h4>
                   <p className="text-sm text-gray-600 mt-1 line-clamp-2">{notice.content}</p>
                   <p className="text-xs text-gray-400 mt-2">{formatDate(notice.createdAt)}</p>
                 </div>
@@ -227,8 +227,8 @@ export default function PortalDashboardPage() {
                     {link.icon}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">{link.title}</h3>
-                    <p className="text-sm text-gray-500">{link.description}</p>
+                    <h3 className="font-semibold text-gray-900 dark:text-white">{link.title}</h3>
+                    <p className="text-sm text-gray-500 dark:text-slate-400">{link.description}</p>
                   </div>
                 </div>
               </div>

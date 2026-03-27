@@ -393,7 +393,7 @@ export default function MyBillsPage() {
         {bill.otherCharges > 0 && (
           <div className="rounded-lg border border-gray-200 dark:border-[#1E2D42] overflow-hidden">
             <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 dark:bg-[#0B1222]">
-              <Receipt size={16} className="text-gray-500" />
+              <Receipt size={16} className="text-gray-500 dark:text-slate-400" />
               <span className="font-semibold text-sm text-gray-700 dark:text-gray-200">Other Charges</span>
               <span className="ml-auto font-bold text-sm">{formatCurrency(bill.otherCharges)}</span>
             </div>
@@ -573,7 +573,7 @@ export default function MyBillsPage() {
           </div>
         ) : bills.length === 0 ? (
           <div className="card text-center py-12">
-            <CreditCard size={48} className="mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+            <CreditCard size={48} className="mx-auto mb-4 text-gray-300 dark:text-gray-600 dark:text-slate-400" />
             <p className="text-gray-500 dark:text-gray-400">No bills found</p>
           </div>
         ) : (

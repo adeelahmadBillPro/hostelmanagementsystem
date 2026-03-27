@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import { useToast } from "@/components/providers";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import FileUpload from "@/components/ui/file-upload";
 import {
   Wallet,
   Banknote,
@@ -353,15 +354,14 @@ export default function PayBillPage() {
                   </div>
                 )}
 
-                {/* Proof Image URL */}
+                {/* Payment Proof Upload */}
                 <div>
-                  <label className="label">Proof Image URL (optional)</label>
-                  <input
-                    type="text"
-                    value={proofImageUrl}
-                    onChange={(e) => setProofImageUrl(e.target.value)}
-                    className="input w-full"
-                    placeholder="Paste image URL of payment screenshot"
+                  <label className="label">Payment Proof (Screenshot/Photo)</label>
+                  <FileUpload
+                    onUpload={(url) => setProofImageUrl(url)}
+                    accept="image/*,.pdf"
+                    label="Upload payment screenshot or receipt"
+                    currentUrl={proofImageUrl}
                   />
                 </div>
 

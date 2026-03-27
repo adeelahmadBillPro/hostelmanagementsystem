@@ -105,9 +105,9 @@ export default function MyComplaintsPage() {
         </div>
 
         {loading ? (
-          <div className="text-center py-12 text-gray-500">Loading complaints...</div>
+          <div className="text-center py-12 text-gray-500 dark:text-slate-400">Loading complaints...</div>
         ) : complaints.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-gray-500 dark:text-slate-400">
             <MessageSquare size={48} className="mx-auto mb-4 text-gray-300" />
             <p>No complaints filed yet</p>
           </div>
