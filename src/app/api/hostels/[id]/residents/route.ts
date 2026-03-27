@@ -246,7 +246,14 @@ export async function POST(
       return resident;
     });
 
-    return NextResponse.json(result, { status: 201 });
+    return NextResponse.json({
+      ...result,
+      loginCredentials: {
+        email,
+        password: defaultPassword,
+        message: "Share these credentials with the resident so they can login to the portal",
+      },
+    }, { status: 201 });
   } catch (error) {
     console.error("POST resident error:", error);
     return NextResponse.json(

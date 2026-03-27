@@ -11,6 +11,10 @@ import {
   MessageSquare,
   Megaphone,
   ArrowRight,
+  CalendarDays,
+  Shield,
+  Banknote,
+  FileText,
 } from 'lucide-react';
 
 interface DashboardData {
@@ -130,6 +134,46 @@ export default function PortalDashboardPage() {
               </div>
             </div>
           </div>
+
+          {/* Agreement Info */}
+          {(data as any).agreement && (
+            <div className="card">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400">
+                  <FileText size={24} />
+                </div>
+                <h2 className="section-title">Agreement Info</h2>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-slate-400">Move-in Date</span>
+                  <span className="font-semibold">{(data as any).agreement.moveInDate ? formatDate((data as any).agreement.moveInDate) : 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-slate-400">Room Type</span>
+                  <span className="font-semibold">{(data as any).agreement.roomType}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-slate-400">Monthly Rent</span>
+                  <span className="font-bold text-primary">{formatCurrency((data as any).agreement.monthlyRent)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-slate-400">Advance Paid</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency((data as any).agreement.advancePaid)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-slate-400">Security Deposit</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency((data as any).agreement.securityDeposit)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-slate-400">Status</span>
+                  <span className={(data as any).agreement.status === 'ACTIVE' ? 'badge-success' : 'badge-warning'}>
+                    {(data as any).agreement.status}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Current Month Bill */}
           <div className="card">

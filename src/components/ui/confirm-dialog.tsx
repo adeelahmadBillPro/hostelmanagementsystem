@@ -33,11 +33,11 @@ export default function ConfirmDialog({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} maxWidth="max-w-[420px]">
-      <div className="flex items-start gap-3 mb-6">
-        <div className="w-10 h-10 rounded-full bg-warning-light flex items-center justify-center flex-shrink-0">
-          <AlertTriangle size={20} className="text-warning" />
+      <div className="flex items-start gap-4 mb-6">
+        <div className="w-11 h-11 rounded-xl bg-amber-50 dark:bg-amber-900/20 ring-1 ring-amber-200 dark:ring-amber-500/20 flex items-center justify-center flex-shrink-0">
+          <AlertTriangle size={20} className="text-amber-500" />
         </div>
-        <p className="text-sm text-text-secondary dark:text-gray-300 mt-2">
+        <p className="text-sm text-text-secondary dark:text-gray-300 mt-2 leading-relaxed">
           {message}
         </p>
       </div>

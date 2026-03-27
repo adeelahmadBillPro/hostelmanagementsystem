@@ -74,12 +74,27 @@ export async function GET() {
       createdAt: n.createdAt.toISOString(),
     }));
 
+    // Get room rent
+    const room = resident.bed?.room ? await prisma.room.findUnique({
+      where: { id: (resident as any).roomId },
+      select: { rentPerBed: true, type: true },
+    }) : null;
+
     return NextResponse.json({
       resident: {
         name: (resident as any).user?.name || 'Unknown',
         roomNumber: resident.bed?.room?.roomNumber || 'N/A',
         bedNumber: resident.bed?.bedNumber || 'N/A',
         hostelName: resident.hostel?.name || 'N/A',
+      },
+      agreement: {
+        moveInDate: (resident as any).moveInDate?.toISOString() || null,
+        moveOutDate: (resident as any).moveOutDate?.toISOString() || null,
+        advancePaid: (resident as any).advancePaid || 0,
+        securityDeposit: (resident as any).securityDeposit || 0,
+        monthlyRent: room?.rentPerBed || 0,
+        roomType: room?.type || 'N/A',
+        status: (resident as any).status || 'ACTIVE',
       },
       currentBill,
       recentNotices: formattedNotices,

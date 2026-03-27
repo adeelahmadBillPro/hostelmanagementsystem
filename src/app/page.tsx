@@ -48,12 +48,21 @@ function useOnScreen(threshold = 0.15) {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+
+    // Fallback: make visible after 1.5s in case observer fails
+    const fallback = setTimeout(() => setVisible(true), 1500);
+
     const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
-      { threshold }
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          clearTimeout(fallback);
+        }
+      },
+      { threshold, rootMargin: '50px' }
     );
     obs.observe(el);
-    return () => obs.disconnect();
+    return () => { obs.disconnect(); clearTimeout(fallback); };
   }, [threshold]);
 
   return { ref, visible };
@@ -896,11 +905,10 @@ export default function LandingPage() {
                         </div>
                         <div className="flex gap-1 mt-2">
                           {Array.from({ length: room.beds }).map((_, bi) => (
-                            <div
+                            <Bed
                               key={bi}
-                              className={`w-2.5 h-2.5 rounded-full ${
-                                bi < room.occupied ? c.dot : 'bg-gray-300'
-                              }`}
+                              size={14}
+                              className={bi < room.occupied ? c.text : 'text-gray-300'}
                             />
                           ))}
                         </div>
@@ -956,7 +964,7 @@ export default function LandingPage() {
                           const isOccupied = bi < selectedRoom.occupied;
                           return (
                             <div key={bi} className="flex items-center gap-3 py-2 px-3 rounded-lg bg-gray-50">
-                              <div className={`w-4 h-4 rounded-full ${isOccupied ? 'bg-danger' : 'bg-success'}`} />
+                              <Bed size={16} className={isOccupied ? 'text-danger' : 'text-success'} />
                               <div className="flex-1">
                                 <div className="text-sm font-medium text-gray-700">Bed {bi + 1}</div>
                                 <div className="text-[10px] text-gray-400">{isOccupied ? 'Occupied' : 'Vacant'}</div>

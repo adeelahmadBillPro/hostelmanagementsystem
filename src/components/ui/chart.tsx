@@ -116,12 +116,7 @@ export function BarChart({
       ...baseTheme.tooltip,
       y: { formatter: formatValue },
     },
-    title: title
-      ? {
-          text: title,
-          style: { color: "#E2E8F0", fontSize: "16px", fontWeight: 600 },
-        }
-      : undefined,
+    ...(title ? { title: { text: title, style: { color: "#E2E8F0", fontSize: "16px", fontWeight: 600 } } } : {}),
   };
 
   return (

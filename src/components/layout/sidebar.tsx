@@ -494,20 +494,22 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
           background: "linear-gradient(180deg, #0B1929 0%, #0F2235 50%, #0B1929 100%)",
         }}
       >
-        {/* Subtle gradient overlay for glass effect */}
-        <div className="absolute inset-0 pointer-events-none opacity-30"
+        {/* Ambient glow overlays */}
+        <div className="absolute inset-0 pointer-events-none"
           style={{
-            background: "radial-gradient(ellipse at 30% 0%, rgba(56,189,248,0.15) 0%, transparent 60%)",
+            background: "radial-gradient(ellipse at 20% 0%, rgba(79,70,229,0.12) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, rgba(16,185,129,0.06) 0%, transparent 50%)",
           }}
         />
 
         {/* Logo */}
         <div className="relative h-16 flex items-center justify-between px-5 border-b border-white/[0.06]">
           <Link href="/dashboard" className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg shadow-emerald-500/20">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg shadow-emerald-500/25 ring-1 ring-white/10">
               <Building2 size={18} className="text-white" />
             </div>
-            <span className="text-white font-bold text-xl tracking-tight">HostelHub</span>
+            <span className="text-white font-bold text-xl tracking-tight">
+              Hostel<span className="text-emerald-400">Hub</span>
+            </span>
           </Link>
           <button onClick={onClose} className="lg:hidden text-white/40 hover:text-white transition-colors">
             <X size={20} />
@@ -566,13 +568,13 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
                             key={child.href + child.label}
                             href={child.href}
                             onClick={onClose}
-                            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 ${
+                            className={`group flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 ${
                               childActive
                                 ? "text-white bg-white/[0.08]"
                                 : "text-slate-500 hover:text-slate-300 hover:bg-white/[0.04]"
                             }`}
                           >
-                            <span style={{ color: childActive ? childColor : undefined }}>{child.icon}</span>
+                            <span className={`transition-transform duration-200 ${childActive ? "" : "group-hover:scale-110"}`} style={{ color: childActive ? childColor : undefined }}>{child.icon}</span>
                             <span>{child.label}</span>
                           </Link>
                         );
@@ -588,13 +590,16 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
                 key={item.href + item.label}
                 href={item.href}
                 onClick={onClose}
-                className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                className={`group flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 relative ${
                   active
-                    ? "text-white bg-gradient-to-r from-white/[0.1] to-transparent"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]"
+                    ? "text-white bg-white/[0.1]"
+                    : "text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]"
                 }`}
               >
-                <span style={{ color: active ? iconColor : undefined }}>{item.icon}</span>
+                {active && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full" style={{ backgroundColor: iconColor }} />
+                )}
+                <span className={`transition-transform duration-200 ${active ? "" : "group-hover:scale-110"}`} style={{ color: active ? iconColor : undefined }}>{item.icon}</span>
                 <span>{item.label}</span>
               </Link>
             );
@@ -605,11 +610,11 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
         {session?.user && (
           <div className="relative border-t border-white/[0.06]">
             <div className="px-4 pt-3 pb-1">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">Account</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-slate-600">Account</p>
             </div>
             <div className="px-3 pb-4">
-              <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/[0.04]">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-emerald-500/20">
+              <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.07] transition-colors duration-200">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white text-xs font-bold shadow-lg shadow-emerald-500/25 ring-2 ring-emerald-400/20">
                   {session.user.name
                     ?.split(" ")
                     .map((n) => n[0])

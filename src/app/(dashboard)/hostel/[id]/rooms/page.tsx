@@ -181,6 +181,7 @@ export default function RoomsPage() {
     buildingId: "",
     floorId: "",
     roomNumber: "",
+    roomCount: "1",
     type: "SINGLE",
     totalBeds: "1",
     rentPerBed: "",
@@ -291,6 +292,7 @@ export default function RoomsPage() {
         buildingId: "",
         floorId: "",
         roomNumber: "",
+        roomCount: "1",
         type: "SINGLE",
         totalBeds: "1",
         rentPerBed: "",
@@ -376,13 +378,13 @@ export default function RoomsPage() {
       {/* Filter Bar */}
       <div className="card mb-6">
         <div className="flex flex-col lg:flex-row items-start lg:items-center gap-3">
-          <div className="flex items-center gap-2 text-text-muted">
+          <div className="flex items-center gap-2 text-text-muted flex-shrink-0">
             <Filter size={16} />
-            <span className="text-sm font-medium">Filters:</span>
+            <span className="text-sm font-semibold">Filters:</span>
           </div>
-          <div className="flex flex-wrap items-center gap-3 flex-1">
+          <div className="flex flex-wrap items-center gap-2 flex-1">
             <select
-              className="select min-w-[160px]"
+              className="select min-w-[150px] !h-10 text-sm"
               value={filterBuilding}
               onChange={(e) => {
                 setFilterBuilding(e.target.value);
@@ -391,25 +393,21 @@ export default function RoomsPage() {
             >
               <option value="">All Buildings</option>
               {buildings.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
+                <option key={b.id} value={b.id}>{b.name}</option>
               ))}
             </select>
             <select
-              className="select min-w-[160px]"
+              className="select min-w-[150px] !h-10 text-sm"
               value={filterFloor}
               onChange={(e) => setFilterFloor(e.target.value)}
             >
               <option value="">All Floors</option>
               {filteredFloors.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.name} (Floor {f.floorNumber})
-                </option>
+                <option key={f.id} value={f.id}>{f.name} (Floor {f.floorNumber})</option>
               ))}
             </select>
             <select
-              className="select min-w-[130px]"
+              className="select min-w-[120px] !h-10 text-sm"
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
             >
@@ -420,7 +418,7 @@ export default function RoomsPage() {
               <option value="QUAD">Quad</option>
             </select>
             <select
-              className="select min-w-[130px]"
+              className="select min-w-[120px] !h-10 text-sm"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
             >
@@ -429,14 +427,23 @@ export default function RoomsPage() {
               <option value="MAINTENANCE">Maintenance</option>
               <option value="INACTIVE">Inactive</option>
             </select>
+            {(filterBuilding || filterFloor || filterType || filterStatus) && (
+              <button
+                className="text-xs font-medium text-primary hover:text-primary-dark transition-colors px-2"
+                onClick={() => { setFilterBuilding(""); setFilterFloor(""); setFilterType(""); setFilterStatus(""); }}
+              >
+                Clear all
+              </button>
+            )}
           </div>
           <button
-            className="btn-primary flex items-center gap-2 whitespace-nowrap"
+            className="btn-primary flex items-center gap-2 whitespace-nowrap flex-shrink-0"
             onClick={() => {
               setFormData({
                 buildingId: "",
                 floorId: "",
                 roomNumber: "",
+                roomCount: "1",
                 type: "SINGLE",
                 totalBeds: "1",
                 rentPerBed: "",
@@ -452,46 +459,30 @@ export default function RoomsPage() {
       </div>
 
       {/* Color Legend */}
-      <div className="card mb-6 !py-3 !px-4">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-          <span className="text-xs font-semibold text-text-secondary dark:text-gray-400 uppercase tracking-wider">
-            Room Status:
-          </span>
-          <div className="flex items-center gap-1.5">
-            <span className="w-3.5 h-3.5 rounded border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40" />
-            <span className="text-xs text-text-secondary dark:text-gray-400">Empty</span>
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mb-6 px-1">
+        <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest">Legend:</span>
+        {[
+          { color: "bg-emerald-500", label: "Empty" },
+          { color: "bg-amber-500", label: "Partial" },
+          { color: "bg-red-500", label: "Full" },
+          { color: "bg-purple-500", label: "Maintenance" },
+        ].map((s) => (
+          <div key={s.label} className="flex items-center gap-1.5">
+            <span className={`w-2.5 h-2.5 rounded-full ${s.color}`} />
+            <span className="text-xs text-text-muted">{s.label}</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-3.5 h-3.5 rounded border-2 border-amber-500 bg-amber-50 dark:bg-amber-950/40" />
-            <span className="text-xs text-text-secondary dark:text-gray-400">Partial</span>
+        ))}
+        <span className="w-px h-3 bg-border dark:bg-[#1E2D42]" />
+        {[
+          { color: "bg-red-500", label: "Occupied" },
+          { color: "bg-gray-300 dark:bg-gray-600", label: "Vacant" },
+          { color: "bg-blue-500", label: "Reserved" },
+        ].map((s) => (
+          <div key={s.label} className="flex items-center gap-1.5">
+            <span className={`w-2 h-2 rounded-full ${s.color}`} />
+            <span className="text-xs text-text-muted">{s.label}</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-3.5 h-3.5 rounded border-2 border-red-500 bg-red-50 dark:bg-red-950/40" />
-            <span className="text-xs text-text-secondary dark:text-gray-400">Full</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-3.5 h-3.5 rounded border-2 border-purple-500 bg-purple-50 dark:bg-purple-950/40" />
-            <span className="text-xs text-text-secondary dark:text-gray-400">Maintenance</span>
-          </div>
-
-          <span className="w-px h-4 bg-border dark:bg-[#1E2D42]" />
-
-          <span className="text-xs font-semibold text-text-secondary dark:text-gray-400 uppercase tracking-wider">
-            Bed Status:
-          </span>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
-            <span className="text-xs text-text-secondary dark:text-gray-400">Occupied</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-600" />
-            <span className="text-xs text-text-secondary dark:text-gray-400">Vacant</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-            <span className="text-xs text-text-secondary dark:text-gray-400">Reserved</span>
-          </div>
-        </div>
+        ))}
       </div>
 
       {/* Room Grid */}
@@ -554,11 +545,11 @@ export default function RoomsPage() {
                     <div
                       key={room.id}
                       className={`
-                        relative rounded-xl border-2 p-4 cursor-pointer
-                        transition-all duration-200 hover:scale-[1.03] hover:shadow-xl
+                        relative rounded-2xl border-2 p-4 cursor-pointer
+                        transition-all duration-200 hover:-translate-y-1 hover:shadow-lg
                         ${statusConfig.border} ${statusConfig.bg}
                         dark:bg-[#111C2E] dark:hover:bg-[#162033]
-                        opacity-0 animate-fade-in-up
+                        opacity-0 animate-fade-in-up group/room
                       `}
                       style={{
                         animationDelay: `${groupIndex * 80 + roomIndex * 40}ms`,
@@ -679,10 +670,11 @@ export default function RoomsPage() {
 
           {/* Room range */}
           <div className="p-4 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/20">
-            <p className="text-sm font-semibold text-primary mb-3">How many rooms to create?</p>
+            <p className="text-sm font-semibold text-primary mb-1">Room Numbering</p>
+            <p className="text-xs text-text-muted mb-3">Set the first room number and how many rooms to create in one go</p>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="label">Starting Room # *</label>
+                <label className="label">First Room Number *</label>
                 <input
                   type="number"
                   className="input"
@@ -691,18 +683,24 @@ export default function RoomsPage() {
                   value={formData.roomNumber}
                   onChange={(e) => setFormData({ ...formData, roomNumber: e.target.value })}
                 />
+                <p className="text-[11px] text-text-muted mt-1">Room numbering starts from here</p>
               </div>
               <div>
-                <label className="label">Number of Rooms *</label>
+                <label className="label">How Many Rooms? *</label>
                 <input
                   type="number"
                   className="input"
                   placeholder="e.g., 10"
                   min="1"
                   max="50"
-                  value={formData.totalBeds === "1" ? "1" : (formData as any).roomCount || "1"}
-                  onChange={(e) => setFormData({ ...formData, roomCount: e.target.value } as any)}
+                  value={formData.roomCount}
+                  onChange={(e) => setFormData({ ...formData, roomCount: e.target.value })}
                 />
+                <p className="text-[11px] text-text-muted mt-1">
+                  {Number(formData.roomCount) > 1 && formData.roomNumber
+                    ? `Creates rooms ${formData.roomNumber} to ${Number(formData.roomNumber) + Number(formData.roomCount) - 1}`
+                    : "1 to 50 rooms at once"}
+                </p>
               </div>
             </div>
           </div>
@@ -740,12 +738,12 @@ export default function RoomsPage() {
             <div className="p-3 bg-success/5 dark:bg-success/10 rounded-xl border border-success/20">
               <p className="text-sm font-semibold text-success mb-1">Preview</p>
               <p className="text-xs text-text-secondary dark:text-slate-400">
-                Room {formData.roomNumber} to {Number(formData.roomNumber) + Number((formData as any).roomCount || 1) - 1}
+                Room {formData.roomNumber} to {Number(formData.roomNumber) + Number(formData.roomCount || 1) - 1}
                 {" • "}{formData.type} ({formData.type === "SINGLE" ? 1 : formData.type === "DOUBLE" ? 2 : formData.type === "TRIPLE" ? 3 : 4} beds each)
                 {" • "}PKR {Number(formData.rentPerBed).toLocaleString()}/bed
               </p>
               <p className="text-xs font-bold text-success mt-1">
-                Total: {(formData as any).roomCount || 1} rooms, {(Number((formData as any).roomCount || 1)) * (formData.type === "SINGLE" ? 1 : formData.type === "DOUBLE" ? 2 : formData.type === "TRIPLE" ? 3 : 4)} beds
+                Total: {formData.roomCount || 1} rooms, {(Number(formData.roomCount || 1)) * (formData.type === "SINGLE" ? 1 : formData.type === "DOUBLE" ? 2 : formData.type === "TRIPLE" ? 3 : 4)} beds
               </p>
             </div>
           )}
@@ -757,7 +755,7 @@ export default function RoomsPage() {
             <button
               className="btn-primary"
               onClick={async () => {
-                const roomCount = Number((formData as any).roomCount || 1);
+                const roomCount = Number(formData.roomCount || 1);
                 if (roomCount > 1) {
                   // Bulk create
                   setSaving(true);
@@ -779,7 +777,7 @@ export default function RoomsPage() {
                       alert(data.error || "Failed to create rooms");
                     } else {
                       setShowAddModal(false);
-                      fetchData();
+                      fetchRooms();
                       alert(data.message || `Created ${data.created} rooms`);
                     }
                   } catch { alert("Something went wrong"); }
@@ -797,7 +795,7 @@ export default function RoomsPage() {
                   Creating...
                 </span>
               ) : (
-                `Create ${Number((formData as any).roomCount || 1)} Room${Number((formData as any).roomCount || 1) > 1 ? "s" : ""}`
+                `Create ${Number(formData.roomCount || 1)} Room${Number(formData.roomCount || 1) > 1 ? "s" : ""}`
               )}
             </button>
           </div>

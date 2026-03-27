@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, Inbox } from "lucide-react";
 import { useState } from "react";
 
 interface Column<T> {
@@ -53,7 +53,7 @@ export default function DataTable<T extends Record<string, any>>({
           <div className="relative max-w-sm">
             <Search
               size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted"
             />
             <input
               type="text"
@@ -63,7 +63,7 @@ export default function DataTable<T extends Record<string, any>>({
                 setPage(1);
               }}
               placeholder={searchPlaceholder}
-              className="input pl-9"
+              className="input pl-10"
             />
           </div>
         </div>
@@ -87,16 +87,23 @@ export default function DataTable<T extends Record<string, any>>({
               <tr>
                 <td
                   colSpan={columns.length + (actions ? 1 : 0)}
-                  className="px-4 py-12 text-center text-text-muted text-sm"
+                  className="px-4 py-16 text-center"
                 >
-                  {emptyMessage}
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-[#0B1222] flex items-center justify-center mb-3">
+                      <Inbox size={22} className="text-slate-300 dark:text-slate-600" />
+                    </div>
+                    <p className="text-sm font-medium text-text-muted">{emptyMessage}</p>
+                  </div>
                 </td>
               </tr>
             ) : (
               paginated.map((row, i) => (
                 <tr
                   key={i}
-                  className={`table-row ${onRowClick ? "cursor-pointer" : ""}`}
+                  className={`table-row ${onRowClick ? "cursor-pointer" : ""} ${
+                    i % 2 === 1 ? "bg-slate-50/50 dark:bg-white/[0.01]" : ""
+                  }`}
                   onClick={() => onRowClick?.(row)}
                 >
                   {columns.map((col) => (
@@ -119,19 +126,24 @@ export default function DataTable<T extends Record<string, any>>({
       {/* Mobile card view */}
       <div className="md:hidden divide-y divide-border dark:divide-[#1E2D42]">
         {paginated.length === 0 ? (
-          <div className="px-4 py-12 text-center text-text-muted text-sm">
-            {emptyMessage}
+          <div className="px-4 py-16 text-center">
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-[#0B1222] flex items-center justify-center mb-3">
+                <Inbox size={22} className="text-slate-300 dark:text-slate-600" />
+              </div>
+              <p className="text-sm font-medium text-text-muted">{emptyMessage}</p>
+            </div>
           </div>
         ) : (
           paginated.map((row, i) => (
             <div
               key={i}
-              className={`p-4 space-y-2 ${onRowClick ? "cursor-pointer active:bg-bg-main" : ""}`}
+              className={`p-4 space-y-2 transition-colors ${onRowClick ? "cursor-pointer active:bg-bg-main" : ""}`}
               onClick={() => onRowClick?.(row)}
             >
               {columns.map((col) => (
                 <div key={col.key} className="flex justify-between items-center">
-                  <span className="text-xs font-medium text-text-muted uppercase">
+                  <span className="text-xs font-semibold text-text-muted uppercase tracking-wide">
                     {col.label}
                   </span>
                   <span className="text-sm text-text-primary dark:text-white">
@@ -152,7 +164,7 @@ export default function DataTable<T extends Record<string, any>>({
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between p-4 border-t border-border dark:border-[#1E2D42]">
-          <span className="text-xs text-text-muted">
+          <span className="text-xs font-medium text-text-muted">
             Showing {(page - 1) * pageSize + 1}-
             {Math.min(page * pageSize, filtered.length)} of {filtered.length}
           </span>
@@ -160,7 +172,7 @@ export default function DataTable<T extends Record<string, any>>({
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="p-1.5 rounded-lg hover:bg-bg-main disabled:opacity-40 transition-colors"
+              className="p-1.5 rounded-lg hover:bg-bg-main dark:hover:bg-[#0B1222] disabled:opacity-30 transition-all duration-200"
             >
               <ChevronLeft size={16} />
             </button>
@@ -170,10 +182,10 @@ export default function DataTable<T extends Record<string, any>>({
                 <button
                   key={pageNum}
                   onClick={() => setPage(pageNum)}
-                  className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors ${
+                  className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all duration-200 ${
                     page === pageNum
-                      ? "bg-primary text-white"
-                      : "hover:bg-bg-main text-text-secondary"
+                      ? "bg-primary text-white shadow-sm shadow-primary/25"
+                      : "hover:bg-bg-main dark:hover:bg-[#0B1222] text-text-secondary"
                   }`}
                 >
                   {pageNum}
@@ -183,7 +195,7 @@ export default function DataTable<T extends Record<string, any>>({
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="p-1.5 rounded-lg hover:bg-bg-main disabled:opacity-40 transition-colors"
+              className="p-1.5 rounded-lg hover:bg-bg-main dark:hover:bg-[#0B1222] disabled:opacity-30 transition-all duration-200"
             >
               <ChevronRight size={16} />
             </button>
