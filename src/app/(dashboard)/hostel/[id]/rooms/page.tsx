@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import StatCard from "@/components/ui/stat-card";
@@ -14,8 +14,9 @@ import {
   Percent,
   DollarSign,
   Plus,
-  Search,
   Filter,
+  Building2,
+  Layers,
 } from "lucide-react";
 
 interface BedData {
@@ -65,6 +66,88 @@ interface FloorOption {
   name: string;
   floorNumber: number;
   buildingId: string;
+}
+
+// Status config for room cards
+const STATUS_CONFIG = {
+  EMPTY: {
+    label: "EMPTY",
+    border: "border-emerald-400 dark:border-emerald-500/50",
+    bg: "bg-emerald-50 dark:bg-emerald-950/30",
+    text: "text-emerald-700 dark:text-emerald-400",
+    badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400",
+    progress: "bg-emerald-500",
+    numberColor: "text-emerald-600 dark:text-emerald-400",
+  },
+  FULL: {
+    label: "FULL",
+    border: "border-red-400 dark:border-red-500/50",
+    bg: "bg-red-50 dark:bg-red-950/30",
+    text: "text-red-700 dark:text-red-400",
+    badge: "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400",
+    progress: "bg-red-500",
+    numberColor: "text-red-600 dark:text-red-400",
+  },
+  PARTIAL: {
+    label: "PARTIAL",
+    border: "border-amber-400 dark:border-amber-500/50",
+    bg: "bg-amber-50 dark:bg-amber-950/30",
+    text: "text-amber-700 dark:text-amber-400",
+    badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400",
+    progress: "bg-amber-500",
+    numberColor: "text-amber-600 dark:text-amber-400",
+  },
+  MAINTENANCE: {
+    label: "MAINTENANCE",
+    border: "border-purple-400 dark:border-purple-500/50",
+    bg: "bg-purple-50 dark:bg-purple-950/30",
+    text: "text-purple-700 dark:text-purple-400",
+    badge: "bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-400",
+    progress: "bg-purple-500",
+    numberColor: "text-purple-600 dark:text-purple-400",
+  },
+};
+
+function getRoomStatus(room: RoomData) {
+  if (room.status === "MAINTENANCE") return STATUS_CONFIG.MAINTENANCE;
+  const occupied = room.beds.filter((b) => b.status === "OCCUPIED").length;
+  const total = room.beds.length;
+  if (occupied === 0) return STATUS_CONFIG.EMPTY;
+  if (occupied >= total) return STATUS_CONFIG.FULL;
+  return STATUS_CONFIG.PARTIAL;
+}
+
+function getRoomStatusLabel(room: RoomData) {
+  if (room.status === "MAINTENANCE") return "MAINTENANCE";
+  const occupied = room.beds.filter((b) => b.status === "OCCUPIED").length;
+  const total = room.beds.length;
+  if (occupied === 0) return "EMPTY";
+  if (occupied >= total) return "FULL";
+  return "PARTIAL";
+}
+
+function getBedIconColor(status: string) {
+  switch (status) {
+    case "OCCUPIED":
+      return "bg-red-500";
+    case "VACANT":
+      return "bg-gray-300 dark:bg-gray-600";
+    case "RESERVED":
+      return "bg-blue-500";
+    case "MAINTENANCE":
+      return "bg-purple-400";
+    default:
+      return "bg-gray-300 dark:bg-gray-600";
+  }
+}
+
+// Group rooms by "Building — Floor"
+interface RoomGroup {
+  key: string;
+  buildingName: string;
+  floorName: string;
+  floorNumber: number;
+  rooms: RoomData[];
 }
 
 export default function RoomsPage() {
@@ -130,6 +213,39 @@ export default function RoomsPage() {
   useEffect(() => {
     fetchRooms();
   }, [fetchRooms]);
+
+  // Group rooms by building + floor
+  const groupedRooms = useMemo<RoomGroup[]>(() => {
+    const map = new Map<string, RoomGroup>();
+    for (const room of rooms) {
+      const bName = room.floor.building.name;
+      const fName = room.floor.name;
+      const fNum = room.floor.floorNumber;
+      const key = `${bName}---${fName}`;
+      if (!map.has(key)) {
+        map.set(key, {
+          key,
+          buildingName: bName,
+          floorName: fName,
+          floorNumber: fNum,
+          rooms: [],
+        });
+      }
+      map.get(key)!.rooms.push(room);
+    }
+    // Sort groups by building name then floor number
+    const groups = Array.from(map.values());
+    groups.sort((a, b) => {
+      if (a.buildingName !== b.buildingName)
+        return a.buildingName.localeCompare(b.buildingName);
+      return a.floorNumber - b.floorNumber;
+    });
+    // Sort rooms within each group by room number
+    for (const g of groups) {
+      g.rooms.sort((a, b) => a.roomNumber.localeCompare(b.roomNumber, undefined, { numeric: true }));
+    }
+    return groups;
+  }, [rooms]);
 
   // Filter floors by selected building
   const filteredFloors = filterBuilding
@@ -201,36 +317,6 @@ export default function RoomsPage() {
       type,
       totalBeds: bedMap[type] || formData.totalBeds,
     });
-  };
-
-  const getOccupancyClass = (status: string) => {
-    switch (status) {
-      case "vacant":
-        return "room-vacant";
-      case "partial":
-        return "room-partial";
-      case "full":
-        return "room-full";
-      case "maintenance":
-        return "room-reserved";
-      default:
-        return "room-vacant";
-    }
-  };
-
-  const getBedDotColor = (status: string) => {
-    switch (status) {
-      case "OCCUPIED":
-        return "bg-red-500";
-      case "VACANT":
-        return "bg-emerald-500";
-      case "RESERVED":
-        return "bg-indigo-500";
-      case "MAINTENANCE":
-        return "bg-gray-400";
-      default:
-        return "bg-gray-300";
-    }
   };
 
   return (
@@ -365,37 +451,45 @@ export default function RoomsPage() {
         </div>
       </div>
 
-      {/* Room Legend */}
-      <div className="flex flex-wrap items-center gap-4 mb-4 text-xs text-text-muted">
-        <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm bg-emerald-500/20 border border-emerald-500" />
-          <span>Vacant</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm bg-amber-500/20 border border-amber-500" />
-          <span>Partial</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm bg-red-500/20 border border-red-500" />
-          <span>Full</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm bg-indigo-500/20 border border-indigo-500" />
-          <span>Maintenance</span>
-        </div>
-        <div className="ml-4 flex items-center gap-3">
-          <span className="font-medium">Bed dots:</span>
+      {/* Color Legend */}
+      <div className="card mb-6 !py-3 !px-4">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+          <span className="text-xs font-semibold text-text-secondary dark:text-gray-400 uppercase tracking-wider">
+            Room Status:
+          </span>
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span>Vacant</span>
+            <span className="w-3.5 h-3.5 rounded border-2 border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40" />
+            <span className="text-xs text-text-secondary dark:text-gray-400">Empty</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-red-500" />
-            <span>Occupied</span>
+            <span className="w-3.5 h-3.5 rounded border-2 border-amber-500 bg-amber-50 dark:bg-amber-950/40" />
+            <span className="text-xs text-text-secondary dark:text-gray-400">Partial</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-indigo-500" />
-            <span>Reserved</span>
+            <span className="w-3.5 h-3.5 rounded border-2 border-red-500 bg-red-50 dark:bg-red-950/40" />
+            <span className="text-xs text-text-secondary dark:text-gray-400">Full</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-3.5 h-3.5 rounded border-2 border-purple-500 bg-purple-50 dark:bg-purple-950/40" />
+            <span className="text-xs text-text-secondary dark:text-gray-400">Maintenance</span>
+          </div>
+
+          <span className="w-px h-4 bg-border dark:bg-[#1E2D42]" />
+
+          <span className="text-xs font-semibold text-text-secondary dark:text-gray-400 uppercase tracking-wider">
+            Bed Status:
+          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
+            <span className="text-xs text-text-secondary dark:text-gray-400">Occupied</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-600" />
+            <span className="text-xs text-text-secondary dark:text-gray-400">Vacant</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+            <span className="text-xs text-text-secondary dark:text-gray-400">Reserved</span>
           </div>
         </div>
       </div>
@@ -416,48 +510,117 @@ export default function RoomsPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3">
-          {rooms.map((room) => (
+        <div className="space-y-8">
+          {groupedRooms.map((group, groupIndex) => (
             <div
-              key={room.id}
-              className={`${getOccupancyClass(
-                room.occupancyStatus
-              )} rounded-xl p-3 cursor-pointer transition-all duration-200 hover:scale-[1.03] hover:shadow-lg`}
-              onClick={() =>
-                router.push(`/hostel/${hostelId}/rooms/${room.id}`)
-              }
+              key={group.key}
+              className="opacity-0 animate-fade-in-up"
+              style={{ animationDelay: `${groupIndex * 80}ms` }}
             >
-              {/* Room number */}
-              <div className="flex items-start justify-between mb-1.5">
-                <h3 className="text-lg font-bold leading-tight">
-                  {room.roomNumber}
-                </h3>
-                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-white/40 dark:bg-black/20 uppercase">
-                  {room.type}
+              {/* Section Header */}
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10 border border-primary/20">
+                  <Building2 size={16} className="text-primary" />
+                  <span className="text-sm font-bold text-primary uppercase tracking-wide">
+                    {group.buildingName}
+                  </span>
+                  <span className="text-primary/50 mx-1">--</span>
+                  <Layers size={14} className="text-primary" />
+                  <span className="text-sm font-bold text-primary uppercase tracking-wide">
+                    {group.floorName}
+                  </span>
+                </div>
+                <div className="flex-1 h-px bg-border dark:bg-[#1E2D42]" />
+                <span className="text-xs text-text-muted bg-bg-card dark:bg-[#111C2E] px-2 py-1 rounded-md border border-border dark:border-[#1E2D42]">
+                  {group.rooms.length} {group.rooms.length === 1 ? "room" : "rooms"}
                 </span>
               </div>
 
-              {/* Building / Floor info */}
-              <p className="text-[11px] opacity-75 mb-2 truncate">
-                {room.floor.building.name} - {room.floor.name}
-              </p>
+              {/* Room Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {group.rooms.map((room, roomIndex) => {
+                  const statusConfig = getRoomStatus(room);
+                  const statusLabel = getRoomStatusLabel(room);
+                  const occupiedCount = room.beds.filter(
+                    (b) => b.status === "OCCUPIED"
+                  ).length;
+                  const totalBedCount = room.beds.length;
+                  const occupancyPercent =
+                    totalBedCount > 0
+                      ? Math.round((occupiedCount / totalBedCount) * 100)
+                      : 0;
 
-              {/* Beds count */}
-              <p className="text-sm font-semibold mb-2">
-                {room.occupiedBeds}/{room.beds.length} Beds
-              </p>
+                  return (
+                    <div
+                      key={room.id}
+                      className={`
+                        relative rounded-xl border-2 p-4 cursor-pointer
+                        transition-all duration-200 hover:scale-[1.03] hover:shadow-xl
+                        ${statusConfig.border} ${statusConfig.bg}
+                        dark:bg-[#111C2E] dark:hover:bg-[#162033]
+                        opacity-0 animate-fade-in-up
+                      `}
+                      style={{
+                        animationDelay: `${groupIndex * 80 + roomIndex * 40}ms`,
+                      }}
+                      onClick={() =>
+                        router.push(`/hostel/${hostelId}/rooms/${room.id}`)
+                      }
+                    >
+                      {/* Header: Room Number + Status Badge */}
+                      <div className="flex items-start justify-between mb-1">
+                        <h3
+                          className={`text-2xl font-extrabold leading-tight ${statusConfig.numberColor}`}
+                        >
+                          {room.roomNumber}
+                        </h3>
+                        <span
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${statusConfig.badge}`}
+                        >
+                          {statusLabel}
+                        </span>
+                      </div>
 
-              {/* Bed dots */}
-              <div className="flex flex-wrap gap-1">
-                {room.beds.map((bed) => (
-                  <span
-                    key={bed.id}
-                    className={`w-2.5 h-2.5 rounded-full ${getBedDotColor(
-                      bed.status
-                    )} ring-1 ring-white/50`}
-                    title={`${bed.bedNumber}: ${bed.status}`}
-                  />
-                ))}
+                      {/* Subtitle: Block + Floor */}
+                      <p className="text-xs text-gray-500 dark:text-gray-500 mb-3">
+                        {room.floor.building.name} &middot; {room.floor.name}
+                      </p>
+
+                      {/* Bed Count + Percentage */}
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-sm font-semibold text-text-primary dark:text-gray-200">
+                          {occupiedCount}/{totalBedCount} Beds
+                        </span>
+                        <span
+                          className={`text-sm font-bold ${statusConfig.text}`}
+                        >
+                          {occupancyPercent}%
+                        </span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="w-full h-2 rounded-full bg-gray-200 dark:bg-gray-700 mb-3 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${statusConfig.progress}`}
+                          style={{ width: `${occupancyPercent}%` }}
+                        />
+                      </div>
+
+                      {/* Bed Icons */}
+                      <div className="flex flex-wrap gap-1.5">
+                        {room.beds.map((bed) => (
+                          <span
+                            key={bed.id}
+                            className={`w-3 h-3 rounded-sm ${getBedIconColor(
+                              bed.status
+                            )} ring-1 ring-white/60 dark:ring-black/30 transition-colors`}
+                            title={`${bed.bedNumber}: ${bed.status}`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           ))}

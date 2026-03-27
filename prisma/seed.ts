@@ -12,7 +12,7 @@ async function main() {
   const basicPlan = await prisma.subscriptionPlan.create({
     data: {
       name: "Basic",
-      price: 2000,
+      price: 0,
       maxHostels: 1,
       maxResidents: 50,
       features: ["1 Hostel", "Up to 50 Residents", "Basic Reports", "Email Support"],
@@ -22,7 +22,7 @@ async function main() {
   const proPlan = await prisma.subscriptionPlan.create({
     data: {
       name: "Pro",
-      price: 5000,
+      price: 0,
       maxHostels: 5,
       maxResidents: 200,
       features: [
@@ -39,7 +39,7 @@ async function main() {
   const enterprisePlan = await prisma.subscriptionPlan.create({
     data: {
       name: "Enterprise",
-      price: 10000,
+      price: 0,
       maxHostels: 50,
       maxResidents: 2000,
       features: [

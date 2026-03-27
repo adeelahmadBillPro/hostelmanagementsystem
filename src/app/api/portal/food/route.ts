@@ -2,6 +2,35 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 
+// Define ordering windows
+const timeWindows: Record<string, { start: number; end: number }> = {
+  BREAKFAST: { start: 6, end: 9 },
+  LUNCH: { start: 11, end: 14 },
+  DINNER: { start: 18, end: 21 },
+  SNACK: { start: 10, end: 22 },
+};
+
+function formatHour(hour: number): string {
+  if (hour === 0 || hour === 24) return '12 AM';
+  if (hour === 12) return '12 PM';
+  if (hour < 12) return `${hour} AM`;
+  return `${hour - 12} PM`;
+}
+
+function isOrderable(mealType: string): boolean {
+  const window = timeWindows[mealType];
+  if (!window) return false;
+  const now = new Date();
+  const hour = now.getHours();
+  return hour >= window.start && hour < window.end;
+}
+
+function getOrderingHours(mealType: string): string {
+  const window = timeWindows[mealType];
+  if (!window) return '';
+  return `${formatHour(window.start)} - ${formatHour(window.end)}`;
+}
+
 export async function GET(_request: NextRequest) {
   try {
     const session = await getSession();
@@ -50,6 +79,8 @@ export async function GET(_request: NextRequest) {
       freeQtyLimit: item.freeQtyLimit,
       extraRate: item.extraRate,
       maxQtyPerOrder: item.maxQtyPerOrder,
+      isOrderable: isOrderable(item.mealType),
+      orderingHours: getOrderingHours(item.mealType),
     }));
 
     // Monthly food expense summary
@@ -69,7 +100,15 @@ export async function GET(_request: NextRequest) {
       totalSpent: orders.reduce((sum: number, o: any) => sum + o.totalAmount, 0),
     };
 
-    return NextResponse.json({ menu, summary });
+    // Add ordering windows info to response
+    const orderingWindows = Object.entries(timeWindows).map(([meal, window]) => ({
+      mealType: meal,
+      start: formatHour(window.start),
+      end: formatHour(window.end),
+      isOpen: isOrderable(meal),
+    }));
+
+    return NextResponse.json({ menu, summary, orderingWindows });
   } catch (error) {
     console.error('Failed to fetch food menu:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -123,6 +162,18 @@ export async function POST(request: NextRequest) {
       if (qty > menuItem.maxQtyPerOrder) {
         return NextResponse.json(
           { error: `Max quantity for "${menuItem.itemName}" is ${menuItem.maxQtyPerOrder}` },
+          { status: 400 }
+        );
+      }
+
+      // Time lock check - reject orders outside time window
+      const mealType = menuItem.mealType as string;
+      if (!isOrderable(mealType)) {
+        const hours = getOrderingHours(mealType);
+        return NextResponse.json(
+          {
+            error: `Ordering for ${mealType.toLowerCase()} is closed. Available ${hours}`,
+          },
           { status: 400 }
         );
       }

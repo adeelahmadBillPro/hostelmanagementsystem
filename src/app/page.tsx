@@ -167,23 +167,23 @@ const statusColors = {
 const pricingPlans = [
   {
     name: 'Basic',
-    price: '2,000',
+    price: 'Free',
     desc: 'Perfect for small hostels getting started.',
     features: ['1 Hostel', 'Up to 50 Rooms', 'Basic Billing', 'Room Grid View', 'Resident Management', 'Email Support'],
     popular: false,
   },
   {
     name: 'Pro',
-    price: '5,000',
+    price: 'Free',
     desc: 'For growing hostels that need everything.',
-    features: ['Up to 5 Hostels', 'Unlimited Rooms', 'Advanced Billing', 'Food & Staff Management', 'Reports & Analytics', 'Visitor Log & Gate Pass', 'Priority Support', 'Dark Mode'],
+    features: ['Up to 5 Hostels', 'Unlimited Rooms', 'Advanced Billing', 'Food & Staff Management', 'Reports & Analytics', 'In-App Messaging', 'Priority Support', 'Dark Mode'],
     popular: true,
   },
   {
     name: 'Enterprise',
-    price: '10,000',
+    price: 'Free',
     desc: 'For hostel chains and large operations.',
-    features: ['Unlimited Hostels', 'Unlimited Everything', 'Custom Branding', 'API Access', 'Dedicated Account Manager', 'Custom Reports', 'SLA Guarantee', 'Phone Support 24/7'],
+    features: ['Unlimited Hostels', 'Unlimited Everything', 'Custom Branding', 'API Access', 'Payment Proof System', 'Custom Reports', 'SLA Guarantee', 'Phone Support 24/7'],
     popular: false,
   },
 ];
@@ -1030,8 +1030,17 @@ export default function LandingPage() {
                   </div>
 
                   <div className="mb-6">
-                    <span className="text-4xl font-extrabold text-gray-900">PKR {plan.price}</span>
-                    <span className="text-gray-400 text-sm">/month</span>
+                    {plan.price === 'Free' ? (
+                      <>
+                        <span className="text-4xl font-extrabold text-emerald-500">FREE</span>
+                        <span className="text-gray-400 text-sm ml-2">for now</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-4xl font-extrabold text-gray-900">PKR {plan.price}</span>
+                        <span className="text-gray-400 text-sm">/month</span>
+                      </>
+                    )}
                   </div>
 
                   <ul className="space-y-3 mb-8 flex-1">

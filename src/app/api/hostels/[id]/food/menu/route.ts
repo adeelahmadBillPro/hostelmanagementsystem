@@ -44,6 +44,14 @@ export async function GET(
         ? Math.round(menuItems.reduce((sum, m) => sum + m.rate, 0) / totalItems)
         : 0;
 
+    // Ordering time windows
+    const orderingWindows = {
+      BREAKFAST: { start: "6 AM", end: "9 AM" },
+      LUNCH: { start: "11 AM", end: "2 PM" },
+      DINNER: { start: "6 PM", end: "9 PM" },
+      SNACK: { start: "10 AM", end: "10 PM" },
+    };
+
     return NextResponse.json({
       menuItems,
       stats: {
@@ -51,6 +59,7 @@ export async function GET(
         activeItems,
         avgPrice,
       },
+      orderingWindows,
     });
   } catch (error) {
     console.error("Get menu error:", error);
