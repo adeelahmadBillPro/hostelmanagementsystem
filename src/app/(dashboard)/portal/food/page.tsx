@@ -20,6 +20,10 @@ import {
   Star,
   ChevronRight,
   Sparkles,
+  X,
+  Trash2,
+  Clock,
+  History,
 } from 'lucide-react';
 
 // ── Types ──────────────────────────────────────────────────────────────
@@ -120,6 +124,8 @@ export default function FoodOrderingPage() {
   const [activeTab, setActiveTab] = useState<MealType>('LUNCH');
   const [summary, setSummary] = useState<MonthlySummary | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [todayOrders, setTodayOrders] = useState<any[]>([]);
+  const [orderingWindows, setOrderingWindows] = useState<any[]>([]);
 
   // Fetch menu
   useEffect(() => {
@@ -130,6 +136,8 @@ export default function FoodOrderingPage() {
           const data = await res.json();
           setMenu(data.menu || []);
           setSummary(data.summary || null);
+          setOrderingWindows(data.orderingWindows || []);
+          setTodayOrders(data.todayOrders || []);
           // Auto-select first meal tab that has items
           const items: MenuItem[] = data.menu || [];
           const available = MEAL_TABS.find((t) =>
@@ -278,11 +286,12 @@ export default function FoodOrderingPage() {
         setQuantities({});
         setShowReviewModal(false);
         addToast('Order placed successfully!', 'success');
-        // Refresh summary
+        // Refresh summary + today's orders
         const menuRes = await fetch('/api/portal/food');
         if (menuRes.ok) {
           const data = await menuRes.json();
           setSummary(data.summary || null);
+          setTodayOrders(data.todayOrders || []);
         }
       } else {
         const err = await res.json().catch(() => null);
@@ -514,7 +523,16 @@ export default function FoodOrderingPage() {
                   </div>
                   <h2 className="text-lg font-bold text-text-primary dark:text-white">Order Summary</h2>
                   {totalItems > 0 && (
-                    <span className="badge-primary text-xs ml-auto">{totalItems} items</span>
+                    <>
+                      <span className="badge-primary text-xs ml-auto">{totalItems} items</span>
+                      <button
+                        onClick={() => setQuantities({})}
+                        className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        title="Clear cart"
+                      >
+                        <Trash2 size={14} className="text-red-400" />
+                      </button>
+                    </>
                   )}
                 </div>
 
@@ -549,14 +567,23 @@ export default function FoodOrderingPage() {
                               </p>
                             )}
                           </div>
-                          <div className="text-right flex-shrink-0 ml-2">
-                            {item.total === 0 ? (
-                              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">FREE</span>
-                            ) : (
-                              <span className="text-sm font-bold text-text-primary dark:text-white">
-                                {formatCurrency(item.total)}
-                              </span>
-                            )}
+                          <div className="flex items-center gap-1.5 flex-shrink-0 ml-2">
+                            <div className="text-right">
+                              {item.total === 0 ? (
+                                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">FREE</span>
+                              ) : (
+                                <span className="text-sm font-bold text-text-primary dark:text-white">
+                                  {formatCurrency(item.total)}
+                                </span>
+                              )}
+                            </div>
+                            <button
+                              onClick={() => setQty(item.id, 0)}
+                              className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+                              title="Remove"
+                            >
+                              <X size={12} className="text-red-400" />
+                            </button>
                           </div>
                         </div>
                       ))}
@@ -631,6 +658,57 @@ export default function FoodOrderingPage() {
                         </span>
                       </div>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {/* Ordering Hours */}
+              {orderingWindows.length > 0 && (
+                <div className="card animate-fade-in-up">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Clock size={16} className="text-text-muted" />
+                    <h3 className="text-sm font-bold text-text-primary dark:text-white">Ordering Hours</h3>
+                  </div>
+                  <div className="space-y-1.5">
+                    {orderingWindows.map((w: any) => (
+                      <div key={w.mealType} className="flex items-center justify-between text-xs">
+                        <span className="text-text-muted">{w.mealType.charAt(0) + w.mealType.slice(1).toLowerCase()}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-text-secondary dark:text-slate-400 font-medium">{w.start} - {w.end}</span>
+                          {w.isOpen ? (
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Open now" />
+                          ) : (
+                            <span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600" title="Closed" />
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Today's Orders */}
+              {todayOrders.length > 0 && (
+                <div className="card animate-fade-in-up">
+                  <div className="flex items-center gap-2 mb-3">
+                    <History size={16} className="text-text-muted" />
+                    <h3 className="text-sm font-bold text-text-primary dark:text-white">Today&apos;s Orders</h3>
+                    <span className="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-text-muted px-1.5 py-0.5 rounded ml-auto">
+                      {todayOrders.length}
+                    </span>
+                  </div>
+                  <div className="space-y-1.5 max-h-[200px] overflow-y-auto">
+                    {todayOrders.map((order: any, i: number) => (
+                      <div key={i} className="flex items-center justify-between py-1.5 px-2 rounded-lg bg-slate-50 dark:bg-[#0B1222] text-xs">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-text-primary dark:text-white truncate">
+                            {order.quantity}x {order.itemName}
+                          </p>
+                          <p className="text-text-muted">{order.mealType?.charAt(0) + order.mealType?.slice(1).toLowerCase()}</p>
+                        </div>
+                        <span className="font-bold text-text-primary dark:text-white">{formatCurrency(order.totalAmount)}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

@@ -109,7 +109,26 @@ export async function GET(_request: NextRequest) {
       isOpen: isOrderable(meal),
     }));
 
-    return NextResponse.json({ menu, summary, orderingWindows });
+    // Today's orders
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+    const todayOrdersRaw = await prisma.foodOrder.findMany({
+      where: {
+        residentId: resident.id,
+        orderDate: { gte: todayStart, lte: todayEnd },
+      },
+      include: { menu: { select: { itemName: true, mealType: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const todayOrders = todayOrdersRaw.map((o: any) => ({
+      itemName: o.menu?.itemName || 'Unknown',
+      mealType: o.menu?.mealType || 'SNACK',
+      quantity: o.quantity,
+      totalAmount: o.totalAmount,
+    }));
+
+    return NextResponse.json({ menu, summary, orderingWindows, todayOrders });
   } catch (error) {
     console.error('Failed to fetch food menu:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
