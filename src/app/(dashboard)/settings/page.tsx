@@ -285,9 +285,9 @@ export default function SettingsPage() {
                 <input
                   type="text"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, "").slice(0, 11); setPhone(v); }}
                   className="input w-full"
-                  placeholder="03XX-XXXXXXX"
+                  placeholder="03XXXXXXXXX" maxLength={11}
                 />
               </div>
 

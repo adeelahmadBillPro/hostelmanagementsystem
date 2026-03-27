@@ -411,15 +411,17 @@ export default function HostelsPage() {
               />
             </div>
             <div>
-              <label className="label">Contact</label>
+              <label className="label">Contact Number</label>
               <input
-                type="text"
+                type="tel"
                 value={formData.contact}
-                onChange={(e) =>
-                  setFormData({ ...formData, contact: e.target.value })
-                }
+                onChange={(e) => {
+                  const v = e.target.value.replace(/[^0-9]/g, "").slice(0, 11);
+                  setFormData({ ...formData, contact: v });
+                }}
                 className="input"
-                placeholder="Enter contact number"
+                placeholder="03XXXXXXXXX"
+                maxLength={11}
               />
             </div>
           </div>

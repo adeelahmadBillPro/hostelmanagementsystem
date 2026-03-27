@@ -323,11 +323,13 @@ export default function TenantsPage() {
             <input
               type="tel"
               value={formData.phone}
-              onChange={(e) =>
-                setFormData({ ...formData, phone: e.target.value })
-              }
+              onChange={(e) => {
+                const v = e.target.value.replace(/[^0-9]/g, "").slice(0, 11);
+                setFormData({ ...formData, phone: v });
+              }}
               className="input"
-              placeholder="Enter phone number"
+              placeholder="03XXXXXXXXX"
+              maxLength={11}
             />
           </div>
 

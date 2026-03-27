@@ -237,7 +237,7 @@ export default function VisitorsPage() {
                 onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
                 className="input"
                 required
-                placeholder="03XX-XXXXXXX"
+                placeholder="03XXXXXXXXX" maxLength={11}
               />
             </div>
             <div>

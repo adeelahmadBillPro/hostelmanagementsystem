@@ -117,7 +117,7 @@ export default function AddStaffPage() {
                 onChange={handleChange}
                 className="input"
                 required
-                placeholder="03XX-XXXXXXX"
+                placeholder="03XXXXXXXXX" maxLength={11}
               />
             </div>
 

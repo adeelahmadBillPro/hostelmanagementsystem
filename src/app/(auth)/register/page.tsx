@@ -226,7 +226,7 @@ export default function RegisterPage() {
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => updateField("phone", e.target.value)}
-                  placeholder="03XX-XXXXXXX"
+                  placeholder="03XXXXXXXXX" maxLength={11}
                   className="input pl-10"
                 />
               </div>
