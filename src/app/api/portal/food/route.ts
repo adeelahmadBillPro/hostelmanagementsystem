@@ -44,6 +44,12 @@ export async function GET(_request: NextRequest) {
       mealType: item.mealType,
       available: item.isActive,
       availableDays: item.availableDays,
+      category: item.category,
+      isFree: item.isFree,
+      freeWithMeal: item.freeWithMeal,
+      freeQtyLimit: item.freeQtyLimit,
+      extraRate: item.extraRate,
+      maxQtyPerOrder: item.maxQtyPerOrder,
     }));
 
     // Monthly food expense summary
@@ -86,35 +92,103 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Resident not found' }, { status: 404 });
     }
 
-    const { menuId, quantity } = await request.json();
+    const body = await request.json();
 
-    if (!menuId) {
-      return NextResponse.json({ error: 'Menu item is required' }, { status: 400 });
+    // Support both old single-item format and new multi-item format
+    const items: { menuId: string; quantity: number }[] = body.items
+      ? body.items
+      : [{ menuId: body.menuId, quantity: body.quantity || 1 }];
+
+    if (!items || items.length === 0) {
+      return NextResponse.json({ error: 'At least one item is required' }, { status: 400 });
     }
 
-    const menuItem = await prisma.foodMenu.findFirst({
-      where: { id: menuId, hostelId: resident.hostelId, isActive: true },
+    // Validate all menu items exist
+    const menuIds = items.map((i) => i.menuId);
+    const menuItemsFromDb = await prisma.foodMenu.findMany({
+      where: { id: { in: menuIds }, hostelId: resident.hostelId, isActive: true },
     });
 
-    if (!menuItem) {
-      return NextResponse.json({ error: 'Menu item not found or not available' }, { status: 404 });
+    const menuMap = new Map(menuItemsFromDb.map((m: any) => [m.id, m]));
+
+    for (const item of items) {
+      if (!menuMap.has(item.menuId)) {
+        return NextResponse.json(
+          { error: `Menu item ${item.menuId} not found or not available` },
+          { status: 404 }
+        );
+      }
+      const menuItem: any = menuMap.get(item.menuId);
+      const qty = item.quantity || 1;
+      if (qty > menuItem.maxQtyPerOrder) {
+        return NextResponse.json(
+          { error: `Max quantity for "${menuItem.itemName}" is ${menuItem.maxQtyPerOrder}` },
+          { status: 400 }
+        );
+      }
     }
 
-    const qty = quantity || 1;
-    const totalAmount = menuItem.rate * qty;
+    // Check if there's a "main" category item in this order
+    const hasMainItem = items.some((item) => {
+      const menuItem: any = menuMap.get(item.menuId);
+      return menuItem && menuItem.category === 'main';
+    });
 
-    const order = await prisma.foodOrder.create({
-      data: {
-        hostelId: resident.hostelId,
-        residentId: resident.id,
-        menuId,
-        quantity: qty,
-        totalAmount,
+    // Calculate price and create orders
+    const createdOrders = [];
+    let grandTotal = 0;
+
+    for (const item of items) {
+      const menuItem: any = menuMap.get(item.menuId);
+      const qty = item.quantity || 1;
+      let totalAmount = 0;
+
+      if (menuItem.isFree) {
+        // Always free
+        totalAmount = 0;
+      } else if (menuItem.freeWithMeal) {
+        if (hasMainItem) {
+          // Free up to freeQtyLimit when ordered with a main dish
+          if (menuItem.freeQtyLimit > 0) {
+            const freeQty = Math.min(qty, menuItem.freeQtyLimit);
+            const extraQty = Math.max(0, qty - freeQty);
+            totalAmount = extraQty * (menuItem.extraRate || menuItem.rate);
+          } else {
+            // freeQtyLimit = 0 means unlimited free with meal
+            totalAmount = 0;
+          }
+        } else {
+          // No main item in order, charge extraRate per unit
+          totalAmount = qty * (menuItem.extraRate || menuItem.rate);
+        }
+      } else {
+        // Regular item
+        totalAmount = menuItem.rate * qty;
+      }
+
+      const order = await prisma.foodOrder.create({
+        data: {
+          hostelId: resident.hostelId,
+          residentId: resident.id,
+          menuId: item.menuId,
+          quantity: qty,
+          totalAmount,
+        },
+        include: { menu: true },
+      });
+
+      createdOrders.push(order);
+      grandTotal += totalAmount;
+    }
+
+    return NextResponse.json(
+      {
+        orders: createdOrders,
+        grandTotal,
+        itemCount: createdOrders.length,
       },
-      include: { menu: true },
-    });
-
-    return NextResponse.json({ order }, { status: 201 });
+      { status: 201 }
+    );
   } catch (error) {
     console.error('Failed to create food order:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

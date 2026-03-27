@@ -154,6 +154,9 @@ model User {
   gatePassesApproved GatePass[]    @relation("GatePassApprover")
   auditLogs        AuditLog[]
   managerHostels   ManagerHostel[]
+  proofsReviewed   PaymentProof[]  @relation("ProofReviewer")
+  disputesResolved BillDispute[]   @relation("DisputeResolver")
+  messagesSent     Message[]       @relation("MessageSender")
 
   @@index([tenantId])
   @@index([role])
@@ -226,6 +229,7 @@ model Hostel {
   visitors          Visitor[]
   meterReadings     MeterReading[]
   managerHostels    ManagerHostel[]
+  conversations     Conversation[]
 
   @@index([tenantId])
 }
@@ -355,6 +359,9 @@ model Resident {
   gatePasses    GatePass[]
   visitors      Visitor[]
   roomTransfers RoomTransfer[]
+  paymentProofs PaymentProof[]
+  billDisputes  BillDispute[]
+  conversations Conversation[]
 
   @@index([hostelId])
   @@index([userId])
@@ -404,6 +411,12 @@ model FoodMenu {
   rate          Float
   availableDays String[] // ["monday","tuesday",...]
   isActive      Boolean  @default(true)
+  category      String   @default("main") // main, side, bread, drink, dessert
+  isFree        Boolean  @default(false) // always free item
+  freeWithMeal  Boolean  @default(false) // free when ordered with main dish
+  freeQtyLimit  Int      @default(0) // how many free (0 = unlimited if isFree)
+  extraRate     Float    @default(0) // rate after free limit exceeded
+  maxQtyPerOrder Int     @default(10) // max quantity per order
 
   hostelId String
   hostel   Hostel @relation(fields: [hostelId], references: [id], onDelete: Cascade)
@@ -449,10 +462,15 @@ model MonthlyBill {
   parkingFee   Float      @default(0)
   previousBalance Float   @default(0)
   advanceDeduction Float  @default(0)
+  discount     Float      @default(0)
+  discountReason String?
   totalAmount  Float
   paidAmount   Float      @default(0)
   balance      Float
   status       BillStatus @default(UNPAID)
+  dueDate      DateTime?
+  notes        String?
+  isDisputed   Boolean    @default(false)
 
   residentId String
   resident   Resident @relation(fields: [residentId], references: [id])
@@ -463,7 +481,9 @@ model MonthlyBill {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  payments Payment[]
+  payments      Payment[]
+  paymentProofs PaymentProof[]
+  disputes      BillDispute[]
 
   @@unique([residentId, month, year])
   @@index([hostelId])
@@ -737,4 +757,111 @@ model AuditLog {
   @@index([userId])
   @@index([entity])
   @@index([createdAt])
+}
+
+// ==================== PAYMENT PROOF ====================
+
+enum ProofStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model PaymentProof {
+  id              String      @id @default(cuid())
+  amount          Float
+  method          PaymentMethod
+  transactionId   String?
+  proofImageUrl   String?
+  status          ProofStatus @default(PENDING)
+  rejectionReason String?
+  submittedAt     DateTime    @default(now())
+  reviewedAt      DateTime?
+
+  residentId String
+  resident   Resident @relation(fields: [residentId], references: [id])
+
+  billId String
+  bill   MonthlyBill @relation(fields: [billId], references: [id])
+
+  reviewedById String?
+  reviewedBy   User? @relation("ProofReviewer", fields: [reviewedById], references: [id])
+
+  @@index([billId])
+  @@index([status])
+}
+
+// ==================== BILL DISPUTE ====================
+
+enum DisputeStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  REJECTED
+}
+
+model BillDispute {
+  id          String        @id @default(cuid())
+  category    String        // "food", "electricity", "parking", "room_rent", "other"
+  description String
+  itemDate    DateTime?     // specific order date if food dispute
+  itemId      String?       // specific food order ID if applicable
+
+  status      DisputeStatus @default(OPEN)
+  resolution  String?
+  adjustedAmount Float?
+
+  residentId String
+  resident   Resident @relation(fields: [residentId], references: [id])
+
+  billId String
+  bill   MonthlyBill @relation(fields: [billId], references: [id])
+
+  resolvedById String?
+  resolvedBy   User? @relation("DisputeResolver", fields: [resolvedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([billId])
+  @@index([status])
+}
+
+// ==================== IN-APP MESSAGING ====================
+
+model Conversation {
+  id      String @id @default(cuid())
+  subject String
+
+  residentId String
+  resident   Resident @relation(fields: [residentId], references: [id])
+
+  hostelId String
+  hostel   Hostel @relation(fields: [hostelId], references: [id])
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages Message[]
+
+  @@index([hostelId])
+  @@index([residentId])
+}
+
+model Message {
+  id      String @id @default(cuid())
+  content String
+  isRead  Boolean @default(false)
+
+  senderId String
+  sender   User @relation("MessageSender", fields: [senderId], references: [id])
+
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId])
+  @@index([senderId])
 }
