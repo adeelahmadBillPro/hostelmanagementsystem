@@ -360,6 +360,8 @@ model Resident {
   moveOutDate      DateTime?
   advancePaid      Float          @default(0)
   securityDeposit  Float          @default(0)
+  foodPlan         String         @default("FULL_MESS") // FULL_MESS, NO_MESS, CUSTOM
+  customFoodFee    Float          @default(0) // Only used when foodPlan = CUSTOM
   status           ResidentStatus @default(ACTIVE)
 
   userId   String  @unique

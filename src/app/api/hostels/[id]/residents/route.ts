@@ -156,6 +156,8 @@ export async function POST(
       bedId,
       advancePaid,
       securityDeposit,
+      foodPlan,
+      customFoodFee,
       moveInDate,
     } = body;
 
@@ -215,6 +217,8 @@ export async function POST(
           moveInDate: new Date(moveInDate),
           advancePaid: parseFloat(advancePaid) || 0,
           securityDeposit: parseFloat(securityDeposit) || 0,
+          foodPlan: foodPlan || "FULL_MESS",
+          customFoodFee: parseFloat(customFoodFee) || 0,
           status: "ACTIVE",
           gender: gender || null,
           institution: institution || null,

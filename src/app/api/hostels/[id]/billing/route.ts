@@ -165,6 +165,7 @@ export async function POST(
         room: { select: { rentPerBed: true } },
         bed: true,
         parking: true,
+        user: { select: { name: true } },
       },
     });
 
@@ -187,7 +188,7 @@ export async function POST(
     }
 
     // Calculate bills
-    const fixedFoodCharge = ((hostel as any).fixedFoodCharge || 0) * rentMultiplier;
+    const hostelFixedFoodCharge = ((hostel as any).fixedFoodCharge || 0) * rentMultiplier;
     const dueDays = (hostel as any).billingDueDays || 7;
     const dueDate = new Date();
     dueDate.setDate(dueDate.getDate() + dueDays);
@@ -248,7 +249,17 @@ export async function POST(
         advanceDeduction = resident.advancePaid;
       }
 
-      const totalAmount = roomRent + foodCharges + fixedFoodCharge + parkingFee +
+      // Food plan: FULL_MESS gets hostel's fixed charge, NO_MESS gets 0, CUSTOM gets their own fee
+      const foodPlan = (resident as any).foodPlan || "FULL_MESS";
+      let fixedFoodFee = 0;
+      if (foodPlan === "FULL_MESS") {
+        fixedFoodFee = hostelFixedFoodCharge;
+      } else if (foodPlan === "CUSTOM") {
+        fixedFoodFee = ((resident as any).customFoodFee || 0) * rentMultiplier;
+      }
+      // NO_MESS = 0 fixed fee, only app orders charged
+
+      const totalAmount = roomRent + foodCharges + fixedFoodFee + parkingFee +
         meterCharges + previousBalance - advanceDeduction;
 
       billsToCreate.push({
@@ -262,7 +273,7 @@ export async function POST(
         billingCycle,
         roomRent,
         foodCharges,
-        fixedFoodFee: fixedFoodCharge,
+        fixedFoodFee,
         otherCharges: 0,
         meterCharges,
         parkingFee,

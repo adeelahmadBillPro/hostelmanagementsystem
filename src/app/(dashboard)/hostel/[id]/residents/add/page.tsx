@@ -89,6 +89,8 @@ export default function AddResidentPage() {
   const [rentPerBed, setRentPerBed] = useState(0);
   const [advancePaid, setAdvancePaid] = useState("");
   const [securityDeposit, setSecurityDeposit] = useState("");
+  const [foodPlan, setFoodPlan] = useState("FULL_MESS");
+  const [customFoodFee, setCustomFoodFee] = useState("");
   const [moveInDate, setMoveInDate] = useState(
     new Date().toISOString().split("T")[0]
   );
@@ -266,6 +268,8 @@ export default function AddResidentPage() {
           bedId: selectedBed,
           advancePaid: parseFloat(advancePaid) || 0,
           securityDeposit: parseFloat(securityDeposit) || 0,
+          foodPlan,
+          customFoodFee: parseFloat(customFoodFee) || 0,
           moveInDate,
         }),
       });
@@ -790,6 +794,40 @@ export default function AddResidentPage() {
                 min="0"
               />
             </div>
+          </div>
+
+          {/* Food Plan */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label className="label">Food Plan</label>
+              <select
+                value={foodPlan}
+                onChange={(e) => setFoodPlan(e.target.value)}
+                className="select"
+              >
+                <option value="FULL_MESS">Full Mess (Fixed monthly fee)</option>
+                <option value="NO_MESS">No Mess (Only app orders)</option>
+                <option value="CUSTOM">Custom Fee</option>
+              </select>
+              <p className="text-[11px] text-text-muted mt-1">
+                {foodPlan === "FULL_MESS" && "Charged hostel's fixed food fee each billing cycle"}
+                {foodPlan === "NO_MESS" && "No fixed food charge, only charged for app food orders"}
+                {foodPlan === "CUSTOM" && "Set a custom food fee for this resident"}
+              </p>
+            </div>
+            {foodPlan === "CUSTOM" && (
+              <div>
+                <label className="label">Custom Food Fee (PKR/month)</label>
+                <input
+                  type="number"
+                  value={customFoodFee}
+                  onChange={(e) => setCustomFoodFee(e.target.value)}
+                  className="input"
+                  placeholder="e.g., 3000"
+                  min="0"
+                />
+              </div>
+            )}
           </div>
 
           {/* Summary */}
