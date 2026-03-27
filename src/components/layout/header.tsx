@@ -56,6 +56,21 @@ export default function Header({ title, onMenuClick, onToggleCollapse, sidebarCo
       const res = await fetch("/api/notifications");
       if (res.ok) {
         const data = await res.json();
+        // Filter out notifications if user dismissed them recently (within 1 hour)
+        const dismissedAt = localStorage.getItem("notif-dismissed-at");
+        if (dismissedAt) {
+          const dismissedTime = new Date(dismissedAt).getTime();
+          const oneHourAgo = Date.now() - 60 * 60 * 1000;
+          if (dismissedTime > oneHourAgo) {
+            // Still within dismiss window - show empty
+            setNotifications([]);
+            setTotalUnread(0);
+            return;
+          } else {
+            // Dismiss expired - clear it
+            localStorage.removeItem("notif-dismissed-at");
+          }
+        }
         setNotifications(data.notifications || []);
         setTotalUnread(data.totalUnread || 0);
       }
@@ -115,6 +130,8 @@ export default function Header({ title, onMenuClick, onToggleCollapse, sidebarCo
   };
 
   const handleMarkAllRead = () => {
+    // Save dismiss timestamp so notifications don't reappear after refresh
+    localStorage.setItem("notif-dismissed-at", new Date().toISOString());
     setNotifications([]);
     setTotalUnread(0);
     setShowNotifications(false);
