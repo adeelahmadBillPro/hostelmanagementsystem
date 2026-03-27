@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HostelHub - System Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;color:#1E293B;line-height:1.7;background:#fff}
+  .page{max-width:780px;margin:0 auto;padding:50px 40px}
+
+  /* Cover */
+  .cover{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:linear-gradient(135deg,#0B1929,#163352);color:white;padding:80px 40px;page-break-after:always}
+  .logo{width:70px;height:70px;background:linear-gradient(135deg,#10B981,#14B8A6);border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;margin-bottom:30px}
+  .cover h1{font-size:38px;font-weight:800;margin-bottom:10px}
+  .cover h2{font-size:18px;font-weight:400;color:#94A3B8;margin-bottom:50px;max-width:500px}
+  .cover-badges{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:60px}
+  .cover-badges span{padding:5px 16px;border-radius:20px;font-size:12px;font-weight:600}
+  .b1{background:rgba(79,70,229,0.2);color:#A5B4FC}
+  .b2{background:rgba(16,185,129,0.2);color:#6EE7B7}
+  .b3{background:rgba(245,158,11,0.2);color:#FCD34D}
+  .b4{background:rgba(239,68,68,0.2);color:#FCA5A5}
+  .cover-footer{font-size:13px;color:#64748B}
+  .cover-footer strong{color:#10B981}
+
+  /* Content */
+  h1{font-size:26px;font-weight:800;color:#0B1929;margin:50px 0 20px;padding-bottom:10px;border-bottom:3px solid #10B981}
+  h2{font-size:20px;font-weight:700;color:#1E3A5F;margin:30px 0 12px}
+  h3{font-size:16px;font-weight:600;color:#334155;margin:20px 0 8px}
+  p{margin-bottom:12px;font-size:14px;color:#475569}
+  ul{margin:8px 0 16px 24px;font-size:14px;color:#475569}
+  li{margin-bottom:6px}
+
+  /* Cards */
+  .role-card{border:1px solid #E2E8F0;border-radius:12px;padding:20px;margin-bottom:14px;background:#FAFBFC}
+  .role-card h3{margin:0 0 6px;font-size:16px}
+  .role-tag{display:inline-block;padding:3px 12px;border-radius:16px;font-size:11px;font-weight:600;margin-bottom:8px}
+  .tag-blue{background:#EEF2FF;color:#4F46E5}
+  .tag-green{background:#ECFDF5;color:#059669}
+  .tag-amber{background:#FEF3C7;color:#D97706}
+  .tag-red{background:#FEF2F2;color:#DC2626}
+
+  /* Flow steps */
+  .step{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start}
+  .step-n{width:30px;height:30px;background:#10B981;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0}
+  .step-c{flex:1}
+  .step-c strong{color:#0B1929}
+
+  /* Table */
+  table{width:100%;border-collapse:collapse;margin:15px 0;font-size:13px}
+  th{background:#0B1929;color:white;padding:10px 14px;text-align:left;font-weight:600}
+  td{padding:10px 14px;border-bottom:1px solid #E2E8F0}
+  tr:nth-child(even){background:#F8FAFC}
+
+  /* Feature grid */
+  .feat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:15px 0}
+  .feat-item{display:flex;align-items:center;gap:8px;font-size:13px;color:#475569}
+  .feat-item::before{content:"✓";color:#10B981;font-weight:700}
+
+  /* Highlight */
+  .highlight{background:linear-gradient(135deg,#ECFDF5,#F0F9FF);border-left:4px solid #10B981;padding:14px 18px;border-radius:0 8px 8px 0;margin:15px 0;font-size:14px}
+
+  /* Module card */
+  .mod-card{border:1px solid #E2E8F0;border-radius:10px;padding:16px;margin-bottom:10px}
+  .mod-card h3{margin:0 0 4px;font-size:15px;color:#0B1929}
+  .mod-card p{margin:0;font-size:13px;color:#64748B}
+
+  /* Print */
+  @media print{
+    body{font-size:11px}
+    .page{padding:20px}
+    .cover{min-height:auto;padding:60px 40px}
+    h1{page-break-before:always;margin-top:20px}
+    h1:first-of-type{page-break-before:auto}
+    .no-break{page-break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="logo">H</div>
+  <h1>HostelHub</h1>
+  <h2>Complete Hostel Management Platform - User Guide & System Documentation</h2>
+  <div class="cover-badges">
+    <span class="b1">Super Admin</span>
+    <span class="b2">Hostel Owner</span>
+    <span class="b3">Manager</span>
+    <span class="b4">Resident</span>
+  </div>
+  <div class="cover-footer">
+    <p>Version 1.0 | <strong>Multi-Tenant SaaS Platform</strong></p>
+    <p>Supports Government, University & Private Hostels</p>
+    <p style="margin-top:20px">PKR Currency | CNIC Validation | JazzCash & EasyPaisa</p>
+  </div>
+</div>
+
+<div class="page">
+
+<!-- INTRO -->
+<h1>Welcome to HostelHub</h1>
+<p>HostelHub is a complete hostel management platform that helps hostel owners manage rooms, residents, billing, food, staff, and day-to-day operations from a single dashboard.</p>
+<p>Whether you run a small private hostel or a chain of university hostels, HostelHub scales to meet your needs with multi-hostel support, role-based access, and comprehensive reporting.</p>
+
+<div class="highlight">
+  <strong>What HostelHub Manages:</strong> Rooms & Beds, Residents, Monthly Billing, Food Menu & Orders, Staff & Salaries, Expenses, Visitors, Complaints, Gate Passes, Messaging, and more.
+</div>
+
+<!-- ROLES -->
+<h1>User Roles & Access</h1>
+<p>HostelHub has 4 main user roles, each with specific permissions:</p>
+
+<div class="role-card no-break">
+  <span class="role-tag tag-blue">Super Admin</span>
+  <h3>Platform Administrator</h3>
+  <p>Manages the entire platform. Controls which hostel owners can use the system, sets subscription plans, and views platform-wide analytics and revenue.</p>
+</div>
+
+<div class="role-card no-break">
+  <span class="role-tag tag-green">Hostel Owner (Tenant Admin)</span>
+  <h3>Hostel Owner / Organization</h3>
+  <p>Owns one or more hostels. Has full access to manage buildings, rooms, residents, billing, food, staff, expenses, and reports. Can hire managers and assign them to specific hostels.</p>
+</div>
+
+<div class="role-card no-break">
+  <span class="role-tag tag-amber">Hostel Manager</span>
+  <h3>Day-to-Day Operations</h3>
+  <p>Assigned to specific hostel(s) by the owner. Manages residents, records payments, handles food menu, responds to complaints and messages. Cannot access other hostels.</p>
+</div>
+
+<div class="role-card no-break">
+  <span class="role-tag tag-red">Resident</span>
+  <h3>Hostel Resident (Boy/Girl)</h3>
+  <p>Has a personal portal to view bills, order food, send messages to management, file complaints, apply for gate passes, and see hostel facilities.</p>
+</div>
+
+<!-- FLOW: OWNER -->
+<h1>Getting Started (Hostel Owner)</h1>
+
+<div class="step"><div class="step-n">1</div><div class="step-c"><strong>Create Account</strong><br>Register on the platform with your name, email, and phone number.</div></div>
+<div class="step"><div class="step-n">2</div><div class="step-c"><strong>Add Your Hostel</strong><br>Enter hostel name, type (Private/University/Government), address, and contact details.</div></div>
+<div class="step"><div class="step-n">3</div><div class="step-c"><strong>Set Up Infrastructure</strong><br>Add buildings (Block A, Block B), floors per building, then rooms with bed count and rent per bed. Beds are created automatically.</div></div>
+<div class="step"><div class="step-n">4</div><div class="step-c"><strong>Add Residents</strong><br>Register each resident with personal info, CNIC, and assign them to a specific room and bed. Set advance and security deposit amounts.</div></div>
+<div class="step"><div class="step-n">5</div><div class="step-c"><strong>Set Up Food Menu</strong><br>Add breakfast, lunch, dinner items with prices. Mark which items are free (e.g., roti with meal). Set available days.</div></div>
+<div class="step"><div class="step-n">6</div><div class="step-c"><strong>Generate Monthly Bills</strong><br>At month end, click "Generate Bills" to automatically create bills for all residents including rent, food charges, parking, and electricity.</div></div>
+<div class="step"><div class="step-n">7</div><div class="step-c"><strong>Collect Payments</strong><br>Record payments when residents pay via Cash, Bank, JazzCash, or EasyPaisa. Or let residents upload payment proof from their portal.</div></div>
+
+<!-- ROOM MANAGEMENT -->
+<h1>Room & Bed Management</h1>
+<p>HostelHub organizes your hostel in a clear hierarchy:</p>
+
+<div class="highlight">
+  <strong>Hostel → Buildings → Floors → Rooms → Beds</strong><br>
+  Example: Al-Noor Hostel → Block A → Floor 2 → Room 201 → Bed 201-B1
+</div>
+
+<h2>Visual Room Grid</h2>
+<p>The room grid gives you a bird's-eye view of all rooms, color-coded by status:</p>
+<table>
+  <tr><th>Color</th><th>Status</th><th>Meaning</th></tr>
+  <tr><td style="color:#10B981">🟢 Green</td><td>Empty</td><td>All beds are vacant</td></tr>
+  <tr><td style="color:#F59E0B">🟡 Amber</td><td>Partially Occupied</td><td>Some beds occupied, some vacant</td></tr>
+  <tr><td style="color:#EF4444">🔴 Red</td><td>Fully Occupied</td><td>All beds are taken</td></tr>
+  <tr><td style="color:#4F46E5">🔵 Blue</td><td>Reserved</td><td>Beds reserved but not yet occupied</td></tr>
+</table>
+<p>Each room card shows bed icons - red for occupied, gray for vacant. Click any room to see detailed bed assignments.</p>
+
+<h2>Room Types</h2>
+<table>
+  <tr><th>Type</th><th>Beds</th><th>Best For</th></tr>
+  <tr><td>Single</td><td>1 bed</td><td>Private rooms, premium pricing</td></tr>
+  <tr><td>Double</td><td>2 beds</td><td>Standard shared rooms</td></tr>
+  <tr><td>Triple</td><td>3 beds</td><td>Economy shared rooms</td></tr>
+  <tr><td>Quad</td><td>4 beds</td><td>Budget dormitory style</td></tr>
+</table>
+
+<!-- BILLING -->
+<h1>Billing & Payments</h1>
+
+<h2>How Monthly Bills Work</h2>
+<p>When you generate bills, the system automatically calculates each resident's charges:</p>
+
+<table>
+  <tr><th>Charge Type</th><th>How It's Calculated</th></tr>
+  <tr><td>Room Rent</td><td>Based on the bed's monthly rate (set when room was created)</td></tr>
+  <tr><td>Food Charges</td><td>Sum of all food orders placed during the month</td></tr>
+  <tr><td>Parking Fee</td><td>Monthly fee if resident has registered vehicle</td></tr>
+  <tr><td>Electricity</td><td>From meter reading (units × rate per unit)</td></tr>
+  <tr><td>Previous Balance</td><td>Unpaid amount from last month (auto carried forward)</td></tr>
+  <tr><td>Advance Deduction</td><td>Amount deducted from advance paid at move-in</td></tr>
+  <tr><td>Discount</td><td>Manager can apply discount with reason</td></tr>
+</table>
+
+<h2>Payment Methods</h2>
+<table>
+  <tr><th>Method</th><th>Process</th></tr>
+  <tr><td>Cash</td><td>Manager records payment directly</td></tr>
+  <tr><td>Bank Transfer</td><td>Resident transfers to hostel account, manager records with reference #</td></tr>
+  <tr><td>JazzCash</td><td>Mobile payment - resident uploads screenshot as proof</td></tr>
+  <tr><td>EasyPaisa</td><td>Mobile payment - resident uploads screenshot as proof</td></tr>
+</table>
+
+<h2>Payment Proof System</h2>
+<div class="step"><div class="step-n">1</div><div class="step-c"><strong>Resident pays</strong> via JazzCash/Bank and takes a screenshot</div></div>
+<div class="step"><div class="step-n">2</div><div class="step-c"><strong>Resident uploads</strong> the screenshot in "Pay Bill" portal page</div></div>
+<div class="step"><div class="step-n">3</div><div class="step-c"><strong>Manager reviews</strong> the proof in "Payment Proofs" page</div></div>
+<div class="step"><div class="step-n">4</div><div class="step-c"><strong>Manager approves</strong> → bill automatically marked as paid</div></div>
+
+<h2>Partial Payments</h2>
+<p>Residents can pay in installments. Each payment reduces the balance. The remaining amount carries forward to the next month.</p>
+
+<h2>Bill Disputes</h2>
+<p>If a resident believes a charge is incorrect, they can file a dispute from their portal. The manager reviews and adjusts the bill if needed.</p>
+
+<!-- FOOD -->
+<h1>Food Menu & Ordering</h1>
+
+<h2>Manager: Setting Up the Menu</h2>
+<ul>
+  <li>Add items by meal type: Breakfast, Lunch, Dinner, Snack</li>
+  <li>Set price per item in PKR</li>
+  <li>Mark items as <strong>FREE</strong> (e.g., roti with meal)</li>
+  <li>Set free quantity limits (e.g., 3 roti free, 4th onwards PKR 10)</li>
+  <li>Choose available days (Mon-Sun)</li>
+  <li>Set maximum order quantity per item</li>
+</ul>
+
+<h2>Resident: Ordering Food</h2>
+<ul>
+  <li>Open "Food Menu" in portal → see today's available items</li>
+  <li>Use +/- buttons to select quantity</li>
+  <li>Total calculates <strong>live</strong> as you change quantities</li>
+  <li>Free items show "FREE" badge (e.g., roti with biryani)</li>
+  <li>Review order summary before confirming</li>
+  <li>Food charges automatically added to monthly bill</li>
+</ul>
+
+<h2>Ordering Time Windows</h2>
+<table>
+  <tr><th>Meal</th><th>Order Window</th></tr>
+  <tr><td>Breakfast</td><td>6:00 AM - 9:00 AM</td></tr>
+  <tr><td>Lunch</td><td>11:00 AM - 2:00 PM</td></tr>
+  <tr><td>Dinner</td><td>6:00 PM - 9:00 PM</td></tr>
+  <tr><td>Snack</td><td>10:00 AM - 10:00 PM</td></tr>
+</table>
+
+<!-- STAFF -->
+<h1>Staff Management</h1>
+<p>Track all hostel staff with their roles, shifts, and salaries:</p>
+<table>
+  <tr><th>Staff Type</th><th>Shift Options</th></tr>
+  <tr><td>Security / Watchman</td><td>Day / Night / Full</td></tr>
+  <tr><td>Cooking Staff</td><td>Day / Night / Full</td></tr>
+  <tr><td>Laundry</td><td>Day / Full</td></tr>
+  <tr><td>Cleaning</td><td>Day / Full</td></tr>
+  <tr><td>Maintenance</td><td>Day / Full</td></tr>
+  <tr><td>Admin Staff</td><td>Day / Full</td></tr>
+</table>
+<p><strong>Salary Sheet:</strong> Generate monthly salary sheet, track bonus/deductions, mark paid individually or all at once.</p>
+
+<!-- RESIDENT PORTAL -->
+<h1>Resident Portal</h1>
+<p>Every resident gets a personal portal with these features:</p>
+
+<div class="mod-card no-break">
+  <h3>Dashboard</h3>
+  <p>See room/bed info, current month's bill summary, recent notices, and quick action links.</p>
+</div>
+<div class="mod-card no-break">
+  <h3>Hostel Info</h3>
+  <p>View hostel profile, facilities available (Wi-Fi, AC, parking, etc.), and contact details.</p>
+</div>
+<div class="mod-card no-break">
+  <h3>My Bill</h3>
+  <p>Full itemized breakdown of monthly bill. See every food order, room rent, parking, electricity charges. File disputes if something looks wrong.</p>
+</div>
+<div class="mod-card no-break">
+  <h3>Pay Bill</h3>
+  <p>Upload payment proof (screenshot of bank/JazzCash/EasyPaisa transaction). Track approval status.</p>
+</div>
+<div class="mod-card no-break">
+  <h3>Food Menu</h3>
+  <p>Order from today's menu with live price calculator. See free items, quantity controls, and order summary.</p>
+</div>
+<div class="mod-card no-break">
+  <h3>Messages</h3>
+  <p>Chat directly with hostel management. Create topic-based conversations. Send text, images, and documents.</p>
+</div>
+<div class="mod-card no-break">
+  <h3>Complaints</h3>
+  <p>File complaints (AC broken, water issue, etc.) and track resolution status.</p>
+</div>
+<div class="mod-card no-break">
+  <h3>Gate Pass</h3>
+  <p>Apply for leave with dates and reason. Track approval from management.</p>
+</div>
+<div class="mod-card no-break">
+  <h3>Notices</h3>
+  <p>Read hostel announcements and rules posted by management.</p>
+</div>
+<div class="mod-card no-break">
+  <h3>Profile Settings</h3>
+  <p>Upload photo (optional), update phone, emergency contact, blood group. Change password.</p>
+</div>
+
+<!-- OTHER FEATURES -->
+<h1>Additional Features</h1>
+
+<h2>Hostel Amenities Profile</h2>
+<p>Manager can set which facilities are available in the hostel. 60+ pre-loaded options across 6 categories: Hostel General, Room, Washroom, Dining, Security, and Transport/Nearby. Just toggle on/off. Residents see the available facilities.</p>
+
+<h2>Visitor Management</h2>
+<p>Record every visitor with name, CNIC, phone, purpose, which resident they're visiting, and time in/out.</p>
+
+<h2>Expense Tracking</h2>
+<p>Track all hostel expenses by category (Gas, Electricity, Internet, Water, Maintenance, Staff Salary, etc.). View monthly P&L summary with charts showing income vs expenses.</p>
+
+<h2>Reports & Analytics</h2>
+<p>Interactive charts and reports: Occupancy rates, revenue trends, expense breakdowns, resident lists, and payment summaries. All exportable to Excel.</p>
+
+<h2>Notifications</h2>
+<p>Bell icon in the header shows unread count. Click to see: unread messages, unpaid bills, pending payment proofs, new complaints, and gate pass requests.</p>
+
+<h2>Messaging</h2>
+<p>Built-in chat system between residents and management. Topic-based conversations with file attachment support (images, PDFs, videos).</p>
+
+<h2>Bulk Operations</h2>
+<ul>
+  <li>Generate bills for all residents at once</li>
+  <li>Mark multiple payments as paid</li>
+  <li>Bulk checkout at end of semester</li>
+  <li>Import residents from Excel spreadsheet</li>
+  <li>Import rooms from Excel</li>
+  <li>Export any report to Excel</li>
+  <li>Enter meter readings for all rooms on one page</li>
+</ul>
+
+<h2>Dark Mode</h2>
+<p>Full dark mode support across all pages. Toggle with the moon/sun icon in the header.</p>
+
+<!-- HOSTEL TYPES -->
+<h1>Hostel Types Supported</h1>
+<table>
+  <tr><th>Type</th><th>Pricing</th><th>Features</th></tr>
+  <tr><td>Private Hostel</td><td>Custom rates per room/bed</td><td>All features, flexible pricing</td></tr>
+  <tr><td>University Hostel</td><td>University-set rates</td><td>Semester billing, student ID</td></tr>
+  <tr><td>Government Hostel</td><td>Subsidized rates</td><td>Standard tracking, minimal charges</td></tr>
+</table>
+
+<!-- FOOTER -->
+<div style="text-align:center;margin-top:60px;padding:30px;border-top:2px solid #E2E8F0;color:#94A3B8;font-size:12px">
+  <p><strong>HostelHub</strong> - Complete Hostel Management Platform</p>
+  <p>For support, contact your hostel management team.</p>
+  <p style="margin-top:10px">&copy; 2026 HostelHub. All rights reserved.</p>
+</div>
+
+</div>
+</body>
+</html>
