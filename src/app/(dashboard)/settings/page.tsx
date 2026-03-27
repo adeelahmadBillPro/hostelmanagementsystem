@@ -234,12 +234,13 @@ export default function SettingsPage() {
             <div className="space-y-4">
               {/* Profile Photo */}
               <div>
-                <label className="label">Profile Photo</label>
+                <label className="label">Profile Photo (optional)</label>
                 <FileUpload
                   onUpload={(url) => setImage(url)}
                   accept="image/*"
                   label="Upload profile photo"
                   currentUrl={image}
+                  variant="avatar"
                 />
               </div>
 
