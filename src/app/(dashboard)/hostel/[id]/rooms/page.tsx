@@ -636,142 +636,160 @@ export default function RoomsPage() {
         </div>
       )}
 
-      {/* Add Room Modal */}
+      {/* Add Rooms Modal - Quick Add Multiple */}
       <Modal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
-        title="Add Room"
+        title="Quick Add Rooms"
+        maxWidth="max-w-[600px]"
       >
         <div className="space-y-4">
+          {/* Building + Floor */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label">Building</label>
+              <label className="label">Building *</label>
               <select
                 className="select"
                 value={formData.buildingId}
                 onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    buildingId: e.target.value,
-                    floorId: "",
-                  })
+                  setFormData({ ...formData, buildingId: e.target.value, floorId: "" })
                 }
               >
                 <option value="">Select Building</option>
                 {buildings.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name}
-                  </option>
+                  <option key={b.id} value={b.id}>{b.name}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="label">Floor</label>
+              <label className="label">Floor *</label>
               <select
                 className="select"
                 value={formData.floorId}
-                onChange={(e) =>
-                  setFormData({ ...formData, floorId: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, floorId: e.target.value })}
                 disabled={!formData.buildingId}
               >
                 <option value="">Select Floor</option>
                 {formFloors.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.name} (Floor {f.floorNumber})
-                  </option>
+                  <option key={f.id} value={f.id}>{f.name} (Floor {f.floorNumber})</option>
                 ))}
               </select>
             </div>
           </div>
 
+          {/* Room range */}
+          <div className="p-4 bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/20">
+            <p className="text-sm font-semibold text-primary mb-3">How many rooms to create?</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="label">Starting Room # *</label>
+                <input
+                  type="number"
+                  className="input"
+                  placeholder="e.g., 101"
+                  min="1"
+                  value={formData.roomNumber}
+                  onChange={(e) => setFormData({ ...formData, roomNumber: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="label">Number of Rooms *</label>
+                <input
+                  type="number"
+                  className="input"
+                  placeholder="e.g., 10"
+                  min="1"
+                  max="50"
+                  value={formData.totalBeds === "1" ? "1" : (formData as any).roomCount || "1"}
+                  onChange={(e) => setFormData({ ...formData, roomCount: e.target.value } as any)}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Type + Rent */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label">Room Number</label>
-              <input
-                type="text"
-                className="input"
-                placeholder="e.g., 101"
-                value={formData.roomNumber}
-                onChange={(e) =>
-                  setFormData({ ...formData, roomNumber: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <label className="label">Room Type</label>
+              <label className="label">Room Type *</label>
               <select
                 className="select"
                 value={formData.type}
                 onChange={(e) => handleTypeChange(e.target.value)}
               >
-                <option value="SINGLE">Single</option>
-                <option value="DOUBLE">Double</option>
-                <option value="TRIPLE">Triple</option>
-                <option value="QUAD">Quad</option>
+                <option value="SINGLE">Single (1 bed)</option>
+                <option value="DOUBLE">Double (2 beds)</option>
+                <option value="TRIPLE">Triple (3 beds)</option>
+                <option value="QUAD">Quad (4 beds)</option>
               </select>
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="label">Total Beds</label>
-              <input
-                type="number"
-                className="input"
-                min="1"
-                max="10"
-                value={formData.totalBeds}
-                onChange={(e) =>
-                  setFormData({ ...formData, totalBeds: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <label className="label">Rent per Bed (PKR)</label>
+              <label className="label">Rent per Bed (PKR) *</label>
               <input
                 type="number"
                 className="input"
                 placeholder="e.g., 8000"
                 min="0"
                 value={formData.rentPerBed}
-                onChange={(e) =>
-                  setFormData({ ...formData, rentPerBed: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <label className="label">Rent per Room (PKR)</label>
-              <input
-                type="number"
-                className="input"
-                placeholder="Optional"
-                min="0"
-                value={formData.rentPerRoom}
-                onChange={(e) =>
-                  setFormData({ ...formData, rentPerRoom: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, rentPerBed: e.target.value })}
               />
             </div>
           </div>
 
+          {/* Preview */}
+          {formData.roomNumber && formData.rentPerBed && (
+            <div className="p-3 bg-success/5 dark:bg-success/10 rounded-xl border border-success/20">
+              <p className="text-sm font-semibold text-success mb-1">Preview</p>
+              <p className="text-xs text-text-secondary dark:text-slate-400">
+                Room {formData.roomNumber} to {Number(formData.roomNumber) + Number((formData as any).roomCount || 1) - 1}
+                {" • "}{formData.type} ({formData.type === "SINGLE" ? 1 : formData.type === "DOUBLE" ? 2 : formData.type === "TRIPLE" ? 3 : 4} beds each)
+                {" • "}PKR {Number(formData.rentPerBed).toLocaleString()}/bed
+              </p>
+              <p className="text-xs font-bold text-success mt-1">
+                Total: {(formData as any).roomCount || 1} rooms, {(Number((formData as any).roomCount || 1)) * (formData.type === "SINGLE" ? 1 : formData.type === "DOUBLE" ? 2 : formData.type === "TRIPLE" ? 3 : 4)} beds
+              </p>
+            </div>
+          )}
+
           <div className="flex justify-end gap-3 pt-2">
-            <button
-              className="btn-secondary"
-              onClick={() => setShowAddModal(false)}
-              disabled={saving}
-            >
+            <button className="btn-secondary" onClick={() => setShowAddModal(false)} disabled={saving}>
               Cancel
             </button>
             <button
               className="btn-primary"
-              onClick={handleAdd}
-              disabled={
-                saving ||
-                !formData.floorId ||
-                !formData.roomNumber ||
-                !formData.rentPerBed
-              }
+              onClick={async () => {
+                const roomCount = Number((formData as any).roomCount || 1);
+                if (roomCount > 1) {
+                  // Bulk create
+                  setSaving(true);
+                  try {
+                    const res = await fetch(`/api/hostels/${hostelId}/rooms/bulk`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        floorId: formData.floorId,
+                        startNumber: Number(formData.roomNumber),
+                        count: roomCount,
+                        type: formData.type,
+                        rentPerBed: Number(formData.rentPerBed),
+                        rentPerRoom: formData.rentPerRoom ? Number(formData.rentPerRoom) : null,
+                      }),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) {
+                      alert(data.error || "Failed to create rooms");
+                    } else {
+                      setShowAddModal(false);
+                      fetchData();
+                      alert(data.message || `Created ${data.created} rooms`);
+                    }
+                  } catch { alert("Something went wrong"); }
+                  finally { setSaving(false); }
+                } else {
+                  // Single create (existing logic)
+                  handleAdd();
+                }
+              }}
+              disabled={saving || !formData.floorId || !formData.roomNumber || !formData.rentPerBed}
             >
               {saving ? (
                 <span className="flex items-center gap-2">
@@ -779,7 +797,7 @@ export default function RoomsPage() {
                   Creating...
                 </span>
               ) : (
-                "Create Room"
+                `Create ${Number((formData as any).roomCount || 1)} Room${Number((formData as any).roomCount || 1) > 1 ? "s" : ""}`
               )}
             </button>
           </div>
