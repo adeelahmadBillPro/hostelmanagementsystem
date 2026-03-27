@@ -44,7 +44,10 @@ export async function POST(
     const hostelId = params.id;
     const body = await request.json();
 
-    const parsed = staffSchema.safeParse(body);
+    const parsed = staffSchema.safeParse({
+      ...body,
+      salary: Number(body.salary) || 0,
+    });
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }

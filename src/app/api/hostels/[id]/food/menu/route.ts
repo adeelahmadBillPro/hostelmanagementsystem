@@ -98,7 +98,10 @@ export async function POST(
     }
 
     const body = await request.json();
-    const parsed = foodMenuSchema.safeParse(body);
+    const parsed = foodMenuSchema.safeParse({
+      ...body,
+      rate: Number(body.rate) || 0,
+    });
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }

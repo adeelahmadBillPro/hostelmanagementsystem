@@ -162,7 +162,13 @@ export async function POST(
     if (!hostel) return NextResponse.json({ error: "The requested item was not found" }, { status: 404 });
 
     const body = await request.json();
-    const parsed = roomSchema.safeParse(body);
+    // Convert string numbers from form to actual numbers
+    const parsed = roomSchema.safeParse({
+      ...body,
+      totalBeds: Number(body.totalBeds) || 0,
+      rentPerBed: Number(body.rentPerBed) || 0,
+      rentPerRoom: body.rentPerRoom ? Number(body.rentPerRoom) : undefined,
+    });
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }

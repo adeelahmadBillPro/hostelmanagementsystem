@@ -76,7 +76,10 @@ export async function POST(
     }
 
     const body = await request.json();
-    const parsed = expenseSchema.safeParse(body);
+    const parsed = expenseSchema.safeParse({
+      ...body,
+      amount: Number(body.amount) || 0,
+    });
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }

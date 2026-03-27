@@ -30,7 +30,12 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const parsed = subscriptionPlanSchema.safeParse(body);
+  const parsed = subscriptionPlanSchema.safeParse({
+    ...body,
+    price: Number(body.price) || 0,
+    maxHostels: Number(body.maxHostels) || 1,
+    maxResidents: Number(body.maxResidents) || 1,
+  });
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
