@@ -83,7 +83,7 @@ export default function Header({ title, onMenuClick, onToggleCollapse, sidebarCo
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30000);
+    const interval = setInterval(fetchNotifications, 10000); // 10 seconds
     return () => clearInterval(interval);
   }, [fetchNotifications]);
 

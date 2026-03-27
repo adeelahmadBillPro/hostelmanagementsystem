@@ -32,6 +32,7 @@ import {
   Upload,
   Activity,
   CalendarDays,
+  ArrowLeftRight,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -162,6 +163,11 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
               label: "Add Resident",
               href: `/hostel/${hostelId}/residents/add`,
               icon: <UserPlus size={20} />,
+            },
+            {
+              label: "Room Transfer",
+              href: `/hostel/${hostelId}/room-transfer`,
+              icon: <ArrowLeftRight size={20} />,
             },
           ],
         },
@@ -433,6 +439,7 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
     "Residents": "#34D399",
     "All Residents": "#34D399",
     "Add Resident": "#34D399",
+    "Room Transfer": "#F472B6",
     "Food Menu": "#FBBF24",
     "Menu Items": "#FBBF24",
     "Orders": "#FBBF24",

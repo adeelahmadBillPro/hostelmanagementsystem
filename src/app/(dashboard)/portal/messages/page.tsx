@@ -103,6 +103,9 @@ export default function PortalMessagesPage() {
 
   useEffect(() => {
     fetchConversations();
+    // Poll every 5 seconds for new messages
+    const interval = setInterval(fetchConversations, 5000);
+    return () => clearInterval(interval);
   }, [fetchConversations]);
 
   useEffect(() => {

@@ -121,6 +121,8 @@ export default function HostelMessagesPage() {
 
   useEffect(() => {
     fetchConversations();
+    const interval = setInterval(fetchConversations, 5000);
+    return () => clearInterval(interval);
   }, [fetchConversations]);
 
   useEffect(() => {
