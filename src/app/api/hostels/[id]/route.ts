@@ -104,6 +104,15 @@ export async function PATCH(
     if (address !== undefined) updateData.address = address;
     if (city !== undefined) updateData.city = city;
     if (contact !== undefined) updateData.contact = contact;
+    // Billing settings
+    if (body.billingCycle !== undefined) {
+      if (["WEEKLY", "BIWEEKLY", "MONTHLY"].includes(body.billingCycle)) {
+        updateData.billingCycle = body.billingCycle;
+      }
+    }
+    if (body.fixedFoodCharge !== undefined) updateData.fixedFoodCharge = parseFloat(body.fixedFoodCharge) || 0;
+    if (body.billingDueDays !== undefined) updateData.billingDueDays = parseInt(body.billingDueDays) || 7;
+    if (body.lateFeePercent !== undefined) updateData.lateFeePercent = parseFloat(body.lateFeePercent) || 0;
     if (status !== undefined) {
       if (!["ACTIVE", "INACTIVE"].includes(status)) {
         return NextResponse.json(

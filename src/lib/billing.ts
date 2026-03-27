@@ -1,4 +1,4 @@
-import { PrismaClient, Prisma } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 type PrismaTx = Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">;
 
@@ -15,8 +15,8 @@ export async function generateBillForResident(
   tx: PrismaTx
 ) {
   // Check if bill already exists
-  const existing = await tx.monthlyBill.findUnique({
-    where: { residentId_month_year: { residentId, month, year } },
+  const existing = await tx.monthlyBill.findFirst({
+    where: { residentId, month, year, weekNumber: null },
   });
   if (existing) return null;
 
@@ -54,7 +54,7 @@ export async function generateBillForResident(
     0
   );
 
-  // Meter charges - sum of meter readings for this month
+  // Meter charges
   const meterAgg = await tx.meterReading.aggregate({
     where: {
       roomId: resident.roomId,
@@ -65,44 +65,40 @@ export async function generateBillForResident(
   });
   const meterCharges = meterAgg._sum.amount || 0;
 
-  // Previous balance from last month
-  const prevMonth = month === 1 ? 12 : month - 1;
-  const prevYear = month === 1 ? year - 1 : year;
-  const prevBill = await tx.monthlyBill.findUnique({
-    where: {
-      residentId_month_year: { residentId, month: prevMonth, year: prevYear },
-    },
+  // Previous balance from last bill
+  const prevBill = await tx.monthlyBill.findFirst({
+    where: { residentId, hostelId },
+    orderBy: { createdAt: "desc" },
   });
   const previousBalance = prevBill?.balance || 0;
 
-  // Advance deduction (use from resident, can be adjusted)
-  const advanceDeduction = 0; // Manager can edit later
+  // Advance deduction (first bill only)
+  let advanceDeduction = 0;
+  const billCount = await tx.monthlyBill.count({ where: { residentId } });
+  if (billCount === 0 && resident.advancePaid > 0) {
+    advanceDeduction = resident.advancePaid;
+  }
 
-  // Calculate total
   const totalAmount =
-    roomRent +
-    foodCharges +
-    parkingFee +
-    meterCharges +
-    previousBalance -
-    advanceDeduction;
-  const balance = totalAmount;
+    roomRent + foodCharges + parkingFee + meterCharges + previousBalance - advanceDeduction;
+  const balance = Math.max(0, totalAmount);
 
-  // Create bill
   const bill = await tx.monthlyBill.create({
     data: {
       residentId,
       hostelId,
       month,
       year,
+      billingCycle: "MONTHLY",
       roomRent,
       foodCharges,
+      fixedFoodFee: 0,
       otherCharges: 0,
       meterCharges,
       parkingFee,
       previousBalance,
       advanceDeduction,
-      totalAmount,
+      totalAmount: balance,
       paidAmount: 0,
       balance,
       status: "UNPAID",
@@ -114,7 +110,6 @@ export async function generateBillForResident(
 
 /**
  * Mark overdue bills for a hostel.
- * Updates UNPAID/PARTIAL bills past their due date to OVERDUE.
  */
 export async function markOverdueBills(hostelId: string, prismaClient: PrismaTx) {
   const now = new Date();

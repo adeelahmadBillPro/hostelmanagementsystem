@@ -207,6 +207,12 @@ model Hostel {
   coverImage  String?
   status      HostelStatus @default(ACTIVE)
 
+  // Billing settings
+  billingCycle      String  @default("MONTHLY") // WEEKLY, BIWEEKLY, MONTHLY
+  fixedFoodCharge   Float   @default(0) // Fixed mess/food fee per resident per cycle
+  billingDueDays    Int     @default(7) // Days after generation for payment due
+  lateFeePercent    Float   @default(0) // Late fee percentage on overdue
+
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -476,8 +482,13 @@ model MonthlyBill {
   id           String     @id @default(cuid())
   month        Int
   year         Int
+  weekNumber   Int?       // Week number for weekly billing (1-52)
+  periodStart  DateTime?  // Start date of billing period
+  periodEnd    DateTime?  // End date of billing period
+  billingCycle String     @default("MONTHLY") // WEEKLY, BIWEEKLY, MONTHLY
   roomRent     Float
-  foodCharges  Float      @default(0)
+  foodCharges  Float      @default(0) // Food order charges from app
+  fixedFoodFee Float      @default(0) // Fixed mess/canteen fee
   otherCharges Float      @default(0)
   meterCharges Float      @default(0)
   parkingFee   Float      @default(0)
@@ -506,7 +517,7 @@ model MonthlyBill {
   paymentProofs PaymentProof[]
   disputes      BillDispute[]
 
-  @@unique([residentId, month, year])
+  @@unique([residentId, month, year, weekNumber])
   @@index([hostelId])
   @@index([status])
 }
