@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { rateLimit } from "@/lib/rate-limit";
+import { foodMenuSchema } from "@/lib/validations";
 
 export async function GET(
   request: NextRequest,
@@ -74,6 +76,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const limited = rateLimit(request, "standard");
+  if (limited) return limited;
+
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -93,35 +98,19 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { mealType, itemName, rate, availableDays } = body;
-
-    if (!mealType || !itemName || rate === undefined) {
-      return NextResponse.json(
-        { error: "mealType, itemName, and rate are required" },
-        { status: 400 }
-      );
+    const parsed = foodMenuSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
 
-    if (!["BREAKFAST", "LUNCH", "DINNER", "SNACK"].includes(mealType)) {
-      return NextResponse.json(
-        { error: "Invalid meal type" },
-        { status: 400 }
-      );
-    }
-
-    if (rate < 0) {
-      return NextResponse.json(
-        { error: "Rate must be non-negative" },
-        { status: 400 }
-      );
-    }
+    const { mealType, itemName, rate, availableDays } = parsed.data;
 
     const menuItem = await prisma.foodMenu.create({
       data: {
         mealType,
         itemName,
         rate,
-        availableDays: availableDays || [],
+        availableDays,
         isActive: true,
         hostelId: params.id,
       },

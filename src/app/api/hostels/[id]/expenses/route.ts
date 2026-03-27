@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
+import { rateLimit } from "@/lib/rate-limit";
+import { expenseSchema } from "@/lib/validations";
 
 export async function GET(
   request: NextRequest,
@@ -64,6 +66,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const limited = rateLimit(request, "standard");
+  if (limited) return limited;
+
   try {
     const session = await getSession();
     if (!session) {
@@ -71,18 +76,19 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { categoryId, amount, date, description, receiptUrl } = body;
-
-    if (!categoryId || !amount || !date || !description) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    const parsed = expenseSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
+
+    const { categoryId, amount, date, description, receiptUrl } = parsed.data;
 
     const expense = await prisma.expense.create({
       data: {
         hostelId: params.id,
         createdById: session.user.id,
         categoryId,
-        amount: parseFloat(amount),
+        amount,
         date: new Date(date),
         description,
         receiptUrl: receiptUrl || null,

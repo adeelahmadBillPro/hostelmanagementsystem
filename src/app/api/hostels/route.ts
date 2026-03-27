@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { rateLimit } from "@/lib/rate-limit";
+import { hostelSchema } from "@/lib/validations";
 
 export async function GET() {
   const session = await getSession();
@@ -111,6 +113,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const limited = rateLimit(request, "standard");
+  if (limited) return limited;
+
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -128,21 +133,12 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, type, address, city, contact } = body;
-
-    if (!name || !type || !address) {
-      return NextResponse.json(
-        { error: "Name, type, and address are required" },
-        { status: 400 }
-      );
+    const parsed = hostelSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
 
-    if (!["GOVERNMENT", "UNIVERSITY", "PRIVATE"].includes(type)) {
-      return NextResponse.json(
-        { error: "Invalid hostel type" },
-        { status: 400 }
-      );
-    }
+    const { name, type, address, city, contact } = parsed.data;
 
     const hostel = await prisma.hostel.create({
       data: {

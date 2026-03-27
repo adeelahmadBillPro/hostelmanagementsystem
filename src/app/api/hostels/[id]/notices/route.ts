@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
+import { noticeSchema } from "@/lib/validations";
 
 export async function GET(
   request: NextRequest,
@@ -49,11 +50,12 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { title, content } = body;
-
-    if (!title || !content) {
-      return NextResponse.json({ error: 'Title and content are required' }, { status: 400 });
+    const parsed = noticeSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
+
+    const { title, content } = parsed.data;
 
     const notice = await prisma.notice.create({
       data: {

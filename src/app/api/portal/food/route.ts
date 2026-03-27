@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
+import { rateLimit } from "@/lib/rate-limit";
 
 // Define ordering windows
 const timeWindows: Record<string, { start: number; end: number }> = {
@@ -116,6 +117,9 @@ export async function GET(_request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const limited = rateLimit(request, "sensitive");
+  if (limited) return limited;
+
   try {
     const session = await getSession();
     if (!session || session.user.role !== 'RESIDENT') {

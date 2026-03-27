@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { rateLimit } from "@/lib/rate-limit";
+import { subscriptionPlanSchema } from "@/lib/validations";
 
 export async function GET() {
   const session = await getSession();
@@ -19,28 +21,29 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const limited = rateLimit(request, "standard");
+  if (limited) return limited;
+
   const session = await getSession();
   if (!session || session.user.role !== "SUPER_ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await request.json();
-  const { name, price, maxHostels, maxResidents, features } = body;
-
-  if (!name || price === undefined || !maxHostels || !maxResidents) {
-    return NextResponse.json(
-      { error: "Name, price, maxHostels, and maxResidents are required" },
-      { status: 400 }
-    );
+  const parsed = subscriptionPlanSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
+
+  const { name, price, maxHostels, maxResidents, features } = parsed.data;
 
   const plan = await prisma.subscriptionPlan.create({
     data: {
       name,
-      price: parseFloat(price),
-      maxHostels: parseInt(maxHostels),
-      maxResidents: parseInt(maxResidents),
-      features: Array.isArray(features) ? features : [],
+      price,
+      maxHostels,
+      maxResidents,
+      features,
     },
     include: {
       _count: { select: { tenants: true } },

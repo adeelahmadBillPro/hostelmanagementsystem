@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { rateLimit } from "@/lib/rate-limit";
+import { generateBillForResident } from "@/lib/billing";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const limited = rateLimit(request, "sensitive");
+  if (limited) return limited;
+
   try {
     const session = await getSession();
     if (!session) {
@@ -170,85 +175,21 @@ export async function POST(
         return NextResponse.json({ error: "month and year are required" }, { status: 400 });
       }
 
-      const activeResidents = await prisma.resident.findMany({
-        where: { hostelId: params.id, status: "ACTIVE" },
-        include: {
-          room: true,
-          bed: true,
-          parking: true,
-          foodOrders: {
-            where: {
-              orderDate: {
-                gte: new Date(year, month - 1, 1),
-                lte: new Date(year, month, 0, 23, 59, 59),
-              },
-            },
-          },
-        },
+      const hostelId = params.id;
+      const bills = await prisma.$transaction(async (tx) => {
+        const residents = await tx.resident.findMany({ where: { hostelId, status: "ACTIVE" } });
+        const results = [];
+        for (const r of residents) {
+          const bill = await generateBillForResident(r.id, month, year, hostelId, tx);
+          if (bill) results.push(bill);
+        }
+        return results;
       });
-
-      let generatedCount = 0;
-      for (const resident of activeResidents) {
-        // Check if bill already exists
-        const existingBill = await prisma.monthlyBill.findUnique({
-          where: {
-            residentId_month_year: {
-              residentId: resident.id,
-              month,
-              year,
-            },
-          },
-        });
-
-        if (existingBill) continue;
-
-        const roomRent = resident.room.rentPerBed;
-        const foodCharges = resident.foodOrders.reduce(
-          (sum: number, o: any) => sum + o.totalAmount,
-          0
-        );
-        const parkingFee = resident.parking.reduce(
-          (sum: number, p: any) => sum + p.monthlyFee,
-          0
-        );
-
-        // Check previous balance
-        const lastBill = await prisma.monthlyBill.findFirst({
-          where: {
-            residentId: resident.id,
-            OR: [
-              { month: month === 1 ? 12 : month - 1, year: month === 1 ? year - 1 : year },
-            ],
-          },
-          orderBy: { createdAt: "desc" },
-        });
-
-        const previousBalance = lastBill ? lastBill.balance : 0;
-        const totalAmount = roomRent + foodCharges + parkingFee + previousBalance;
-
-        await prisma.monthlyBill.create({
-          data: {
-            month,
-            year,
-            roomRent,
-            foodCharges,
-            parkingFee,
-            previousBalance,
-            totalAmount,
-            balance: totalAmount,
-            residentId: resident.id,
-            hostelId: params.id,
-            dueDate: new Date(year, month - 1, 10),
-          },
-        });
-
-        generatedCount++;
-      }
 
       return NextResponse.json({
         success: true,
-        message: `${generatedCount} bills generated for ${month}/${year}`,
-        count: generatedCount,
+        message: `${bills.length} bills generated for ${month}/${year}`,
+        count: bills.length,
       });
     }
 

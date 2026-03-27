@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { rateLimit } from "@/lib/rate-limit";
+import { roomSchema } from "@/lib/validations";
 
 export async function GET(
   request: NextRequest,
@@ -22,7 +25,7 @@ export async function GET(
     const type = searchParams.get("type");
     const status = searchParams.get("status");
 
-    const where: any = {
+    const where: Prisma.RoomWhereInput = {
       floor: {
         building: { hostelId },
       },
@@ -32,13 +35,13 @@ export async function GET(
       where.floorId = floorId;
     }
     if (buildingId) {
-      where.floor = { ...where.floor, buildingId };
+      where.floor = { ...where.floor as object, buildingId };
     }
     if (type) {
-      where.type = type;
+      where.type = type as any;
     }
     if (status) {
-      where.status = status;
+      where.status = status as any;
     }
 
     const rooms = await prisma.room.findMany({
@@ -145,6 +148,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const limited = rateLimit(request, "standard");
+  if (limited) return limited;
+
   try {
     const session = await getSession();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -156,14 +162,12 @@ export async function POST(
     if (!hostel) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     const body = await request.json();
-    const { floorId, roomNumber, type, totalBeds, rentPerBed, rentPerRoom } = body;
-
-    if (!floorId || !roomNumber || !type || !totalBeds || rentPerBed === undefined) {
-      return NextResponse.json(
-        { error: "Floor, room number, type, total beds, and rent per bed are required" },
-        { status: 400 }
-      );
+    const parsed = roomSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
+
+    const { floorId, roomNumber, type, totalBeds, rentPerBed, rentPerRoom } = parsed.data;
 
     // Verify floor belongs to this hostel
     const floor = await prisma.floor.findFirst({
@@ -191,15 +195,15 @@ export async function POST(
       data: {
         roomNumber,
         type,
-        totalBeds: parseInt(totalBeds),
-        rentPerBed: parseFloat(rentPerBed),
-        rentPerRoom: rentPerRoom ? parseFloat(rentPerRoom) : null,
+        totalBeds,
+        rentPerBed,
+        rentPerRoom: rentPerRoom ?? null,
         floorId,
       },
     });
 
     // Automatically create beds
-    for (let i = 1; i <= parseInt(totalBeds); i++) {
+    for (let i = 1; i <= totalBeds; i++) {
       await prisma.bed.create({
         data: {
           bedNumber: `${roomNumber}-B${i}`,

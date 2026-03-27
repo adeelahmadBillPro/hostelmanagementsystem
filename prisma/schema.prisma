@@ -314,8 +314,9 @@ model Bed {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  residents     Resident[]
-  roomTransfers RoomTransfer[]
+  residents      Resident[]
+  toTransfers    RoomTransfer[] @relation("ToBed")
+  fromTransfers  RoomTransfer[] @relation("FromBed")
 
   @@index([roomId])
 }
@@ -691,8 +692,11 @@ model RoomTransfer {
   fromRoomId String
   fromRoom   Room @relation(fields: [fromRoomId], references: [id])
 
+  fromBedId String
+  fromBed   Bed @relation("FromBed", fields: [fromBedId], references: [id])
+
   toBedId String
-  toBed   Bed @relation(fields: [toBedId], references: [id])
+  toBed   Bed @relation("ToBed", fields: [toBedId], references: [id])
 
   createdAt DateTime @default(now())
 

@@ -1,23 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { generateReceiptNumber } from "@/lib/utils";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const tenantId = session.user.tenantId;
-  if (!tenantId) {
-    return NextResponse.json({ error: "No tenant assigned" }, { status: 403 });
-  }
-
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const tenantId = session.user.tenantId;
+    if (!tenantId) {
+      return NextResponse.json({ error: "No tenant assigned" }, { status: 403 });
+    }
+
     const hostel = await prisma.hostel.findFirst({
       where: { id: params.id, tenantId },
     });
@@ -34,13 +36,13 @@ export async function GET(
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59);
 
-    const where: any = {
+    const where: Prisma.PaymentWhereInput = {
       hostelId: params.id,
       date: { gte: startDate, lte: endDate },
     };
 
     if (method) {
-      where.method = method;
+      where.method = method as any;
     }
 
     if (search) {
@@ -98,6 +100,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const limited = rateLimit(request, "sensitive");
+  if (limited) return limited;
+
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

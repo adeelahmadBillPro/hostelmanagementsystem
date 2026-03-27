@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "./auth";
 import { redirect } from "next/navigation";
 import { UserRole } from "@prisma/client";
+import { prisma } from "./prisma";
 
 export async function getSession() {
   return await getServerSession(authOptions);
@@ -21,6 +22,45 @@ export async function requireRole(roles: UserRole[]) {
     redirect("/dashboard");
   }
   return session;
+}
+
+/**
+ * Verify the user has access to a specific hostel.
+ * - TENANT_ADMIN: hostel must belong to their tenant
+ * - HOSTEL_MANAGER: must have a ManagerHostel record for this hostel
+ * - SUPER_ADMIN: always allowed
+ * Returns the hostel or null if unauthorized.
+ */
+export async function requireHostelAccess(
+  hostelId: string,
+  session: { user: { id: string; role: UserRole; tenantId: string | null } }
+) {
+  const role = session.user.role;
+
+  if (role === "SUPER_ADMIN") {
+    return await prisma.hostel.findUnique({ where: { id: hostelId } });
+  }
+
+  if (role === "TENANT_ADMIN") {
+    return await prisma.hostel.findFirst({
+      where: { id: hostelId, tenantId: session.user.tenantId! },
+    });
+  }
+
+  if (role === "HOSTEL_MANAGER") {
+    const assignment = await prisma.managerHostel.findUnique({
+      where: {
+        userId_hostelId: {
+          userId: session.user.id,
+          hostelId,
+        },
+      },
+      include: { hostel: true },
+    });
+    return assignment?.hostel || null;
+  }
+
+  return null;
 }
 
 export function getRoleBasedRedirect(role: UserRole): string {

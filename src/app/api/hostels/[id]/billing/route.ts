@@ -1,28 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { rateLimit } from "@/lib/rate-limit";
+import { markOverdueBills } from "@/lib/billing";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const tenantId = session.user.tenantId;
-  if (!tenantId) {
-    return NextResponse.json({ error: "No tenant assigned" }, { status: 403 });
-  }
-
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const tenantId = session.user.tenantId;
+    if (!tenantId) {
+      return NextResponse.json({ error: "No tenant assigned" }, { status: 403 });
+    }
+
+    const hostelId = params.id;
+
     const hostel = await prisma.hostel.findFirst({
-      where: { id: params.id, tenantId },
+      where: { id: hostelId, tenantId },
     });
     if (!hostel) {
       return NextResponse.json({ error: "Hostel not found" }, { status: 404 });
     }
+
+    // Mark overdue bills
+    await markOverdueBills(hostelId, prisma);
 
     const { searchParams } = new URL(request.url);
     const month = parseInt(searchParams.get("month") || String(new Date().getMonth() + 1));
@@ -77,6 +84,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const limited = rateLimit(request, "sensitive");
+  if (limited) return limited;
+
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

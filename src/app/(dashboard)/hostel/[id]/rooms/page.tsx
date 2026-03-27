@@ -607,16 +607,25 @@ export default function RoomsPage() {
                       </div>
 
                       {/* Bed Icons */}
-                      <div className="flex flex-wrap gap-1.5">
-                        {room.beds.map((bed) => (
-                          <span
-                            key={bed.id}
-                            className={`w-3 h-3 rounded-sm ${getBedIconColor(
-                              bed.status
-                            )} ring-1 ring-white/60 dark:ring-black/30 transition-colors`}
-                            title={`${bed.bedNumber}: ${bed.status}`}
-                          />
-                        ))}
+                      <div className="flex flex-wrap gap-1.5 mt-1">
+                        {room.beds.map((bed) => {
+                          const bedColor = bed.status === "OCCUPIED"
+                            ? "text-red-500 bg-red-50 dark:bg-red-900/20"
+                            : bed.status === "RESERVED"
+                            ? "text-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                            : bed.status === "MAINTENANCE"
+                            ? "text-purple-500 bg-purple-50 dark:bg-purple-900/20"
+                            : "text-gray-400 bg-gray-100 dark:bg-gray-800/50";
+                          return (
+                            <span
+                              key={bed.id}
+                              className={`w-8 h-7 rounded-md flex items-center justify-center ${bedColor} transition-colors`}
+                              title={`${bed.bedNumber}: ${bed.status}`}
+                            >
+                              <BedDouble size={16} />
+                            </span>
+                          );
+                        })}
                       </div>
                     </div>
                   );

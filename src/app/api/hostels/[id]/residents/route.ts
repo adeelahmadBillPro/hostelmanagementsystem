@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "crypto";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function GET(
   request: NextRequest,
@@ -25,10 +28,10 @@ export async function GET(
     const status = searchParams.get("status");
     const search = searchParams.get("search");
 
-    const where: any = { hostelId };
+    const where: Prisma.ResidentWhereInput = { hostelId };
 
     if (status && status !== "ALL") {
-      where.status = status;
+      where.status = status as any;
     }
 
     if (search) {
@@ -120,6 +123,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const limited = rateLimit(request, "standard");
+  if (limited) return limited;
+
   try {
     const session = await getSession();
     if (!session) {
@@ -181,12 +187,8 @@ export async function POST(
       );
     }
 
-    // Generate default password from CNIC or phone
-    const defaultPassword = cnic
-      ? cnic.replace(/\D/g, "").slice(-6)
-      : phone
-      ? phone.slice(-6)
-      : "123456";
+    // Generate secure random default password
+    const defaultPassword = randomBytes(4).toString("hex"); // Random 8-char password
     const hashedPassword = await bcrypt.hash(defaultPassword, 10);
 
     // Create user + resident + update bed in transaction

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
+import { rateLimit } from "@/lib/rate-limit";
+import { staffSchema } from "@/lib/validations";
 
 export async function GET(
   request: NextRequest,
@@ -30,6 +32,9 @@ export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const limited = rateLimit(request, "standard");
+  if (limited) return limited;
+
   try {
     const session = await getSession();
     if (!session) {
@@ -38,6 +43,11 @@ export async function POST(
 
     const hostelId = params.id;
     const body = await request.json();
+
+    const parsed = staffSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
+    }
 
     const {
       name,
@@ -48,13 +58,8 @@ export async function POST(
       shift,
       salary,
       joiningDate,
-      emergencyContact,
-      emergencyPhone,
-    } = body;
-
-    if (!name || !cnic || !phone || !address || !staffType || !shift || !salary) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
+    } = parsed.data;
+    const { emergencyContact, emergencyPhone } = body;
 
     const staff = await prisma.staff.create({
       data: {
@@ -65,7 +70,7 @@ export async function POST(
         address,
         staffType,
         shift,
-        salary: parseFloat(salary),
+        salary,
         joiningDate: new Date(joiningDate),
         emergencyContact: emergencyContact || null,
         emergencyPhone: emergencyPhone || null,
