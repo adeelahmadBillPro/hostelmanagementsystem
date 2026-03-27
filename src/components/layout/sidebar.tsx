@@ -116,6 +116,11 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
           icon: <Home size={20} />,
         },
         {
+          label: "Hostel Profile",
+          href: `/hostel/${hostelId}/profile`,
+          icon: <Building2 size={20} />,
+        },
+        {
           label: "Map View",
           href: `/hostel/${hostelId}/map`,
           icon: <Map size={20} />,
@@ -279,6 +284,11 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
       label: "Dashboard",
       href: "/portal/dashboard",
       icon: <LayoutDashboard size={20} />,
+    },
+    {
+      label: "Hostel Info",
+      href: "/portal/hostel-info",
+      icon: <Building2 size={20} />,
     },
     {
       label: "My Bill",

@@ -197,13 +197,15 @@ model SubscriptionPlan {
 }
 
 model Hostel {
-  id      String       @id @default(cuid())
-  name    String
-  type    HostelType
-  address String
-  city    String?
-  contact String?
-  status  HostelStatus @default(ACTIVE)
+  id          String       @id @default(cuid())
+  name        String
+  type        HostelType
+  address     String
+  city        String?
+  contact     String?
+  description String?
+  coverImage  String?
+  status      HostelStatus @default(ACTIVE)
 
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -230,8 +232,26 @@ model Hostel {
   meterReadings     MeterReading[]
   managerHostels    ManagerHostel[]
   conversations     Conversation[]
+  amenities         HostelAmenity[]
 
   @@index([tenantId])
+}
+
+model HostelAmenity {
+  id          String  @id @default(cuid())
+  name        String
+  category    String  // hostel, room, washroom, dining, security, transport, nearby
+  icon        String? // lucide icon name
+  isAvailable Boolean @default(false)
+  description String?
+
+  hostelId String
+  hostel   Hostel @relation(fields: [hostelId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([hostelId])
 }
 
 model ManagerHostel {
