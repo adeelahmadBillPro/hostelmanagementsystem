@@ -10,7 +10,7 @@ export async function GET(
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
     }
 
     const hostelId = params.id;
@@ -106,7 +106,8 @@ export async function GET(
       })),
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error(error);
+    return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
   }
 }
 
@@ -118,7 +119,7 @@ export async function POST(
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
     }
 
     const body = await request.json();
@@ -200,6 +201,7 @@ export async function POST(
       message: `Resident transferred from ${resident.bed.bedNumber} to ${newBed.bedNumber}`,
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error(error);
+    return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
   }
 }

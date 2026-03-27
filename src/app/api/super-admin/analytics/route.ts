@@ -5,7 +5,7 @@ import { getSession } from "@/lib/session";
 export async function GET() {
   const session = await getSession();
   if (!session || session.user.role !== "SUPER_ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
   }
 
   const now = new Date();

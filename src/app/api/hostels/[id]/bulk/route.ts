@@ -14,12 +14,12 @@ export async function POST(
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
     }
 
     const tenantId = session.user.tenantId;
     if (!tenantId) {
-      return NextResponse.json({ error: "No tenant assigned" }, { status: 403 });
+      return NextResponse.json({ error: "Your account is not linked to any organization. Please contact support." }, { status: 403 });
     }
 
     // Verify hostel ownership

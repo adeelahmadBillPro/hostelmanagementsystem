@@ -8,7 +8,7 @@ export async function PATCH(
 ) {
   const session = await getSession();
   if (!session || session.user.role !== "SUPER_ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
   }
 
   const { id } = params;
@@ -44,7 +44,7 @@ export async function DELETE(
 ) {
   const session = await getSession();
   if (!session || session.user.role !== "SUPER_ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
   }
 
   const { id } = params;

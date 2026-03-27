@@ -11,13 +11,13 @@ export async function GET(
 ) {
   try {
     const session = await getSession();
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session) return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
 
     const hostelId = params.id;
     const hostel = await prisma.hostel.findFirst({
       where: { id: hostelId, tenantId: session.user.tenantId! },
     });
-    if (!hostel) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!hostel) return NextResponse.json({ error: "The requested item was not found" }, { status: 404 });
 
     const { searchParams } = new URL(request.url);
     const buildingId = searchParams.get("buildingId");
@@ -153,13 +153,13 @@ export async function POST(
 
   try {
     const session = await getSession();
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session) return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
 
     const hostelId = params.id;
     const hostel = await prisma.hostel.findFirst({
       where: { id: hostelId, tenantId: session.user.tenantId! },
     });
-    if (!hostel) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!hostel) return NextResponse.json({ error: "The requested item was not found" }, { status: 404 });
 
     const body = await request.json();
     const parsed = roomSchema.safeParse(body);

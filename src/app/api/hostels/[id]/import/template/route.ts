@@ -58,7 +58,7 @@ export async function GET(
   } catch (error: any) {
     console.error("Template generation error:", error);
     return NextResponse.json(
-      { error: error.message || "Internal server error" },
+      { error: "Something went wrong. Please try again." },
       { status: 500 }
     );
   }

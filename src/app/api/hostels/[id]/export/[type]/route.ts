@@ -10,12 +10,12 @@ export async function GET(
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
     }
 
     const tenantId = session.user.tenantId;
     if (!tenantId) {
-      return NextResponse.json({ error: "No tenant assigned" }, { status: 403 });
+      return NextResponse.json({ error: "Your account is not linked to any organization. Please contact support." }, { status: 403 });
     }
 
     const hostel = await prisma.hostel.findFirst({
@@ -239,7 +239,7 @@ export async function GET(
   } catch (error: any) {
     console.error("Export error:", error);
     return NextResponse.json(
-      { error: error.message || "Internal server error" },
+      { error: "Something went wrong. Please try again." },
       { status: 500 }
     );
   }

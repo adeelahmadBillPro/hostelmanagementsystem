@@ -9,7 +9,7 @@ export async function GET(
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
     }
 
     const hostelId = params.id;
@@ -19,7 +19,7 @@ export async function GET(
       where: { id: hostelId, tenantId: session.user.tenantId! },
     });
     if (!hostel) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json({ error: "The requested item was not found" }, { status: 404 });
     }
 
     const resident = await prisma.resident.findFirst({
@@ -121,7 +121,7 @@ export async function PATCH(
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
     }
 
     const hostelId = params.id;
@@ -131,7 +131,7 @@ export async function PATCH(
       where: { id: hostelId, tenantId: session.user.tenantId! },
     });
     if (!hostel) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json({ error: "The requested item was not found" }, { status: 404 });
     }
 
     const resident = await prisma.resident.findFirst({
@@ -242,7 +242,7 @@ export async function DELETE(
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
     }
 
     const hostelId = params.id;
@@ -252,7 +252,7 @@ export async function DELETE(
       where: { id: hostelId, tenantId: session.user.tenantId! },
     });
     if (!hostel) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json({ error: "The requested item was not found" }, { status: 404 });
     }
 
     const resident = await prisma.resident.findFirst({

@@ -7,7 +7,7 @@ import { subscriptionPlanSchema } from "@/lib/validations";
 export async function GET() {
   const session = await getSession();
   if (!session || session.user.role !== "SUPER_ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
   }
 
   const plans = await prisma.subscriptionPlan.findMany({
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
   const session = await getSession();
   if (!session || session.user.role !== "SUPER_ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
   }
 
   const body = await request.json();

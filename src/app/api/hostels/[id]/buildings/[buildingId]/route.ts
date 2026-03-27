@@ -8,13 +8,13 @@ export async function PATCH(
 ) {
   try {
     const session = await getSession();
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session) return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
 
     const hostelId = params.id;
     const hostel = await prisma.hostel.findFirst({
       where: { id: hostelId, tenantId: session.user.tenantId! },
     });
-    if (!hostel) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!hostel) return NextResponse.json({ error: "The requested item was not found" }, { status: 404 });
 
     const building = await prisma.building.findFirst({
       where: { id: params.buildingId, hostelId },
@@ -45,13 +45,13 @@ export async function DELETE(
 ) {
   try {
     const session = await getSession();
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!session) return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
 
     const hostelId = params.id;
     const hostel = await prisma.hostel.findFirst({
       where: { id: hostelId, tenantId: session.user.tenantId! },
     });
-    if (!hostel) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!hostel) return NextResponse.json({ error: "The requested item was not found" }, { status: 404 });
 
     const building = await prisma.building.findFirst({
       where: { id: params.buildingId, hostelId },

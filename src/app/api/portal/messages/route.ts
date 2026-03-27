@@ -6,7 +6,7 @@ export async function GET(_request: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.user.role !== "RESIDENT") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
     }
 
     const resident = await prisma.resident.findUnique({
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
     if (!session || session.user.role !== "RESIDENT") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
     }
 
     const resident = await prisma.resident.findUnique({

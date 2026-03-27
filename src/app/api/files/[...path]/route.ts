@@ -30,7 +30,7 @@ export async function GET(
     // Security: prevent directory traversal
     const resolved = join(process.cwd(), "public", "uploads");
     if (!filePath.startsWith(resolved)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ error: "You don't have permission for this action" }, { status: 403 });
     }
 
     const buffer = await readFile(filePath);

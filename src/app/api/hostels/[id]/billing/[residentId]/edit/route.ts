@@ -10,13 +10,13 @@ export async function PATCH(
   try {
     const session = await getSession();
     if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
     }
 
     // Only managers and admins can edit bills
     const allowedRoles = ["TENANT_ADMIN", "HOSTEL_MANAGER", "SUPER_ADMIN"];
     if (!allowedRoles.includes(session.user.role)) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      return NextResponse.json({ error: "You don't have permission for this action" }, { status: 403 });
     }
 
     const hostelId = params.id;

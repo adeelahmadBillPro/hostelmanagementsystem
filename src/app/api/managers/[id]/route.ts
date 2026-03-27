@@ -8,16 +8,16 @@ export async function PATCH(
 ) {
   const session = await getSession();
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
   }
 
   const tenantId = session.user.tenantId;
   if (!tenantId) {
-    return NextResponse.json({ error: "No tenant assigned" }, { status: 403 });
+    return NextResponse.json({ error: "Your account is not linked to any organization. Please contact support." }, { status: 403 });
   }
 
   if (session.user.role !== "TENANT_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ error: "You don't have permission for this action" }, { status: 403 });
   }
 
   try {
@@ -127,16 +127,16 @@ export async function DELETE(
 ) {
   const session = await getSession();
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
   }
 
   const tenantId = session.user.tenantId;
   if (!tenantId) {
-    return NextResponse.json({ error: "No tenant assigned" }, { status: 403 });
+    return NextResponse.json({ error: "Your account is not linked to any organization. Please contact support." }, { status: 403 });
   }
 
   if (session.user.role !== "TENANT_ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ error: "You don't have permission for this action" }, { status: 403 });
   }
 
   try {
