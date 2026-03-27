@@ -72,8 +72,8 @@ export async function POST(request: Request) {
     const filePath = join(uploadDir, uniqueName);
     await writeFile(filePath, buffer);
 
-    // Return public URL
-    const fileUrl = `/uploads/${subfolder}/${uniqueName}`;
+    // Return URL via API route (works in production mode)
+    const fileUrl = `/api/files/${subfolder}/${uniqueName}`;
 
     // Determine file category
     let fileType = "file";

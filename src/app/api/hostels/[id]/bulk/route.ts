@@ -193,6 +193,76 @@ export async function POST(
       });
     }
 
+    // ===== BULK ASSIGN =====
+    if (action === "bulk-assign") {
+      const { assignments } = body;
+      if (!assignments || !Array.isArray(assignments) || assignments.length === 0) {
+        return NextResponse.json({ error: "assignments array is required" }, { status: 400 });
+      }
+
+      let assignedCount = 0;
+      const assignFailed: { residentId: string; error: string }[] = [];
+
+      for (const assignment of assignments) {
+        try {
+          const { residentId, roomId, bedId } = assignment;
+
+          if (!residentId || !roomId || !bedId) {
+            assignFailed.push({ residentId: residentId || "unknown", error: "Missing residentId, roomId, or bedId" });
+            continue;
+          }
+
+          // Verify resident belongs to this hostel
+          const resident = await prisma.resident.findFirst({
+            where: { id: residentId, hostelId: params.id },
+          });
+          if (!resident) {
+            assignFailed.push({ residentId, error: "Resident not found in this hostel" });
+            continue;
+          }
+
+          // Verify bed is VACANT
+          const bed = await prisma.bed.findFirst({
+            where: { id: bedId, roomId, status: "VACANT" },
+          });
+          if (!bed) {
+            assignFailed.push({ residentId, error: "Bed not available or not found" });
+            continue;
+          }
+
+          // If resident currently has a bed, free it
+          if (resident.bedId) {
+            await prisma.bed.update({
+              where: { id: resident.bedId },
+              data: { status: "VACANT" },
+            });
+          }
+
+          // Assign resident to new room and bed
+          await prisma.resident.update({
+            where: { id: residentId },
+            data: { roomId, bedId },
+          });
+
+          await prisma.bed.update({
+            where: { id: bedId },
+            data: { status: "OCCUPIED" },
+          });
+
+          assignedCount++;
+        } catch (err: any) {
+          assignFailed.push({ residentId: assignment.residentId || "unknown", error: err.message || "Unknown error" });
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: `${assignedCount} residents assigned`,
+        count: assignedCount,
+        failed: assignFailed,
+      });
+    }
+
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
     console.error("Bulk operation error:", error);

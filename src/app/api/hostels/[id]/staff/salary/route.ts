@@ -110,6 +110,59 @@ export async function POST(
   }
 }
 
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { month, year, method } = await request.json();
+
+    if (!month || !year) {
+      return NextResponse.json({ error: 'Month and year are required' }, { status: 400 });
+    }
+
+    const paymentMethod = method || 'CASH';
+
+    const unpaidRecords = await prisma.staffSalary.findMany({
+      where: {
+        staff: { hostelId: params.id },
+        month,
+        year,
+        isPaid: false,
+      },
+    });
+
+    if (unpaidRecords.length === 0) {
+      return NextResponse.json({ error: 'No unpaid salary records found' }, { status: 404 });
+    }
+
+    const updated = await prisma.staffSalary.updateMany({
+      where: {
+        id: { in: unpaidRecords.map((r) => r.id) },
+      },
+      data: {
+        isPaid: true,
+        paidDate: new Date(),
+        method: paymentMethod,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: `${updated.count} salary records marked as paid`,
+      count: updated.count,
+    });
+  } catch (error) {
+    console.error('Failed to bulk pay salaries:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }

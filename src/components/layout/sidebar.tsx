@@ -29,6 +29,8 @@ import {
   Banknote,
   Home,
   Map,
+  Upload,
+  Activity,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -207,6 +209,11 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
           ],
         },
         {
+          label: "Meter Readings",
+          href: `/hostel/${hostelId}/meter-readings`,
+          icon: <Activity size={20} />,
+        },
+        {
           label: "Staff",
           href: `/hostel/${hostelId}/staff`,
           icon: <ShieldCheck size={20} />,
@@ -257,6 +264,11 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
           label: "Reports",
           href: `/hostel/${hostelId}/reports`,
           icon: <BarChart3 size={20} />,
+        },
+        {
+          label: "Import / Export",
+          href: `/hostel/${hostelId}/import-export`,
+          icon: <Upload size={20} />,
         },
       ]
     : [];
@@ -433,6 +445,8 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
     "Gate Pass": "#A3E635",
     "Messages": "#38BDF8",
     "Deleted files": "#F87171",
+    "Meter Readings": "#FBBF24",
+    "Import / Export": "#38BDF8",
   };
 
   const getIconColor = (label: string) => iconColors[label] || "#94A3B8";
