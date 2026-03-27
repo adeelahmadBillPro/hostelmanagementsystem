@@ -398,7 +398,7 @@ export default function RoomDetailPage() {
           <div className="card p-0 overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-border dark:border-[#334155] bg-bg-main/50 dark:bg-[#0F172A]/50">
+                <tr className="border-b border-border dark:border-[#1E2D42] bg-bg-main/50 dark:bg-[#0B1222]/50">
                   <th className="text-left text-xs font-medium text-text-muted px-4 py-3">
                     Item
                   </th>
@@ -413,9 +413,9 @@ export default function RoomDetailPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border dark:divide-[#334155]">
+              <tbody className="divide-y divide-border dark:divide-[#1E2D42]">
                 {inventory.map((item) => (
-                  <tr key={item.id} className="hover:bg-bg-main/30 dark:hover:bg-[#1E293B]/30">
+                  <tr key={item.id} className="hover:bg-bg-main/30 dark:hover:bg-[#111C2E]/30">
                     <td className="px-4 py-3 text-sm font-medium text-text-primary dark:text-white">
                       {item.itemName}
                     </td>
@@ -461,7 +461,7 @@ export default function RoomDetailPage() {
           <div className="card p-0 overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-border dark:border-[#334155] bg-bg-main/50 dark:bg-[#0F172A]/50">
+                <tr className="border-b border-border dark:border-[#1E2D42] bg-bg-main/50 dark:bg-[#0B1222]/50">
                   <th className="text-left text-xs font-medium text-text-muted px-4 py-3">
                     Resident
                   </th>
@@ -479,11 +479,11 @@ export default function RoomDetailPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border dark:divide-[#334155]">
+              <tbody className="divide-y divide-border dark:divide-[#1E2D42]">
                 {pastResidents.map((resident) => (
                   <tr
                     key={resident.id}
-                    className="hover:bg-bg-main/30 dark:hover:bg-[#1E293B]/30"
+                    className="hover:bg-bg-main/30 dark:hover:bg-[#111C2E]/30"
                   >
                     <td className="px-4 py-3">
                       <div>

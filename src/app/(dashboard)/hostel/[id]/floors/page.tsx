@@ -275,21 +275,21 @@ export default function FloorsPage() {
                         </div>
 
                         <div className="grid grid-cols-3 gap-3 mb-3">
-                          <div className="text-center p-2 rounded-lg bg-bg-main dark:bg-[#0F172A]">
+                          <div className="text-center p-2 rounded-lg bg-bg-main dark:bg-[#0B1222]">
                             <DoorOpen size={16} className="mx-auto text-amber-500 mb-1" />
                             <p className="text-sm font-semibold text-text-primary dark:text-white">
                               {floor.roomCount}
                             </p>
                             <p className="text-[10px] text-text-muted">Rooms</p>
                           </div>
-                          <div className="text-center p-2 rounded-lg bg-bg-main dark:bg-[#0F172A]">
+                          <div className="text-center p-2 rounded-lg bg-bg-main dark:bg-[#0B1222]">
                             <BedDouble size={16} className="mx-auto text-blue-500 mb-1" />
                             <p className="text-sm font-semibold text-text-primary dark:text-white">
                               {floor.bedCount}
                             </p>
                             <p className="text-[10px] text-text-muted">Beds</p>
                           </div>
-                          <div className="text-center p-2 rounded-lg bg-bg-main dark:bg-[#0F172A]">
+                          <div className="text-center p-2 rounded-lg bg-bg-main dark:bg-[#0B1222]">
                             <Users size={16} className="mx-auto text-red-500 mb-1" />
                             <p className="text-sm font-semibold text-text-primary dark:text-white">
                               {floor.occupiedBeds}

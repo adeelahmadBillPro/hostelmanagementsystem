@@ -285,7 +285,7 @@ export default function ResidentsPage() {
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 opacity-0 animate-fade-in-up"
         style={{ animationDelay: "400ms" }}
       >
-        <div className="flex items-center gap-1 bg-white dark:bg-[#1E293B] rounded-xl p-1 shadow-sm border border-border dark:border-[#334155]">
+        <div className="flex items-center gap-1 bg-white dark:bg-[#111C2E] rounded-xl p-1 shadow-sm border border-border dark:border-[#1E2D42]">
           {tabs.map((tab) => (
             <button
               key={tab.key}
@@ -293,7 +293,7 @@ export default function ResidentsPage() {
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 activeTab === tab.key
                   ? "bg-primary text-white shadow-sm"
-                  : "text-text-secondary hover:text-text-primary hover:bg-bg-main dark:hover:bg-[#0F172A]"
+                  : "text-text-secondary hover:text-text-primary hover:bg-bg-main dark:hover:bg-[#0B1222]"
               }`}
             >
               {tab.label}
@@ -362,7 +362,7 @@ export default function ResidentsPage() {
                   onClick={() =>
                     router.push(`/hostel/${hostelId}/residents/${row.id}`)
                   }
-                  className="p-1.5 rounded-lg hover:bg-bg-main dark:hover:bg-[#0F172A] transition-colors"
+                  className="p-1.5 rounded-lg hover:bg-bg-main dark:hover:bg-[#0B1222] transition-colors"
                   title="View"
                 >
                   <Eye size={16} className="text-text-muted" />
@@ -371,7 +371,7 @@ export default function ResidentsPage() {
                   onClick={() =>
                     router.push(`/hostel/${hostelId}/residents/${row.id}?edit=true`)
                   }
-                  className="p-1.5 rounded-lg hover:bg-bg-main dark:hover:bg-[#0F172A] transition-colors"
+                  className="p-1.5 rounded-lg hover:bg-bg-main dark:hover:bg-[#0B1222] transition-colors"
                   title="Edit"
                 >
                   <Edit size={16} className="text-text-muted" />

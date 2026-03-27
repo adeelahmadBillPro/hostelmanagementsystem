@@ -143,7 +143,7 @@ export default function LoginPage() {
       </div>
 
       {/* Right - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 bg-white dark:bg-[#0F172A]">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 bg-white dark:bg-[#0B1222]">
         <div className="w-full max-w-[420px]">
           {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-8 lg:hidden opacity-0 animate-fade-in">

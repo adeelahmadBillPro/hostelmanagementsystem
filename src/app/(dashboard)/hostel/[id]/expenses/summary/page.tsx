@@ -5,21 +5,9 @@ import { useParams, useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/dashboard-layout';
 import { formatCurrency } from '@/lib/utils';
 import { ArrowLeft, TrendingUp, TrendingDown } from 'lucide-react';
-import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from 'recharts';
+import { PieChart, MultiBarChart } from '@/components/ui/chart';
 
-const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#0EA5E9', '#8B5CF6'];
+const PIE_COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#0EA5E9', '#8B5CF6'];
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -207,32 +195,12 @@ export default function ExpenseSummaryPage() {
               <div className="card">
                 <h2 className="section-title mb-4">Expenses by Category</h2>
                 {data.expenses.categories.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={data.expenses.categories}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={(props: any) =>
-                          `${props.name} (${((props.percent || 0) * 100).toFixed(0)}%)`
-                        }
-                        outerRadius={100}
-                        dataKey="amount"
-                        nameKey="name"
-                      >
-                        {data.expenses.categories.map((_, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={COLORS[index % COLORS.length]}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        formatter={(value: any) => formatCurrency(Number(value))}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+                  <PieChart
+                    data={data.expenses.categories.map((c) => ({ label: c.name, value: c.amount }))}
+                    colors={PIE_COLORS}
+                    height={300}
+                    formatValue={(v) => formatCurrency(v)}
+                  />
                 ) : (
                   <div className="text-center py-12 text-gray-400">No expense data</div>
                 )}
@@ -242,17 +210,15 @@ export default function ExpenseSummaryPage() {
               <div className="card">
                 <h2 className="section-title mb-4">Monthly Income vs Expenses (Last 6 Months)</h2>
                 {data.monthlyComparison.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={data.monthlyComparison}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                      <Tooltip formatter={(value: any) => formatCurrency(Number(value))} />
-                      <Legend />
-                      <Bar dataKey="income" fill="#10B981" name="Income" />
-                      <Bar dataKey="expenses" fill="#EF4444" name="Expenses" />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  <MultiBarChart
+                    data={data.monthlyComparison.map((m) => ({ label: m.month, income: m.income, expenses: m.expenses }))}
+                    series={[
+                      { key: 'income', name: 'Income', color: '#10B981' },
+                      { key: 'expenses', name: 'Expenses', color: '#EF4444' },
+                    ]}
+                    height={300}
+                    formatValue={(v) => formatCurrency(v)}
+                  />
                 ) : (
                   <div className="text-center py-12 text-gray-400">No comparison data</div>
                 )}

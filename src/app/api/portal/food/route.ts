@@ -20,7 +20,7 @@ export async function GET(_request: NextRequest) {
 
     // Get today's menu
     const today = new Date();
-    const _dayOfWeek = today.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
+    const dayOfWeek = today.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
 
     const menuItems = await prisma.foodMenu.findMany({
       where: {
@@ -30,7 +30,14 @@ export async function GET(_request: NextRequest) {
       orderBy: [{ mealType: 'asc' }, { itemName: 'asc' }],
     });
 
-    const menu = menuItems.map((item: any) => ({
+    // Filter items available today (show all if availableDays is empty)
+    const todayMenuItems = menuItems.filter(
+      (item: any) =>
+        item.availableDays.length === 0 ||
+        item.availableDays.some((d: string) => d.toLowerCase() === dayOfWeek)
+    );
+
+    const menu = todayMenuItems.map((item: any) => ({
       id: item.id,
       name: item.itemName,
       rate: item.rate,
@@ -85,12 +92,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Menu item is required' }, { status: 400 });
     }
 
-    const menuItem = await prisma.foodMenu.findUnique({
-      where: { id: menuId },
+    const menuItem = await prisma.foodMenu.findFirst({
+      where: { id: menuId, hostelId: resident.hostelId, isActive: true },
     });
 
     if (!menuItem) {
-      return NextResponse.json({ error: 'Menu item not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Menu item not found or not available' }, { status: 404 });
     }
 
     const qty = quantity || 1;

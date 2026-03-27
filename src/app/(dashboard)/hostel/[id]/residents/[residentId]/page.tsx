@@ -482,7 +482,7 @@ export default function ResidentProfilePage() {
             </span>
           </div>
         </div>
-        <div className="mt-3 pt-3 border-t border-border dark:border-[#334155] flex items-center gap-2 text-sm text-text-muted">
+        <div className="mt-3 pt-3 border-t border-border dark:border-[#1E2D42] flex items-center gap-2 text-sm text-text-muted">
           <Calendar size={14} />
           Move-in: {formatDate(resident.moveInDate)}
           {resident.moveOutDate && (
@@ -534,7 +534,7 @@ export default function ResidentProfilePage() {
         className="opacity-0 animate-fade-in-up"
         style={{ animationDelay: "400ms" }}
       >
-        <div className="flex items-center gap-1 mb-4 bg-white dark:bg-[#1E293B] rounded-xl p-1 shadow-sm border border-border dark:border-[#334155] w-fit">
+        <div className="flex items-center gap-1 mb-4 bg-white dark:bg-[#111C2E] rounded-xl p-1 shadow-sm border border-border dark:border-[#1E2D42] w-fit">
           {[
             { key: "payments" as const, label: "Payment History", icon: DollarSign },
             { key: "food" as const, label: "Food Orders", icon: UtensilsCrossed },
@@ -548,7 +548,7 @@ export default function ResidentProfilePage() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
                   activeTab === tab.key
                     ? "bg-primary text-white shadow-sm"
-                    : "text-text-secondary hover:text-text-primary hover:bg-bg-main dark:hover:bg-[#0F172A]"
+                    : "text-text-secondary hover:text-text-primary hover:bg-bg-main dark:hover:bg-[#0B1222]"
                 }`}
               >
                 <TabIcon size={14} />
@@ -612,7 +612,7 @@ export default function ResidentProfilePage() {
             </div>
 
             {/* Mobile view */}
-            <div className="md:hidden divide-y divide-border dark:divide-[#334155]">
+            <div className="md:hidden divide-y divide-border dark:divide-[#1E2D42]">
               {resident.payments.length === 0 ? (
                 <div className="px-4 py-12 text-center text-text-muted text-sm">
                   No payment records found
@@ -688,7 +688,7 @@ export default function ResidentProfilePage() {
               </table>
             </div>
 
-            <div className="md:hidden divide-y divide-border dark:divide-[#334155]">
+            <div className="md:hidden divide-y divide-border dark:divide-[#1E2D42]">
               {resident.foodOrders.length === 0 ? (
                 <div className="px-4 py-12 text-center text-text-muted text-sm">
                   No food orders found
@@ -787,7 +787,7 @@ export default function ResidentProfilePage() {
               </table>
             </div>
 
-            <div className="md:hidden divide-y divide-border dark:divide-[#334155]">
+            <div className="md:hidden divide-y divide-border dark:divide-[#1E2D42]">
               {resident.complaints.length === 0 ? (
                 <div className="px-4 py-12 text-center text-text-muted text-sm">
                   No complaints found
@@ -956,7 +956,7 @@ export default function ResidentProfilePage() {
             />
           </div>
         </div>
-        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border dark:border-[#334155]">
+        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border dark:border-[#1E2D42]">
           <button
             onClick={() => setShowEditModal(false)}
             className="btn-secondary"

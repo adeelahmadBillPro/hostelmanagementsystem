@@ -221,14 +221,14 @@ export default function PlansPage() {
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => openEditModal(plan)}
-                          className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#1E293B] transition-colors"
+                          className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#111C2E] transition-colors"
                           title="Edit"
                         >
                           <Edit2 size={16} className="text-text-muted" />
                         </button>
                         <button
                           onClick={() => handleDelete(plan)}
-                          className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#1E293B] transition-colors"
+                          className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#111C2E] transition-colors"
                           title="Delete"
                         >
                           <Trash2 size={16} className="text-danger" />
@@ -278,7 +278,7 @@ export default function PlansPage() {
                     )}
 
                     {/* Footer */}
-                    <div className="pt-3 border-t border-border dark:border-[#334155]">
+                    <div className="pt-3 border-t border-border dark:border-[#1E2D42]">
                       <span className="text-xs text-text-muted">
                         {plan._count.tenants} tenant{plan._count.tenants !== 1 ? "s" : ""} subscribed
                       </span>

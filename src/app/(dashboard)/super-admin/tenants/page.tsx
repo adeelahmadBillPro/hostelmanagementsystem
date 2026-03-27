@@ -255,7 +255,7 @@ export default function TenantsPage() {
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => handleToggleStatus(row)}
-                  className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#1E293B] transition-colors"
+                  className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#111C2E] transition-colors"
                   title={row.status === "ACTIVE" ? "Disable" : "Enable"}
                 >
                   {row.status === "ACTIVE" ? (
@@ -266,7 +266,7 @@ export default function TenantsPage() {
                 </button>
                 <button
                   onClick={() => handleDelete(row)}
-                  className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#1E293B] transition-colors"
+                  className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#111C2E] transition-colors"
                   title="Delete"
                 >
                   <Trash2 size={18} className="text-danger" />

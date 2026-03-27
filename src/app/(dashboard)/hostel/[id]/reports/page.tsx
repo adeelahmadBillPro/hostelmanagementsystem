@@ -13,21 +13,9 @@ import {
   Download,
   FileText,
 } from 'lucide-react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from 'recharts';
+import { MultiBarChart, PieChart } from '@/components/ui/chart';
 
-const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#0EA5E9', '#8B5CF6'];
+const PIE_COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#EF4444', '#0EA5E9', '#8B5CF6'];
 
 interface ReportData {
   type: string;
@@ -182,18 +170,16 @@ export default function ReportsPage() {
         {d.monthlyRevenue && d.monthlyRevenue.length > 0 && (
           <div className="card">
             <h3 className="section-title mb-4">Monthly Revenue Breakdown</h3>
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={d.monthlyRevenue}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-                <Tooltip formatter={(value: any) => formatCurrency(Number(value))} />
-                <Legend />
-                <Bar dataKey="rent" fill="#4F46E5" name="Rent" />
-                <Bar dataKey="food" fill="#10B981" name="Food" />
-                <Bar dataKey="other" fill="#F59E0B" name="Other" />
-              </BarChart>
-            </ResponsiveContainer>
+            <MultiBarChart
+              data={d.monthlyRevenue.map((m) => ({ label: m.month, rent: m.rent, food: m.food, other: m.other }))}
+              series={[
+                { key: 'rent', name: 'Rent', color: '#4F46E5' },
+                { key: 'food', name: 'Food', color: '#10B981' },
+                { key: 'other', name: 'Other', color: '#F59E0B' },
+              ]}
+              height={350}
+              formatValue={(v) => formatCurrency(v)}
+            />
           </div>
         )}
       </div>
@@ -214,25 +200,12 @@ export default function ReportsPage() {
         {d.categories && d.categories.length > 0 && (
           <div className="card">
             <h3 className="section-title mb-4">Expenses by Category</h3>
-            <ResponsiveContainer width="100%" height={350}>
-              <PieChart>
-                <Pie
-                  data={d.categories}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={(props: any) => `${props.name} (${((props.percent || 0) * 100).toFixed(0)}%)`}
-                  outerRadius={120}
-                  dataKey="amount"
-                  nameKey="name"
-                >
-                  {d.categories.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: any) => formatCurrency(Number(value))} />
-              </PieChart>
-            </ResponsiveContainer>
+            <PieChart
+              data={d.categories.map((c) => ({ label: c.name, value: c.amount }))}
+              colors={PIE_COLORS}
+              height={350}
+              formatValue={(v) => formatCurrency(v)}
+            />
           </div>
         )}
       </div>

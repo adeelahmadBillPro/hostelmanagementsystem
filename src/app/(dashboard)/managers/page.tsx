@@ -290,14 +290,14 @@ export default function ManagersPage() {
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => openEditModal(row)}
-                  className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#1E293B] transition-colors"
+                  className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#111C2E] transition-colors"
                   title="Edit"
                 >
                   <Edit2 size={18} className="text-text-muted" />
                 </button>
                 <button
                   onClick={() => handleDelete(row)}
-                  className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#1E293B] transition-colors"
+                  className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#111C2E] transition-colors"
                   title="Delete"
                 >
                   <Trash2 size={18} className="text-danger" />
@@ -386,16 +386,16 @@ export default function ManagersPage() {
           <div>
             <label className="label">Assign Hostels</label>
             {hostels.length === 0 ? (
-              <div className="p-4 rounded-lg bg-bg-main dark:bg-[#0F172A] text-sm text-text-muted flex items-center gap-2">
+              <div className="p-4 rounded-lg bg-bg-main dark:bg-[#0B1222] text-sm text-text-muted flex items-center gap-2">
                 <Building2 size={16} />
                 No hostels available. Create a hostel first.
               </div>
             ) : (
-              <div className="space-y-2 max-h-48 overflow-y-auto p-3 rounded-lg border border-border dark:border-[#334155] bg-bg-main dark:bg-[#0F172A]">
+              <div className="space-y-2 max-h-48 overflow-y-auto p-3 rounded-lg border border-border dark:border-[#1E2D42] bg-bg-main dark:bg-[#0B1222]">
                 {hostels.map((hostel) => (
                   <label
                     key={hostel.id}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-white dark:hover:bg-[#1E293B] cursor-pointer transition-colors"
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-white dark:hover:bg-[#111C2E] cursor-pointer transition-colors"
                   >
                     <input
                       type="checkbox"

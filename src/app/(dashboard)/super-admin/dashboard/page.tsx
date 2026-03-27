@@ -1,66 +1,78 @@
-import { prisma } from "@/lib/prisma";
-import { requireRole } from "@/lib/session";
+"use client";
+
+import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import { Users, Building2, DollarSign, UserCheck } from "lucide-react";
 import StatCard from "@/components/ui/stat-card";
 import RevenueChart from "./revenue-chart";
+import { PageLoader } from "@/components/ui/loading";
 
-async function getDashboardData() {
-  const [totalTenants, activeHostels, totalResidents, recentTenants, monthlyRevenue] =
-    await Promise.all([
-      prisma.tenant.count(),
-      prisma.hostel.count({ where: { status: "ACTIVE" } }),
-      prisma.resident.count({ where: { status: "ACTIVE" } }),
-      prisma.tenant.findMany({
-        take: 10,
-        orderBy: { createdAt: "desc" },
-        include: {
-          plan: { select: { name: true } },
-          _count: { select: { hostels: true } },
-        },
-      }),
-      prisma.payment.aggregate({
-        _sum: { amount: true },
-        where: {
-          createdAt: {
-            gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
-          },
-        },
-      }),
-    ]);
-
-  const now = new Date();
-  const revenueByMonth = await Promise.all(
-    Array.from({ length: 6 }, (_, i) => {
-      const date = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
-      const endDate = new Date(now.getFullYear(), now.getMonth() - (5 - i) + 1, 1);
-      return prisma.payment
-        .aggregate({
-          _sum: { amount: true },
-          where: {
-            createdAt: { gte: date, lt: endDate },
-          },
-        })
-        .then((result) => ({
-          month: date.toLocaleString("default", { month: "short", year: "2-digit" }),
-          revenue: result._sum.amount || 0,
-        }));
-    })
-  );
-
-  return {
-    totalTenants,
-    activeHostels,
-    totalResidents,
-    monthlyRevenue: monthlyRevenue._sum.amount || 0,
-    recentTenants,
-    revenueByMonth,
-  };
+interface DashboardData {
+  totalTenants: number;
+  activeHostels: number;
+  totalResidents: number;
+  monthlyRevenue: number;
+  recentTenants: any[];
+  revenueByMonth: { month: string; revenue: number }[];
 }
 
-export default async function SuperAdminDashboard() {
-  await requireRole(["SUPER_ADMIN"]);
-  const data = await getDashboardData();
+export default function SuperAdminDashboard() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/super-admin/analytics")
+      .then((res) => res.json())
+      .then((json) => {
+        // Build dashboard data from analytics endpoint
+        setData({
+          totalTenants: json.tenantGrowth?.reduce((s: number, t: any) => s + t.count, 0) || 0,
+          activeHostels: json.planDistribution?.reduce((s: number, p: any) => s + p.value, 0) || 0,
+          totalResidents: 0,
+          monthlyRevenue: json.monthlyRevenue?.reduce((s: number, m: any) => s + m.revenue, 0) || 0,
+          recentTenants: [],
+          revenueByMonth: json.monthlyRevenue || [],
+        });
+      })
+      .catch(() => {
+        setData({
+          totalTenants: 0,
+          activeHostels: 0,
+          totalResidents: 0,
+          monthlyRevenue: 0,
+          recentTenants: [],
+          revenueByMonth: [],
+        });
+      })
+      .finally(() => setLoading(false));
+
+    // Also fetch tenants for table
+    fetch("/api/super-admin/tenants")
+      .then((res) => res.json())
+      .then((tenants) => {
+        if (Array.isArray(tenants)) {
+          setData((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  totalTenants: tenants.length,
+                  activeHostels: tenants.reduce((s: number, t: any) => s + (t.hostelCount || 0), 0),
+                  recentTenants: tenants.slice(0, 10),
+                }
+              : prev
+          );
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  if (loading) return (
+    <DashboardLayout title="Super Admin Dashboard">
+      <PageLoader />
+    </DashboardLayout>
+  );
+
+  if (!data) return null;
 
   return (
     <DashboardLayout title="Super Admin Dashboard">
@@ -115,7 +127,7 @@ export default async function SuperAdminDashboard() {
           className="card p-0 overflow-hidden opacity-0 animate-fade-in-up"
           style={{ animationDelay: "500ms" }}
         >
-          <div className="p-4 border-b border-border dark:border-[#334155]">
+          <div className="p-4 border-b border-border">
             <h2 className="section-title">Recent Tenant Signups</h2>
           </div>
           <div className="overflow-x-auto">
@@ -127,30 +139,29 @@ export default async function SuperAdminDashboard() {
                   <th className="table-header">Plan</th>
                   <th className="table-header">Hostels</th>
                   <th className="table-header">Status</th>
-                  <th className="table-header">Joined</th>
                 </tr>
               </thead>
               <tbody>
                 {data.recentTenants.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={5}
                       className="px-4 py-12 text-center text-text-muted text-sm"
                     >
                       No tenants found
                     </td>
                   </tr>
                 ) : (
-                  data.recentTenants.map((tenant) => (
+                  data.recentTenants.map((tenant: any) => (
                     <tr key={tenant.id} className="table-row">
                       <td className="table-cell font-medium">{tenant.name}</td>
                       <td className="table-cell">{tenant.email}</td>
                       <td className="table-cell">
                         <span className="badge-primary">
-                          {tenant.plan?.name || "No Plan"}
+                          {tenant.planName || tenant.plan?.name || "No Plan"}
                         </span>
                       </td>
-                      <td className="table-cell">{tenant._count.hostels}</td>
+                      <td className="table-cell">{tenant.hostelCount || tenant._count?.hostels || 0}</td>
                       <td className="table-cell">
                         <span
                           className={
@@ -163,9 +174,6 @@ export default async function SuperAdminDashboard() {
                         >
                           {tenant.status}
                         </span>
-                      </td>
-                      <td className="table-cell">
-                        {new Date(tenant.createdAt).toLocaleDateString()}
                       </td>
                     </tr>
                   ))

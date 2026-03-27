@@ -142,7 +142,7 @@ export default function MapViewPage() {
     <div
       className={`${
         isFullScreen
-          ? "fixed inset-0 z-30 bg-bg-main dark:bg-[#0F172A] overflow-auto"
+          ? "fixed inset-0 z-30 bg-bg-main dark:bg-[#0B1222] overflow-auto"
           : ""
       }`}
     >

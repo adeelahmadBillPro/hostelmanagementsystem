@@ -1,16 +1,15 @@
 "use client";
 
-import { LucideIcon } from "lucide-react";
 import React from "react";
 
 interface StatCardProps {
   label?: string;
-  title?: string; // alias for label
+  title?: string;
   value: string | number;
-  icon: LucideIcon | React.ReactNode;
+  icon: any;
   iconBg?: string;
   iconColor?: string;
-  color?: string; // alias for iconColor
+  color?: string;
   trend?: {
     value: number;
     isUp: boolean;
@@ -22,7 +21,7 @@ export default function StatCard({
   label,
   title,
   value,
-  icon,
+  icon: Icon,
   iconBg,
   iconColor,
   color,
@@ -33,8 +32,22 @@ export default function StatCard({
   const displayColor = iconColor || color || "#4F46E5";
   const displayBg = iconBg || `${displayColor}15`;
 
-  // Check if icon is a LucideIcon component (function) or a React element
-  const isComponent = typeof icon === "function";
+  // Determine how to render the icon
+  const renderIcon = () => {
+    if (!Icon) return null;
+
+    // Already a rendered JSX element (e.g., <Users size={24} />)
+    if (React.isValidElement(Icon)) {
+      return Icon;
+    }
+
+    // A component (function or forwardRef object) - render it
+    if (typeof Icon === "function" || (typeof Icon === "object" && Icon.$$typeof)) {
+      return <Icon size={24} style={{ color: displayColor }} />;
+    }
+
+    return null;
+  };
 
   return (
     <div
@@ -42,12 +55,7 @@ export default function StatCard({
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="stat-icon" style={{ backgroundColor: displayBg }}>
-        {isComponent
-          ? React.createElement(icon as LucideIcon, {
-              size: 24,
-              style: { color: displayColor },
-            })
-          : icon}
+        {renderIcon()}
       </div>
       <div className="flex-1 min-w-0">
         <p className="stat-number">{value}</p>

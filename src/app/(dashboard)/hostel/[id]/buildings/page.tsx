@@ -285,7 +285,7 @@ export default function BuildingsPage() {
               <div key={building.id} className="card p-0 overflow-hidden">
                 {/* Building header */}
                 <div
-                  className="flex items-center gap-4 p-4 cursor-pointer hover:bg-bg-main/50 dark:hover:bg-[#1E293B]/50 transition-colors"
+                  className="flex items-center gap-4 p-4 cursor-pointer hover:bg-bg-main/50 dark:hover:bg-[#111C2E]/50 transition-colors"
                   onClick={() => toggleExpand(building.id)}
                 >
                   <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center flex-shrink-0">
@@ -353,13 +353,13 @@ export default function BuildingsPage() {
 
                 {/* Expanded floors */}
                 {isExpanded && (
-                  <div className="border-t border-border dark:border-[#334155] bg-bg-main/30 dark:bg-[#0F172A]/30">
+                  <div className="border-t border-border dark:border-[#1E2D42] bg-bg-main/30 dark:bg-[#0B1222]/30">
                     {building.floors.length === 0 ? (
                       <div className="p-4 text-center text-sm text-text-muted">
                         No floors added yet. Go to Floors page to add floors.
                       </div>
                     ) : (
-                      <div className="divide-y divide-border dark:divide-[#334155]">
+                      <div className="divide-y divide-border dark:divide-[#1E2D42]">
                         {building.floors.map((floor) => {
                           const floorOccupancy =
                             floor.bedCount > 0

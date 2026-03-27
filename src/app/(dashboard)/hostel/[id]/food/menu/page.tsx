@@ -250,14 +250,14 @@ export default function FoodMenuPage() {
 
       {/* Tabs + Add Button */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-1 bg-bg-main dark:bg-[#0F172A] rounded-xl p-1">
+        <div className="flex items-center gap-1 bg-bg-main dark:bg-[#0B1222] rounded-xl p-1">
           {MEAL_TYPES.map((type) => (
             <button
               key={type}
               onClick={() => setActiveTab(type)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === type
-                  ? "bg-white dark:bg-[#1E293B] text-primary shadow-sm"
+                  ? "bg-white dark:bg-[#111C2E] text-primary shadow-sm"
                   : "text-text-muted hover:text-text-primary"
               }`}
             >
@@ -334,7 +334,7 @@ export default function FoodMenuPage() {
               </div>
 
               {/* Actions */}
-              <div className="flex items-center justify-between pt-3 border-t border-border dark:border-[#334155]">
+              <div className="flex items-center justify-between pt-3 border-t border-border dark:border-[#1E2D42]">
                 <button
                   onClick={() => handleToggleActive(item)}
                   className="flex items-center gap-1.5 text-sm text-text-muted hover:text-text-primary transition-colors"
@@ -435,7 +435,7 @@ export default function FoodMenuPage() {
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg border-2 cursor-pointer transition-colors text-sm ${
                     form.availableDays.includes(day.key)
                       ? "border-primary bg-primary/5 text-primary"
-                      : "border-border dark:border-[#334155] text-text-muted"
+                      : "border-border dark:border-[#1E2D42] text-text-muted"
                   }`}
                 >
                   <input

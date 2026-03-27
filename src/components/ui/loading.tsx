@@ -48,7 +48,7 @@ export function TableSkeleton({ rows = 5 }: { rows?: number }) {
       {Array.from({ length: rows }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-4 px-4 py-4 border-b border-[#F1F5F9] dark:border-[#334155] animate-pulse"
+          className="flex items-center gap-4 px-4 py-4 border-b border-[#F1F5F9] dark:border-[#1E2D42] animate-pulse"
         >
           <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4" />
           <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-1/5" />

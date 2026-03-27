@@ -410,7 +410,7 @@ export default function ResidentBillDetailPage() {
                 </span>
               </div>
 
-              <div className="border-t border-border dark:border-[#334155] pt-3 mt-3 space-y-2">
+              <div className="border-t border-border dark:border-[#1E2D42] pt-3 mt-3 space-y-2">
                 <div className="flex justify-between text-sm font-semibold">
                   <span className="text-text-primary dark:text-white">Total Amount</span>
                   <span className="text-text-primary dark:text-white">
@@ -533,7 +533,7 @@ export default function ResidentBillDetailPage() {
                     className={`flex items-center gap-2 p-3 rounded-lg border-2 transition-colors text-sm ${
                       paymentForm.method === opt.value
                         ? "border-primary bg-primary/5 text-primary"
-                        : "border-border dark:border-[#334155] text-text-secondary hover:border-primary/40"
+                        : "border-border dark:border-[#1E2D42] text-text-secondary hover:border-primary/40"
                     }`}
                   >
                     <Icon size={16} />

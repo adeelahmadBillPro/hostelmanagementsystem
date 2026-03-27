@@ -310,7 +310,7 @@ export default function AddResidentPage() {
                         ? "bg-success text-white"
                         : isActive
                         ? "bg-primary text-white"
-                        : "bg-bg-main dark:bg-[#0F172A] text-text-muted"
+                        : "bg-bg-main dark:bg-[#0B1222] text-text-muted"
                     }`}
                   >
                     {isCompleted ? <Check size={20} /> : <StepIcon size={20} />}
@@ -332,7 +332,7 @@ export default function AddResidentPage() {
                     className={`flex-1 h-0.5 mx-4 mt-[-20px] ${
                       currentStep > step.number
                         ? "bg-success"
-                        : "bg-border dark:bg-[#334155]"
+                        : "bg-border dark:bg-[#1E2D42]"
                     }`}
                   />
                 )}
@@ -637,7 +637,7 @@ export default function AddResidentPage() {
                 type="number"
                 value={rentPerBed}
                 readOnly
-                className="input bg-bg-main dark:bg-[#0F172A] cursor-not-allowed"
+                className="input bg-bg-main dark:bg-[#0B1222] cursor-not-allowed"
               />
               <p className="text-xs text-text-muted mt-1">
                 Auto-filled from selected room
@@ -679,7 +679,7 @@ export default function AddResidentPage() {
           </div>
 
           {/* Summary */}
-          <div className="mt-6 p-4 rounded-xl bg-bg-main dark:bg-[#0F172A] border border-border dark:border-[#334155]">
+          <div className="mt-6 p-4 rounded-xl bg-bg-main dark:bg-[#0B1222] border border-border dark:border-[#1E2D42]">
             <h3 className="text-sm font-semibold text-text-primary dark:text-white mb-3">
               Summary
             </h3>
@@ -702,7 +702,7 @@ export default function AddResidentPage() {
                   {formatCurrency(parseFloat(securityDeposit) || 0)}
                 </span>
               </div>
-              <div className="border-t border-border dark:border-[#334155] pt-2 mt-2">
+              <div className="border-t border-border dark:border-[#1E2D42] pt-2 mt-2">
                 <div className="flex justify-between text-sm">
                   <span className="font-semibold text-text-primary dark:text-white">
                     Total Due at Move-in

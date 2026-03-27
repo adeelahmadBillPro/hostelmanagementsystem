@@ -10,6 +10,8 @@ import {
   LogOut,
   User,
   ChevronDown,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
@@ -17,9 +19,11 @@ import Link from "next/link";
 interface HeaderProps {
   title: string;
   onMenuClick: () => void;
+  onToggleCollapse?: () => void;
+  sidebarCollapsed?: boolean;
 }
 
-export default function Header({ title, onMenuClick }: HeaderProps) {
+export default function Header({ title, onMenuClick, onToggleCollapse, sidebarCollapsed }: HeaderProps) {
   const { data: session } = useSession();
   const { theme, toggleTheme } = useTheme();
   const [showDropdown, setShowDropdown] = useState(false);
@@ -39,15 +43,28 @@ export default function Header({ title, onMenuClick }: HeaderProps) {
   }, []);
 
   return (
-    <header className="h-16 bg-white dark:bg-[#1E293B] border-b border-border dark:border-[#334155] shadow-header flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30">
+    <header className="h-16 bg-white dark:bg-[#111C2E] border-b border-border dark:border-[#1E2D42] shadow-header flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30">
       {/* Left */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <button
           onClick={onMenuClick}
-          className="lg:hidden p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#0F172A] transition-colors"
+          className="lg:hidden p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#0B1222] transition-colors"
         >
           <Menu size={20} className="text-text-primary dark:text-white" />
         </button>
+        {onToggleCollapse && (
+          <button
+            onClick={onToggleCollapse}
+            className="hidden lg:flex p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#0B1222] transition-colors"
+            title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {sidebarCollapsed ? (
+              <PanelLeftOpen size={20} className="text-text-secondary" />
+            ) : (
+              <PanelLeftClose size={20} className="text-text-secondary" />
+            )}
+          </button>
+        )}
         <h1 className="text-lg font-semibold text-text-primary dark:text-white truncate">
           {title}
         </h1>
@@ -58,7 +75,7 @@ export default function Header({ title, onMenuClick }: HeaderProps) {
         {/* Theme toggle */}
         <button
           onClick={toggleTheme}
-          className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#0F172A] transition-colors"
+          className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#0B1222] transition-colors"
           title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
         >
           {theme === "light" ? (
@@ -69,7 +86,7 @@ export default function Header({ title, onMenuClick }: HeaderProps) {
         </button>
 
         {/* Notifications */}
-        <button className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#0F172A] transition-colors relative">
+        <button className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#0B1222] transition-colors relative">
           <Bell size={20} className="text-text-secondary dark:text-gray-400" />
           <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full" />
         </button>
@@ -78,7 +95,7 @@ export default function Header({ title, onMenuClick }: HeaderProps) {
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setShowDropdown(!showDropdown)}
-            className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-bg-main dark:hover:bg-[#0F172A] transition-colors"
+            className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-bg-main dark:hover:bg-[#0B1222] transition-colors"
           >
             <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white text-xs font-semibold">
               {session?.user?.name
@@ -100,8 +117,8 @@ export default function Header({ title, onMenuClick }: HeaderProps) {
           </button>
 
           {showDropdown && (
-            <div className="absolute right-0 top-12 w-56 bg-white dark:bg-[#1E293B] border border-border dark:border-[#334155] rounded-xl shadow-modal py-2 animate-scale-in">
-              <div className="px-4 py-2 border-b border-border dark:border-[#334155]">
+            <div className="absolute right-0 top-12 w-56 bg-white dark:bg-[#111C2E] border border-border dark:border-[#1E2D42] rounded-xl shadow-modal py-2 animate-scale-in">
+              <div className="px-4 py-2 border-b border-border dark:border-[#1E2D42]">
                 <p className="text-sm font-medium text-text-primary dark:text-white truncate">
                   {session?.user?.name}
                 </p>
@@ -111,7 +128,7 @@ export default function Header({ title, onMenuClick }: HeaderProps) {
               </div>
               <Link
                 href="/settings"
-                className="flex items-center gap-2 px-4 py-2.5 text-sm text-text-secondary dark:text-gray-300 hover:bg-bg-main dark:hover:bg-[#0F172A] transition-colors"
+                className="flex items-center gap-2 px-4 py-2.5 text-sm text-text-secondary dark:text-gray-300 hover:bg-bg-main dark:hover:bg-[#0B1222] transition-colors"
                 onClick={() => setShowDropdown(false)}
               >
                 <User size={16} />

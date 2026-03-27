@@ -264,7 +264,7 @@ export default function HostelsPage() {
                 </div>
 
                 <div className="grid grid-cols-3 gap-3 mb-3">
-                  <div className="text-center p-2 rounded-lg bg-bg-main dark:bg-[#0F172A]">
+                  <div className="text-center p-2 rounded-lg bg-bg-main dark:bg-[#0B1222]">
                     <p className="text-lg font-bold text-text-primary dark:text-white">
                       {hostel.totalRooms}
                     </p>
@@ -272,7 +272,7 @@ export default function HostelsPage() {
                       Rooms
                     </p>
                   </div>
-                  <div className="text-center p-2 rounded-lg bg-bg-main dark:bg-[#0F172A]">
+                  <div className="text-center p-2 rounded-lg bg-bg-main dark:bg-[#0B1222]">
                     <p className="text-lg font-bold text-success">
                       {hostel.occupiedBeds}
                     </p>
@@ -280,7 +280,7 @@ export default function HostelsPage() {
                       Occupied
                     </p>
                   </div>
-                  <div className="text-center p-2 rounded-lg bg-bg-main dark:bg-[#0F172A]">
+                  <div className="text-center p-2 rounded-lg bg-bg-main dark:bg-[#0B1222]">
                     <p className="text-lg font-bold text-warning">
                       {hostel.vacantBeds}
                     </p>
@@ -290,7 +290,7 @@ export default function HostelsPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-3 border-t border-border dark:border-[#334155]">
+                <div className="flex items-center justify-between pt-3 border-t border-border dark:border-[#1E2D42]">
                   <div>
                     <p className="text-xs text-text-muted">Monthly Revenue</p>
                     <p className="text-sm font-semibold text-text-primary dark:text-white">
@@ -303,7 +303,7 @@ export default function HostelsPage() {
                         e.stopPropagation();
                         openEditModal(hostel);
                       }}
-                      className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#1E293B] transition-colors"
+                      className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#111C2E] transition-colors"
                       title="Edit"
                     >
                       <Edit2 size={16} className="text-text-muted" />
@@ -313,7 +313,7 @@ export default function HostelsPage() {
                         e.stopPropagation();
                         handleDelete(hostel);
                       }}
-                      className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#1E293B] transition-colors"
+                      className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#111C2E] transition-colors"
                       title="Delete"
                     >
                       <Trash2 size={16} className="text-danger" />
@@ -322,7 +322,7 @@ export default function HostelsPage() {
                       onClick={() =>
                         router.push(`/hostel/${hostel.id}/buildings`)
                       }
-                      className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#1E293B] transition-colors"
+                      className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#111C2E] transition-colors"
                       title="View Details"
                     >
                       <ArrowRight size={16} className="text-primary" />

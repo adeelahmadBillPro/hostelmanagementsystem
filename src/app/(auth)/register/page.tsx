@@ -152,7 +152,7 @@ export default function RegisterPage() {
       </div>
 
       {/* Right - Registration Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 bg-white dark:bg-[#0F172A]">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 bg-white dark:bg-[#0B1222]">
         <div className="w-full max-w-[420px]">
           <div className="flex items-center gap-2 mb-8 lg:hidden opacity-0 animate-fade-in">
             <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">

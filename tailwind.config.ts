@@ -35,8 +35,10 @@ const config: Config = {
           dark: "#991B1B",
         },
         sidebar: {
-          DEFAULT: "#1E1B4B",
-          hover: "#312E81",
+          DEFAULT: "#0B1929",
+          hover: "#122A42",
+          accent: "#163352",
+          glass: "rgba(255,255,255,0.06)",
         },
         bg: {
           main: "#F8FAFC",

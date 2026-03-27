@@ -2,21 +2,7 @@
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/dashboard-layout";
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
+import { LineChart, BarChart, PieChart } from "@/components/ui/chart";
 
 interface AnalyticsData {
   revenueByMonth: { month: string; revenue: number }[];
@@ -24,7 +10,7 @@ interface AnalyticsData {
   planDistribution: { name: string; value: number }[];
 }
 
-const COLORS = ["#4F46E5", "#10B981", "#F59E0B", "#EF4444", "#0EA5E9"];
+const PLAN_COLORS = ["#4F46E5", "#10B981", "#F59E0B", "#EF4444", "#0EA5E9"];
 
 export default function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
@@ -122,46 +108,11 @@ export default function AnalyticsPage() {
             style={{ animationDelay: "300ms" }}
           >
             <h2 className="section-title mb-4">Revenue by Month</h2>
-            <div className="h-[320px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={data.revenueByMonth}
-                  margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                  <XAxis
-                    dataKey="month"
-                    tick={{ fontSize: 11, fill: "#64748B" }}
-                    axisLine={{ stroke: "#E2E8F0" }}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 11, fill: "#64748B" }}
-                    axisLine={{ stroke: "#E2E8F0" }}
-                    tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
-                  />
-                  <Tooltip
-                    formatter={(value: any) => [
-                      `PKR ${Number(value).toLocaleString()}`,
-                      "Revenue",
-                    ]}
-                    contentStyle={{
-                      backgroundColor: "#fff",
-                      border: "1px solid #E2E8F0",
-                      borderRadius: "8px",
-                      fontSize: "13px",
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="#4F46E5"
-                    strokeWidth={2.5}
-                    dot={{ fill: "#4F46E5", r: 4 }}
-                    activeDot={{ r: 6 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+            <LineChart
+              data={data.revenueByMonth.map((d) => ({ label: d.month, revenue: d.revenue }))}
+              series={[{ key: "revenue", name: "Revenue", color: "#4F46E5" }]}
+              height={320}
+            />
           </div>
 
           {/* Tenants Growth - BarChart */}
@@ -170,40 +121,12 @@ export default function AnalyticsPage() {
             style={{ animationDelay: "400ms" }}
           >
             <h2 className="section-title mb-4">Tenants Growth</h2>
-            <div className="h-[320px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={data.tenantsGrowth}
-                  margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
-                  <XAxis
-                    dataKey="month"
-                    tick={{ fontSize: 11, fill: "#64748B" }}
-                    axisLine={{ stroke: "#E2E8F0" }}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 11, fill: "#64748B" }}
-                    axisLine={{ stroke: "#E2E8F0" }}
-                    allowDecimals={false}
-                  />
-                  <Tooltip
-                    formatter={(value: any) => [value, "New Tenants"]}
-                    contentStyle={{
-                      backgroundColor: "#fff",
-                      border: "1px solid #E2E8F0",
-                      borderRadius: "8px",
-                      fontSize: "13px",
-                    }}
-                  />
-                  <Bar
-                    dataKey="tenants"
-                    fill="#10B981"
-                    radius={[6, 6, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            <BarChart
+              data={data.tenantsGrowth.map((d) => ({ label: d.month, value: d.tenants }))}
+              color="#10B981"
+              height={320}
+              formatValue={(v) => `${v}`}
+            />
           </div>
 
           {/* Plan Distribution - PieChart */}
@@ -212,50 +135,13 @@ export default function AnalyticsPage() {
             style={{ animationDelay: "500ms" }}
           >
             <h2 className="section-title mb-4">Plan Distribution</h2>
-            <div className="h-[360px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={data.planDistribution}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={80}
-                    outerRadius={130}
-                    paddingAngle={4}
-                    dataKey="value"
-                    label={(props: any) =>
-                      `${props.name} (${((props.percent || 0) * 100).toFixed(0)}%)`
-                    }
-                  >
-                    {data.planDistribution.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value: any, name: any) => [
-                      `${value} tenant${value !== 1 ? "s" : ""}`,
-                      name,
-                    ]}
-                    contentStyle={{
-                      backgroundColor: "#fff",
-                      border: "1px solid #E2E8F0",
-                      borderRadius: "8px",
-                      fontSize: "13px",
-                    }}
-                  />
-                  <Legend
-                    verticalAlign="bottom"
-                    iconType="circle"
-                    formatter={(value) => (
-                      <span className="text-sm text-text-secondary">{value}</span>
-                    )}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+            <PieChart
+              data={data.planDistribution.map((d) => ({ label: d.name, value: d.value }))}
+              colors={PLAN_COLORS}
+              height={360}
+              donut
+              formatValue={(v) => `${v} tenant${v !== 1 ? "s" : ""}`}
+            />
           </div>
         </div>
       </div>

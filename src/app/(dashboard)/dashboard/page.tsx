@@ -214,7 +214,7 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="grid grid-cols-3 gap-3 mb-3">
-                    <div className="text-center p-2 rounded-lg bg-bg-main dark:bg-[#0F172A]">
+                    <div className="text-center p-2 rounded-lg bg-bg-main dark:bg-[#0B1222]">
                       <p className="text-lg font-bold text-text-primary dark:text-white">
                         {hostel.totalRooms}
                       </p>
@@ -222,7 +222,7 @@ export default function DashboardPage() {
                         Rooms
                       </p>
                     </div>
-                    <div className="text-center p-2 rounded-lg bg-bg-main dark:bg-[#0F172A]">
+                    <div className="text-center p-2 rounded-lg bg-bg-main dark:bg-[#0B1222]">
                       <p className="text-lg font-bold text-success">
                         {hostel.occupiedBeds}
                       </p>
@@ -230,7 +230,7 @@ export default function DashboardPage() {
                         Occupied
                       </p>
                     </div>
-                    <div className="text-center p-2 rounded-lg bg-bg-main dark:bg-[#0F172A]">
+                    <div className="text-center p-2 rounded-lg bg-bg-main dark:bg-[#0B1222]">
                       <p className="text-lg font-bold text-warning">
                         {hostel.vacantBeds}
                       </p>
@@ -240,7 +240,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-border dark:border-[#334155]">
+                  <div className="flex items-center justify-between pt-3 border-t border-border dark:border-[#1E2D42]">
                     <div>
                       <p className="text-xs text-text-muted">Revenue</p>
                       <p className="text-sm font-semibold text-text-primary dark:text-white">

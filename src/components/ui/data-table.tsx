@@ -49,7 +49,7 @@ export default function DataTable<T extends Record<string, any>>({
     <div className="card p-0 overflow-hidden">
       {/* Search */}
       {searchable && (
-        <div className="p-4 border-b border-border dark:border-[#334155]">
+        <div className="p-4 border-b border-border dark:border-[#1E2D42]">
           <div className="relative max-w-sm">
             <Search
               size={16}
@@ -117,7 +117,7 @@ export default function DataTable<T extends Record<string, any>>({
       </div>
 
       {/* Mobile card view */}
-      <div className="md:hidden divide-y divide-border dark:divide-[#334155]">
+      <div className="md:hidden divide-y divide-border dark:divide-[#1E2D42]">
         {paginated.length === 0 ? (
           <div className="px-4 py-12 text-center text-text-muted text-sm">
             {emptyMessage}
@@ -151,7 +151,7 @@ export default function DataTable<T extends Record<string, any>>({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between p-4 border-t border-border dark:border-[#334155]">
+        <div className="flex items-center justify-between p-4 border-t border-border dark:border-[#1E2D42]">
           <span className="text-xs text-text-muted">
             Showing {(page - 1) * pageSize + 1}-
             {Math.min(page * pageSize, filtered.length)} of {filtered.length}

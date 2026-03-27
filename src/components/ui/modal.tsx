@@ -37,13 +37,13 @@ export default function Modal({
         className={`modal-content ${maxWidth} animate-scale-in`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between pb-4 border-b border-border dark:border-[#334155] mb-4">
+        <div className="flex items-center justify-between pb-4 border-b border-border dark:border-[#1E2D42] mb-4">
           <h2 className="text-lg font-semibold text-text-primary dark:text-white">
             {title}
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-bg-main dark:hover:bg-[#0F172A] transition-colors"
+            className="p-1.5 rounded-lg hover:bg-bg-main dark:hover:bg-[#0B1222] transition-colors"
           >
             <X size={18} className="text-text-muted" />
           </button>
