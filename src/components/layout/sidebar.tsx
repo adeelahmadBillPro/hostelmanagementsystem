@@ -31,6 +31,7 @@ import {
   Map,
   Upload,
   Activity,
+  CalendarDays,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -178,6 +179,11 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
               label: "Orders",
               href: `/hostel/${hostelId}/food/orders`,
               icon: <ClipboardList size={20} />,
+            },
+            {
+              label: "Weekly Schedule",
+              href: `/hostel/${hostelId}/food/weekly-schedule`,
+              icon: <CalendarDays size={20} />,
             },
           ],
         },
@@ -430,6 +436,7 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
     "Food Menu": "#FBBF24",
     "Menu Items": "#FBBF24",
     "Orders": "#FBBF24",
+    "Weekly Schedule": "#FBBF24",
     "Billing": "#F472B6",
     "Payments": "#22D3EE",
     "Payment Proofs": "#A78BFA",
