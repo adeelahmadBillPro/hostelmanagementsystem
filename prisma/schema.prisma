@@ -135,6 +135,7 @@ model User {
   role          UserRole
   image         String?
   emailVerified DateTime?
+  salary        Float?       // Manager salary (monthly)
 
   tenantId String?
   tenant   Tenant? @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -154,6 +155,7 @@ model User {
   gatePassesApproved GatePass[]    @relation("GatePassApprover")
   auditLogs        AuditLog[]
   managerHostels   ManagerHostel[]
+  managerSalaries  ManagerSalary[]
   proofsReviewed   PaymentProof[]  @relation("ProofReviewer")
   disputesResolved BillDispute[]   @relation("DisputeResolver")
   messagesSent     Message[]       @relation("MessageSender")
@@ -612,6 +614,12 @@ model Staff {
   emergencyPhone   String?
   isActive         Boolean   @default(true)
 
+  // Benefits
+  freeAccommodation Boolean @default(false) // Lives in hostel for free
+  roomNumber        String?                 // Which room they stay in (info only)
+  freeFood          Boolean @default(false) // Gets free mess food
+  foodAllowance     Float   @default(0)     // Monthly food allowance if not free
+
   hostelId String
   hostel   Hostel @relation(fields: [hostelId], references: [id], onDelete: Cascade)
 
@@ -643,6 +651,28 @@ model StaffSalary {
   updatedAt DateTime @updatedAt
 
   @@unique([staffId, month, year])
+}
+
+model ManagerSalary {
+  id        String   @id @default(cuid())
+  month     Int
+  year      Int
+  amount    Float
+  bonus     Float    @default(0)
+  deduction Float    @default(0)
+  netAmount Float
+  isPaid    Boolean  @default(false)
+  paidDate  DateTime?
+  method    PaymentMethod?
+  notes     String?
+
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, month, year])
 }
 
 // ==================== VISITOR MODULE ====================

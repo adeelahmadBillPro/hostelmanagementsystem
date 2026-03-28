@@ -62,7 +62,7 @@ export async function POST(
       salary,
       joiningDate,
     } = parsed.data;
-    const { emergencyContact, emergencyPhone } = body;
+    const { emergencyContact, emergencyPhone, freeAccommodation, roomNumber, freeFood, foodAllowance } = body;
 
     const staff = await prisma.staff.create({
       data: {
@@ -77,6 +77,10 @@ export async function POST(
         joiningDate: new Date(joiningDate),
         emergencyContact: emergencyContact || null,
         emergencyPhone: emergencyPhone || null,
+        freeAccommodation: !!freeAccommodation,
+        roomNumber: roomNumber || null,
+        freeFood: !!freeFood,
+        foodAllowance: parseFloat(foodAllowance) || 0,
         isActive: true,
       },
     });
