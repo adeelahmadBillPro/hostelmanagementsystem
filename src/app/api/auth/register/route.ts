@@ -11,11 +11,44 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { name, email, phone, password } = body;
 
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !phone) {
       return NextResponse.json(
-        { error: "Name, email, and password are required" },
+        { error: "Name, email, phone, and password are required" },
         { status: 400 }
       );
+    }
+
+    // Validate name
+    if (name.trim().length < 3) {
+      return NextResponse.json({ error: "Name must be at least 3 characters" }, { status: 400 });
+    }
+
+    // Validate email
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
+    }
+
+    // Validate phone (+92 format, 12 digits)
+    const cleanPhone = phone.replace(/\D/g, "");
+    if (cleanPhone.length !== 12 || !cleanPhone.startsWith("923")) {
+      return NextResponse.json({ error: "Phone must be a valid Pakistani number (+92 3XX XXXXXXX)" }, { status: 400 });
+    }
+
+    // Validate password strength
+    if (password.length < 8) {
+      return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
+    }
+    if (!/[A-Z]/.test(password)) {
+      return NextResponse.json({ error: "Password must contain at least one uppercase letter" }, { status: 400 });
+    }
+    if (!/[a-z]/.test(password)) {
+      return NextResponse.json({ error: "Password must contain at least one lowercase letter" }, { status: 400 });
+    }
+    if (!/[0-9]/.test(password)) {
+      return NextResponse.json({ error: "Password must contain at least one number" }, { status: 400 });
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      return NextResponse.json({ error: "Password must contain at least one special character" }, { status: 400 });
     }
 
     // Check existing user
@@ -60,7 +93,7 @@ export async function POST(req: Request) {
       data: {
         name: `${name}'s Organization`,
         email,
-        phone,
+        phone: "+" + cleanPhone,
         planId: trialPlan.id,
         isTrial: true,
         trialEndsAt,
