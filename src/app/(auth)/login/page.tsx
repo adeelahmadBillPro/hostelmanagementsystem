@@ -172,8 +172,16 @@ export default function LoginPage() {
 
           {/* Error */}
           {error && (
-            <div className="bg-danger-light dark:bg-red-900/20 border border-danger/20 text-danger-dark dark:text-red-300 text-sm px-4 py-3 rounded-xl mb-6 animate-scale-in font-medium">
-              {error}
+            <div className="bg-danger-light dark:bg-red-900/20 border border-danger/20 text-danger-dark dark:text-red-300 text-sm px-4 py-3 rounded-xl mb-6 animate-scale-in">
+              <p className="font-medium">{error}</p>
+              {error.toLowerCase().includes("no account") && (
+                <p className="mt-1.5 text-xs">
+                  New hostel owner?{" "}
+                  <a href="/register" className="font-bold underline hover:text-danger">
+                    Register here to get started
+                  </a>
+                </p>
+              )}
             </div>
           )}
 

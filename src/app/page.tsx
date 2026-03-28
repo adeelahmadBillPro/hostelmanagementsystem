@@ -175,24 +175,35 @@ const statusColors = {
 
 const pricingPlans = [
   {
-    name: 'Basic',
+    name: 'Free Trial',
     price: 'Free',
+    period: '14 days',
+    desc: 'Try HostelHub risk-free. No credit card required.',
+    features: ['1 Hostel', '5 Residents', '10 Rooms', '2 Staff', 'Basic Billing', 'Food Menu', 'Complaints'],
+    popular: false,
+  },
+  {
+    name: 'Starter',
+    price: 'PKR 2,000',
+    period: '/month',
     desc: 'Perfect for small hostels getting started.',
-    features: ['1 Hostel', 'Up to 50 Rooms', 'Basic Billing', 'Room Grid View', 'Resident Management', 'Email Support'],
+    features: ['1 Hostel', '50 Residents', '30 Rooms', '5 Staff', 'Billing & Payments', 'Food Orders', 'Gate Pass & Notices', 'Expenses & Reports'],
     popular: false,
   },
   {
     name: 'Pro',
-    price: 'Free',
+    price: 'PKR 5,000',
+    period: '/month',
     desc: 'For growing hostels that need everything.',
-    features: ['Up to 5 Hostels', 'Unlimited Rooms', 'Advanced Billing', 'Food & Staff Management', 'Reports & Analytics', 'In-App Messaging', 'Priority Support', 'Dark Mode'],
+    features: ['3 Hostels', '200 Residents', '100 Rooms', '20 Staff', 'Everything in Starter', 'Multi-Hostel Management', 'Managers & Analytics', 'In-App Messaging', 'Visitor Tracking'],
     popular: true,
   },
   {
     name: 'Enterprise',
-    price: 'Free',
+    price: 'PKR 10,000',
+    period: '/month',
     desc: 'For hostel chains and large operations.',
-    features: ['Unlimited Hostels', 'Unlimited Everything', 'Custom Branding', 'API Access', 'Payment Proof System', 'Custom Reports', 'SLA Guarantee', 'Phone Support 24/7'],
+    features: ['Unlimited Hostels', 'Unlimited Residents', 'Unlimited Rooms', 'Unlimited Staff', 'Everything in Pro', 'API Access', 'Custom Branding', 'Priority Support 24/7'],
     popular: false,
   },
 ];
@@ -1016,45 +1027,45 @@ export default function LandingPage() {
             </div>
           </AnimatedSection>
 
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-6xl mx-auto">
             {pricingPlans.map((plan, i) => (
-              <AnimatedSection key={plan.name} delay={i * 100}>
+              <AnimatedSection key={plan.name} delay={i * 80}>
                 <div
-                  className={`relative rounded-2xl p-7 h-full flex flex-col transition-all duration-300 hover:-translate-y-1 ${
+                  className={`relative rounded-2xl p-6 h-full flex flex-col transition-all duration-300 hover:-translate-y-1 ${
                     plan.popular
-                      ? 'bg-white border-2 border-primary shadow-xl shadow-primary/10'
+                      ? 'bg-white border-2 border-primary shadow-xl shadow-primary/10 scale-[1.02]'
                       : 'bg-white border border-gray-200 shadow-card hover:shadow-lg'
                   }`}
                 >
                   {plan.popular && (
-                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-primary text-white text-xs font-bold px-4 py-1 rounded-full">
+                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-primary to-indigo-500 text-white text-[11px] font-bold px-4 py-1 rounded-full shadow-lg shadow-primary/25">
                       Most Popular
                     </div>
                   )}
 
-                  <div className="mb-6">
-                    <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
-                    <p className="text-sm text-gray-500 mt-1">{plan.desc}</p>
+                  <div className="mb-5">
+                    <h3 className="text-lg font-bold text-gray-900">{plan.name}</h3>
+                    <p className="text-xs text-gray-500 mt-1">{plan.desc}</p>
                   </div>
 
-                  <div className="mb-6">
+                  <div className="mb-5">
                     {plan.price === 'Free' ? (
                       <>
-                        <span className="text-4xl font-extrabold text-emerald-500">FREE</span>
-                        <span className="text-gray-400 text-sm ml-2">for now</span>
+                        <span className="text-3xl font-extrabold text-emerald-500">FREE</span>
+                        <span className="text-gray-400 text-xs ml-1.5">{plan.period}</span>
                       </>
                     ) : (
                       <>
-                        <span className="text-4xl font-extrabold text-gray-900">PKR {plan.price}</span>
-                        <span className="text-gray-400 text-sm">/month</span>
+                        <span className="text-2xl font-extrabold text-gray-900">{plan.price}</span>
+                        <span className="text-gray-400 text-xs">{plan.period}</span>
                       </>
                     )}
                   </div>
 
-                  <ul className="space-y-3 mb-8 flex-1">
+                  <ul className="space-y-2.5 mb-6 flex-1">
                     {plan.features.map((f) => (
-                      <li key={f} className="flex items-start gap-2 text-sm text-gray-600">
-                        <Check className="w-4 h-4 text-success mt-0.5 flex-shrink-0" />
+                      <li key={f} className="flex items-start gap-2 text-[13px] text-gray-600">
+                        <Check className="w-3.5 h-3.5 text-success mt-0.5 flex-shrink-0" />
                         {f}
                       </li>
                     ))}
@@ -1062,13 +1073,15 @@ export default function LandingPage() {
 
                   <Link
                     href="/register"
-                    className={`block text-center py-3 rounded-xl font-semibold text-sm transition-all duration-200 ${
+                    className={`block text-center py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
                       plan.popular
                         ? 'bg-primary text-white hover:bg-primary-dark shadow-lg shadow-primary/20'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        : plan.price === 'Free'
+                          ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    Get Started
+                    {plan.price === 'Free' ? 'Start Free Trial' : 'Get Started'}
                   </Link>
                 </div>
               </AnimatedSection>
