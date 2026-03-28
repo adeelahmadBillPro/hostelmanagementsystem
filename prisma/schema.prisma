@@ -475,6 +475,10 @@ model FoodOrder {
   quantity    Int      @default(1)
   totalAmount Float
   orderDate   DateTime @default(now())
+  status      String   @default("PENDING") // PENDING, PREPARING, DELIVERED, CANCELLED
+  deliveredAt DateTime?
+  cancelledAt DateTime?
+  cancelReason String?
 
   residentId String
   resident   Resident @relation(fields: [residentId], references: [id])

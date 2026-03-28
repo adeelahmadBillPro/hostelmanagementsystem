@@ -186,3 +186,49 @@ export async function POST(
     );
   }
 }
+
+// Update order status (mark delivered, preparing, cancelled)
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { orderId, status, cancelReason } = body;
+
+    if (!orderId || !status) {
+      return NextResponse.json({ error: "Order ID and status required" }, { status: 400 });
+    }
+
+    const validStatuses = ["PENDING", "PREPARING", "DELIVERED", "CANCELLED"];
+    if (!validStatuses.includes(status)) {
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    }
+
+    const order = await prisma.foodOrder.findFirst({
+      where: { id: orderId, hostelId: params.id },
+    });
+    if (!order) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    const updateData: any = { status };
+    if (status === "DELIVERED") updateData.deliveredAt = new Date();
+    if (status === "CANCELLED") {
+      updateData.cancelledAt = new Date();
+      updateData.cancelReason = cancelReason || null;
+    }
+
+    await prisma.foodOrder.update({ where: { id: orderId }, data: updateData });
+
+    return NextResponse.json({ message: `Order marked as ${status.toLowerCase()}` });
+  } catch (error) {
+    console.error("Update order error:", error);
+    return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
+  }
+}

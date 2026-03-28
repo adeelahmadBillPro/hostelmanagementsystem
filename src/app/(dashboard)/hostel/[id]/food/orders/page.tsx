@@ -17,7 +17,11 @@ import {
   Search,
   Loader2,
   Filter,
+  CheckCircle,
+  ChefHat,
+  XCircle,
 } from "lucide-react";
+import { useToast } from "@/components/providers";
 
 interface OrderData {
   id: string;
@@ -25,6 +29,7 @@ interface OrderData {
   totalAmount: number;
   orderDate: string;
   createdAt: string;
+  status: string;
   resident: {
     user: { name: string };
   };
@@ -61,6 +66,24 @@ const MEAL_ICONS: Record<string, React.ReactNode> = {
 export default function FoodOrdersPage() {
   const params = useParams();
   const hostelId = params.id as string;
+  const { addToast } = useToast();
+
+  const updateOrderStatus = async (orderId: string, status: string) => {
+    try {
+      const res = await fetch(`/api/hostels/${hostelId}/food/orders`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, status }),
+      });
+      if (res.ok) {
+        addToast(`Order marked as ${status.toLowerCase()}`, "success");
+        fetchOrders();
+      } else {
+        const data = await res.json();
+        addToast(data.error || "Failed to update", "error");
+      }
+    } catch { addToast("Failed to update order", "error"); }
+  };
 
   const today = new Date().toISOString().split("T")[0];
   const [dateFilter, setDateFilter] = useState(today);
@@ -157,6 +180,60 @@ export default function FoodOrdersPage() {
           hour: "2-digit",
           minute: "2-digit",
         }),
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (row: OrderData) => {
+        const s = row.status || "PENDING";
+        const map: Record<string, { class: string; label: string }> = {
+          PENDING: { class: "badge-warning", label: "Pending" },
+          PREPARING: { class: "badge-primary", label: "Preparing" },
+          DELIVERED: { class: "badge-success", label: "Delivered" },
+          CANCELLED: { class: "badge-danger", label: "Cancelled" },
+        };
+        const badge = map[s] || { class: "badge-secondary", label: s };
+        return <span className={badge.class}>{badge.label}</span>;
+      },
+    },
+    {
+      key: "actions",
+      label: "Action",
+      render: (row: OrderData) => {
+        const s = row.status || "PENDING";
+        if (s === "DELIVERED" || s === "CANCELLED") return null;
+        return (
+          <div className="flex items-center gap-1">
+            {s === "PENDING" && (
+              <button
+                onClick={() => updateOrderStatus(row.id, "PREPARING")}
+                className="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                title="Mark Preparing"
+              >
+                <ChefHat size={15} className="text-blue-500" />
+              </button>
+            )}
+            {(s === "PENDING" || s === "PREPARING") && (
+              <button
+                onClick={() => updateOrderStatus(row.id, "DELIVERED")}
+                className="p-1.5 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+                title="Mark Delivered"
+              >
+                <CheckCircle size={15} className="text-emerald-500" />
+              </button>
+            )}
+            {s === "PENDING" && (
+              <button
+                onClick={() => updateOrderStatus(row.id, "CANCELLED")}
+                className="p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                title="Cancel Order"
+              >
+                <XCircle size={15} className="text-red-400" />
+              </button>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
