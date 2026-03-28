@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, email, phone, password, hostelIds } = body;
+    const { name, email, phone, password, salary, hostelIds } = body;
 
     if (!name || !email || !password) {
       return NextResponse.json(
@@ -145,6 +145,7 @@ export async function POST(request: NextRequest) {
         email,
         phone: phone || null,
         password: hashedPassword,
+        salary: parseFloat(salary) || 0,
         role: "HOSTEL_MANAGER",
         tenantId,
         managerHostels: {

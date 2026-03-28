@@ -288,7 +288,7 @@ export default function Header({ title, onMenuClick, onToggleCollapse, sidebarCo
               </div>
               <div className="py-1">
                 <Link
-                  href="/settings"
+                  href="/profile"
                   className="flex items-center gap-3 px-4 py-2.5 text-sm text-text-secondary dark:text-gray-300 hover:bg-bg-main dark:hover:bg-[#0B1222] transition-colors rounded-lg mx-1.5"
                   onClick={() => setShowDropdown(false)}
                 >

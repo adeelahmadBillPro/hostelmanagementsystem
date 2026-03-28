@@ -249,6 +249,7 @@ model Hostel {
   managerHostels    ManagerHostel[]
   conversations     Conversation[]
   amenities         HostelAmenity[]
+  staffAttendance   StaffAttendance[]
 
   @@index([tenantId])
 }
@@ -627,6 +628,7 @@ model Staff {
   updatedAt DateTime @updatedAt
 
   salaryRecords StaffSalary[]
+  attendance    StaffAttendance[]
 
   @@index([hostelId])
 }
@@ -939,4 +941,26 @@ model Message {
 
   @@index([conversationId])
   @@index([senderId])
+}
+
+// ==================== STAFF ATTENDANCE ====================
+
+model StaffAttendance {
+  id        String   @id @default(cuid())
+  date      DateTime
+  status    String   @default("PRESENT") // PRESENT, ABSENT, LATE, HALF_DAY, LEAVE
+  checkIn   String?  // Time string "08:30"
+  checkOut  String?  // Time string "20:00"
+  notes     String?
+
+  staffId   String
+  staff     Staff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  hostelId  String
+  hostel    Hostel @relation(fields: [hostelId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([staffId, date])
+  @@index([hostelId])
 }

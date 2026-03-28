@@ -43,6 +43,7 @@ export default function ManagersPage() {
     email: "",
     phone: "",
     password: "",
+    salary: "",
     hostelIds: [] as string[],
   });
 
@@ -85,6 +86,7 @@ export default function ManagersPage() {
       email: "",
       phone: "",
       password: "",
+      salary: "",
       hostelIds: [],
     });
     setFormError("");
@@ -103,6 +105,7 @@ export default function ManagersPage() {
       email: manager.email,
       phone: manager.phone || "",
       password: "",
+      salary: "",
       hostelIds: manager.assignedHostels.map((h) => h.id),
     });
     setFormError("");
@@ -156,6 +159,7 @@ export default function ManagersPage() {
             email: formData.email,
             phone: formData.phone || null,
             password: formData.password,
+            salary: parseFloat(formData.salary) || 0,
             hostelIds: formData.hostelIds,
           }),
         });
@@ -384,6 +388,19 @@ export default function ManagersPage() {
               />
             </div>
           )}
+
+          <div>
+            <label className="label">Monthly Salary (PKR)</label>
+            <input
+              type="number"
+              value={formData.salary}
+              onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
+              className="input"
+              placeholder="e.g., 25000"
+              min="0"
+            />
+            <p className="text-[10px] text-text-muted mt-1">Used for salary sheet generation</p>
+          </div>
 
           <div>
             <label className="label">Assign Hostels</label>
