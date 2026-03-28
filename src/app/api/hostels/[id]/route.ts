@@ -128,6 +128,22 @@ export async function PATCH(
       data: updateData,
     });
 
+    // Save amenities if provided
+    if (body.amenities && Array.isArray(body.amenities)) {
+      // Delete existing amenities
+      await prisma.hostelAmenity.deleteMany({ where: { hostelId: params.id } });
+      // Create new ones
+      if (body.amenities.length > 0) {
+        await prisma.hostelAmenity.createMany({
+          data: body.amenities.map((name: string) => ({
+            name,
+            category: "hostel",
+            hostelId: params.id,
+          })),
+        });
+      }
+    }
+
     return NextResponse.json(hostel);
   } catch (error) {
     console.error("Update hostel error:", error);

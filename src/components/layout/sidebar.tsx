@@ -106,6 +106,18 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
       href: "/managers",
       icon: <UserCog size={20} />,
       roles: ["TENANT_ADMIN"],
+      children: [
+        {
+          label: "All Managers",
+          href: "/managers",
+          icon: <UserCog size={20} />,
+        },
+        {
+          label: "Manager Salary",
+          href: "/managers/salary",
+          icon: <Banknote size={20} />,
+        },
+      ],
     },
   ];
 

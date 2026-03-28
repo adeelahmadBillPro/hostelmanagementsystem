@@ -50,6 +50,42 @@ export default function HostelsPage() {
     city: "",
     contact: "",
   });
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+
+  const ALL_AMENITIES = [
+    { name: "WiFi", category: "hostel" },
+    { name: "AC", category: "room" },
+    { name: "Parking", category: "hostel" },
+    { name: "Laundry", category: "hostel" },
+    { name: "CCTV", category: "security" },
+    { name: "Generator", category: "hostel" },
+    { name: "RO Water", category: "hostel" },
+    { name: "Geyser", category: "room" },
+    { name: "Kitchen", category: "dining" },
+    { name: "Mess/Canteen", category: "dining" },
+    { name: "TV Lounge", category: "hostel" },
+    { name: "Study Room", category: "hostel" },
+    { name: "Gym", category: "hostel" },
+    { name: "Sports Area", category: "hostel" },
+    { name: "Prayer Room", category: "hostel" },
+  ];
+
+  const TYPE_DEFAULTS: Record<string, string[]> = {
+    GOVERNMENT: ["WiFi", "Parking", "Mess/Canteen", "Prayer Room"],
+    UNIVERSITY: ["WiFi", "AC", "Parking", "Laundry", "CCTV", "Mess/Canteen", "Study Room", "Prayer Room"],
+    PRIVATE: ["WiFi", "AC", "Parking", "Laundry", "CCTV", "Generator", "RO Water", "Geyser", "Mess/Canteen", "TV Lounge"],
+  };
+
+  const handleTypeChange = (type: string) => {
+    setFormData((f) => ({ ...f, type }));
+    setSelectedAmenities(TYPE_DEFAULTS[type] || []);
+  };
+
+  const toggleAmenity = (name: string) => {
+    setSelectedAmenities((prev) =>
+      prev.includes(name) ? prev.filter((a) => a !== name) : [...prev, name]
+    );
+  };
 
   const fetchHostels = async () => {
     try {
@@ -116,14 +152,26 @@ export default function HostelsPage() {
         }),
       });
 
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
         setFormError(data.error || "Failed to save hostel");
         return;
       }
 
+      // Save amenities for new hostel
+      if (!editingHostel && data.id && selectedAmenities.length > 0) {
+        try {
+          await fetch(`/api/hostels/${data.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ amenities: selectedAmenities }),
+          });
+        } catch {}
+      }
+
       setModalOpen(false);
       resetForm();
+      setSelectedAmenities([]);
       fetchHostels();
     } catch (error) {
       setFormError("An error occurred. Please try again.");
@@ -369,9 +417,7 @@ export default function HostelsPage() {
             <label className="label">Hostel Type</label>
             <select
               value={formData.type}
-              onChange={(e) =>
-                setFormData({ ...formData, type: e.target.value })
-              }
+              onChange={(e) => handleTypeChange(e.target.value)}
               className="select"
               required
             >
@@ -425,6 +471,33 @@ export default function HostelsPage() {
               />
             </div>
           </div>
+
+          {/* Facilities */}
+          {!editingHostel && (
+            <div>
+              <label className="label">Facilities & Amenities</label>
+              <p className="text-[11px] text-text-muted mb-2">Auto-selected based on hostel type. Click to add/remove.</p>
+              <div className="flex flex-wrap gap-2">
+                {ALL_AMENITIES.map((amenity) => {
+                  const selected = selectedAmenities.includes(amenity.name);
+                  return (
+                    <button
+                      key={amenity.name}
+                      type="button"
+                      onClick={() => toggleAmenity(amenity.name)}
+                      className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${
+                        selected
+                          ? "bg-primary/10 border-primary text-primary font-semibold"
+                          : "bg-white dark:bg-[#111C2E] border-border dark:border-[#1E2D42] text-text-muted hover:border-primary/40"
+                      }`}
+                    >
+                      {selected ? "✓ " : ""}{amenity.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="flex justify-end gap-3 pt-2">
             <button
