@@ -123,10 +123,11 @@ function BedVisual({
   bed,
   delay,
 }: {
-  bed: { status: string; resident?: { name: string } | null; bedNumber: string };
+  bed: { status: string; resident?: { name: string; phone?: string; moveInDate?: string } | null; bedNumber: string };
   delay: number;
 }) {
   const [visible, setVisible] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), delay);
@@ -142,16 +143,27 @@ function BedVisual({
       className={`relative transition-all duration-300 ${
         visible ? "scale-100 opacity-100" : "scale-0 opacity-0"
       }`}
+      onMouseEnter={() => bed.resident && setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
     >
+      {/* Hover tooltip for occupied beds */}
+      {showTooltip && bed.resident && (
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 animate-fade-in">
+          <div className="bg-gray-900 text-white text-[11px] rounded-lg px-3 py-2 shadow-xl whitespace-nowrap">
+            <p className="font-bold text-xs">{bed.resident.name}</p>
+            <p className="text-gray-400 mt-0.5">Bed: {bed.bedNumber}</p>
+            {bed.resident.phone && <p className="text-gray-400">{bed.resident.phone}</p>}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900" />
+          </div>
+        </div>
+      )}
+
       {/* Bed shape - rounded rectangle with headboard */}
       <div
         className={`relative rounded-sm border-2 ${getBedColor(
           bed.status
-        )} flex flex-col items-center justify-center overflow-hidden`}
+        )} flex flex-col items-center justify-center overflow-hidden cursor-pointer`}
         style={{ width: "38px", height: "52px" }}
-        title={`${bed.bedNumber} - ${bed.status}${
-          bed.resident?.name ? ` (${bed.resident.name})` : ""
-        }`}
       >
         {/* Headboard */}
         <div
