@@ -136,6 +136,12 @@ export const staffSchema = z.object({
   shift: z.enum(["DAY", "NIGHT", "FULL"]),
   salary: z.number().min(0, "Salary must be positive"),
   joiningDate: z.string().min(1, "Joining date is required"),
+  freeAccommodation: z.boolean().optional(),
+  roomNumber: z.string().optional(),
+  freeFood: z.boolean().optional(),
+  foodAllowance: z.number().optional(),
+  emergencyContact: z.string().optional(),
+  emergencyPhone: z.string().optional(),
 });
 
 // ==================== NOTICE ====================

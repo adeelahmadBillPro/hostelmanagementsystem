@@ -298,3 +298,40 @@ export async function POST(
     return NextResponse.json({ error: "Failed to generate bills" }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getSession();
+    if (!session || !session.user.tenantId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const billId = searchParams.get("deleteBillId");
+    if (!billId) {
+      return NextResponse.json({ error: "Bill ID required" }, { status: 400 });
+    }
+
+    const bill = await prisma.monthlyBill.findFirst({
+      where: { id: billId, hostelId: params.id },
+      include: { payments: true },
+    });
+
+    if (!bill) {
+      return NextResponse.json({ error: "Bill not found" }, { status: 404 });
+    }
+
+    if (bill.payments.length > 0 || bill.paidAmount > 0) {
+      return NextResponse.json({ error: "Cannot delete a bill with payments. Remove payments first." }, { status: 400 });
+    }
+
+    await prisma.monthlyBill.delete({ where: { id: billId } });
+    return NextResponse.json({ message: "Bill deleted successfully" });
+  } catch (error) {
+    console.error("Delete bill error:", error);
+    return NextResponse.json({ error: "Failed to delete bill" }, { status: 500 });
+  }
+}

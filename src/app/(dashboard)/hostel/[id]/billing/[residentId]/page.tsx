@@ -362,7 +362,7 @@ export default function ResidentBillDetailPage() {
               onClick={async () => {
                 if (!confirm("Delete this bill? This cannot be undone.")) return;
                 try {
-                  const res = await fetch(`/api/hostels/${hostelId}/billing/${bill.id}`, { method: "DELETE" });
+                  const res = await fetch(`/api/hostels/${hostelId}/billing?deleteBillId=${bill.id}`, { method: "DELETE" });
                   if (res.ok) {
                     addToast("Bill deleted successfully", "success");
                     router.push(`/hostel/${hostelId}/billing`);

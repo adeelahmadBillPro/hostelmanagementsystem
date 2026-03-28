@@ -62,7 +62,31 @@ export async function POST(
       salary,
       joiningDate,
     } = parsed.data;
-    const { emergencyContact, emergencyPhone, freeAccommodation, roomNumber, freeFood, foodAllowance } = body;
+    const { emergencyContact, emergencyPhone, freeAccommodation, roomNumber, freeFood, foodAllowance } = parsed.data;
+
+    // Validate CNIC - reject dummy/repeated digits
+    if (cnic) {
+      const cleanCnic = cnic.replace(/\D/g, "");
+      if (cleanCnic.length !== 13) {
+        return NextResponse.json({ error: "CNIC must be exactly 13 digits" }, { status: 400 });
+      }
+      // Reject all same digits (11111111111111, 22222222222222, etc.)
+      if (/^(\d)\1{12}$/.test(cleanCnic)) {
+        return NextResponse.json({ error: "Please enter a valid CNIC number, not repeated digits" }, { status: 400 });
+      }
+      // Check duplicate CNIC in same hostel
+      const existingStaff = await prisma.staff.findFirst({
+        where: { hostelId, cnic: cleanCnic, isActive: true },
+      });
+      if (existingStaff) {
+        return NextResponse.json({ error: `Staff with this CNIC already exists: ${existingStaff.name}` }, { status: 400 });
+      }
+    }
+
+    // Validate phone
+    if (phone && phone.length === 11 && /^(\d)\1{10}$/.test(phone)) {
+      return NextResponse.json({ error: "Please enter a valid phone number" }, { status: 400 });
+    }
 
     const staff = await prisma.staff.create({
       data: {
@@ -80,7 +104,7 @@ export async function POST(
         freeAccommodation: !!freeAccommodation,
         roomNumber: roomNumber || null,
         freeFood: !!freeFood,
-        foodAllowance: parseFloat(foodAllowance) || 0,
+        foodAllowance: Number(foodAllowance) || 0,
         isActive: true,
       },
     });
