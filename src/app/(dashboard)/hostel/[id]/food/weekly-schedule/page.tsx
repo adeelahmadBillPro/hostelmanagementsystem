@@ -14,6 +14,8 @@ import {
   Trash2,
   UtensilsCrossed,
   RotateCcw,
+  Grid3X3,
+  List,
 } from "lucide-react";
 
 interface MenuItem {
@@ -48,6 +50,20 @@ const MEAL_BG: Record<string, string> = {
   SNACK: "bg-emerald-50 dark:bg-emerald-900/10 border-emerald-200 dark:border-emerald-800/30",
 };
 
+const MEAL_BADGE_BG: Record<string, string> = {
+  BREAKFAST: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+  LUNCH: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+  DINNER: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+  SNACK: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
+};
+
+const MEAL_CELL_BORDER: Record<string, string> = {
+  BREAKFAST: "border-l-amber-400",
+  LUNCH: "border-l-blue-400",
+  DINNER: "border-l-purple-400",
+  SNACK: "border-l-emerald-400",
+};
+
 const DAYS = [
   { key: "monday", label: "Mon", full: "Monday" },
   { key: "tuesday", label: "Tue", full: "Tuesday" },
@@ -62,6 +78,8 @@ const ALL_DAYS = DAYS.map((d) => d.key);
 const WEEKDAYS = ["monday", "tuesday", "wednesday", "thursday", "friday"];
 const WEEKENDS = ["saturday", "sunday"];
 
+type ViewMode = "calendar" | "edit";
+
 export default function WeeklySchedulePage() {
   const params = useParams();
   const hostelId = params.id as string;
@@ -73,6 +91,7 @@ export default function WeeklySchedulePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("calendar");
 
   const fetchMenu = useCallback(async () => {
     try {
@@ -187,6 +206,15 @@ export default function WeeklySchedulePage() {
     items: menuItems.filter((item) => item.mealType === type),
   })).filter((group) => group.items.length > 0);
 
+  // Build calendar data: for each day + meal type, list item names
+  const getItemsForDayMeal = (dayKey: string, mealType: string) => {
+    return menuItems.filter(
+      (item) =>
+        item.mealType === mealType &&
+        (schedule[item.id] || []).includes(dayKey)
+    );
+  };
+
   return (
     <DashboardLayout title="Weekly Schedule" hostelId={hostelId}>
       {/* Header */}
@@ -197,12 +225,40 @@ export default function WeeklySchedulePage() {
             Weekly Menu Schedule
           </h2>
           <p className="text-sm text-text-muted mt-1">
-            Set which days each menu item is available. Check or uncheck days for each item.
+            {viewMode === "calendar"
+              ? "View the weekly food schedule at a glance. Switch to Edit mode to make changes."
+              : "Set which days each menu item is available. Check or uncheck days for each item."}
           </p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {hasChanges && (
+          {/* View Toggle */}
+          <div className="flex items-center bg-bg-main dark:bg-[#111C2E] rounded-xl p-1 border border-border dark:border-white/10">
+            <button
+              onClick={() => setViewMode("calendar")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                viewMode === "calendar"
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-text-muted hover:text-text-primary dark:hover:text-white"
+              }`}
+            >
+              <Grid3X3 size={14} />
+              Calendar
+            </button>
+            <button
+              onClick={() => setViewMode("edit")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                viewMode === "edit"
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-text-muted hover:text-text-primary dark:hover:text-white"
+              }`}
+            >
+              <List size={14} />
+              Edit
+            </button>
+          </div>
+
+          {viewMode === "edit" && hasChanges && (
             <button
               onClick={resetChanges}
               className="btn-secondary flex items-center gap-2 text-sm animate-fade-in"
@@ -211,64 +267,28 @@ export default function WeeklySchedulePage() {
               Reset
             </button>
           )}
-          <button
-            onClick={handleSave}
-            disabled={saving || !hasChanges}
-            className="btn-primary flex items-center gap-2 text-sm disabled:opacity-50"
-          >
-            {saving ? (
-              <>
-                <Loader2 size={14} className="animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <>
-                <Save size={14} />
-                Save Schedule
-              </>
-            )}
-          </button>
+          {viewMode === "edit" && (
+            <button
+              onClick={handleSave}
+              disabled={saving || !hasChanges}
+              className="btn-primary flex items-center gap-2 text-sm disabled:opacity-50"
+            >
+              {saving ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save size={14} />
+                  Save Schedule
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Quick Templates */}
-      <div className="card mb-6 animate-fade-in">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div>
-            <h3 className="text-sm font-semibold text-text-primary dark:text-white">
-              Quick Templates
-            </h3>
-            <p className="text-xs text-text-muted mt-0.5">
-              Apply a template to all items at once
-            </p>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={() => applyTemplate("daily")}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/30 transition-colors"
-            >
-              <Copy size={12} className="inline mr-1.5" />
-              Daily (All 7 Days)
-            </button>
-            <button
-              onClick={() => applyTemplate("weekdays")}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30 transition-colors"
-            >
-              <Copy size={12} className="inline mr-1.5" />
-              Weekdays Only (Mon-Fri)
-            </button>
-            <button
-              onClick={() => applyTemplate("weekends")}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/20 dark:text-purple-400 dark:hover:bg-purple-900/30 transition-colors"
-            >
-              <Copy size={12} className="inline mr-1.5" />
-              Weekends Only (Sat-Sun)
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Schedule Table */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 size={32} className="animate-spin text-primary" />
@@ -281,157 +301,343 @@ export default function WeeklySchedulePage() {
             Add menu items from the Food Menu page first.
           </p>
         </div>
-      ) : (
-        <div className="space-y-6">
-          {groupedItems.map((group, gi) => (
-            <div
-              key={group.type}
-              className="animate-fade-in-up"
-              style={{ animationDelay: `${gi * 100}ms` }}
-            >
-              {/* Meal Type Header */}
-              <div className="flex items-center gap-3 mb-3">
-                <div
-                  className={`w-1 h-8 rounded-full bg-gradient-to-b ${MEAL_COLORS[group.type]}`}
-                />
-                <h3 className="text-lg font-bold text-text-primary dark:text-white">
-                  {MEAL_LABELS[group.type]}
-                </h3>
-                <span className="text-xs text-text-muted bg-bg-main dark:bg-[#111C2E] px-2 py-0.5 rounded-full">
-                  {group.items.length} items
-                </span>
+      ) : viewMode === "calendar" ? (
+        /* ==================== CALENDAR / GRID VIEW ==================== */
+        <>
+          {/* Desktop: 7-column grid */}
+          <div className="hidden md:block animate-fade-in">
+            <div className="rounded-2xl border border-border dark:border-white/10 overflow-hidden bg-white dark:bg-[#0F1A2E]">
+              {/* Day Headers */}
+              <div className="grid grid-cols-7 bg-bg-main dark:bg-[#111C2E] border-b border-border dark:border-white/10">
+                {DAYS.map((day) => (
+                  <div
+                    key={day.key}
+                    className={`px-3 py-3 text-center font-semibold text-sm text-text-primary dark:text-white border-r last:border-r-0 border-border dark:border-white/10 ${
+                      day.key === "saturday" || day.key === "sunday"
+                        ? "bg-amber-50/50 dark:bg-amber-900/5"
+                        : ""
+                    }`}
+                  >
+                    {day.full}
+                  </div>
+                ))}
               </div>
 
-              {/* Table */}
-              <div className={`rounded-xl border overflow-hidden ${MEAL_BG[group.type]}`}>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-black/5 dark:border-white/5">
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-text-secondary dark:text-gray-400 uppercase tracking-wider min-w-[200px]">
-                          Menu Item
-                        </th>
-                        {DAYS.map((day) => (
-                          <th
-                            key={day.key}
-                            className="px-2 py-3 text-center text-xs font-semibold text-text-secondary dark:text-gray-400 uppercase tracking-wider w-16"
-                          >
-                            <span className="hidden sm:inline">{day.label}</span>
-                            <span className="sm:hidden">{day.label.charAt(0)}</span>
-                          </th>
-                        ))}
-                        <th className="px-3 py-3 text-center text-xs font-semibold text-text-secondary dark:text-gray-400 uppercase tracking-wider w-24">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {group.items.map((item, idx) => {
-                        const itemDays = schedule[item.id] || [];
-                        const isAllSelected = ALL_DAYS.every((d) =>
-                          itemDays.includes(d)
-                        );
-                        const isNoneSelected = itemDays.length === 0;
+              {/* Meal rows */}
+              {MEAL_TYPES.map((mealType) => {
+                const hasItems = menuItems.some((item) => item.mealType === mealType);
+                if (!hasItems) return null;
+
+                return (
+                  <div key={mealType}>
+                    {/* Meal type label row */}
+                    <div className={`grid grid-cols-7 border-b border-border dark:border-white/10`}>
+                      <div className="col-span-7 px-4 py-1.5 flex items-center gap-2 bg-gradient-to-r ${MEAL_COLORS[mealType]} bg-opacity-5">
+                        <div className={`w-1.5 h-5 rounded-full bg-gradient-to-b ${MEAL_COLORS[mealType]}`} />
+                        <span className={`text-xs font-bold uppercase tracking-wider ${MEAL_BADGE_BG[mealType]} px-2 py-0.5 rounded-md`}>
+                          {MEAL_LABELS[mealType]}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Items grid */}
+                    <div className="grid grid-cols-7 border-b border-border dark:border-white/10">
+                      {DAYS.map((day) => {
+                        const items = getItemsForDayMeal(day.key, mealType);
+                        const isWeekend = day.key === "saturday" || day.key === "sunday";
 
                         return (
-                          <tr
-                            key={item.id}
-                            className={`transition-colors hover:bg-black/[0.02] dark:hover:bg-white/[0.02] ${
-                              idx !== group.items.length - 1
-                                ? "border-b border-black/5 dark:border-white/5"
-                                : ""
+                          <div
+                            key={`${mealType}-${day.key}`}
+                            className={`px-2 py-2 min-h-[60px] border-r last:border-r-0 border-border dark:border-white/10 ${
+                              isWeekend ? "bg-amber-50/30 dark:bg-amber-900/5" : ""
                             }`}
                           >
-                            <td className="px-4 py-3">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium text-text-primary dark:text-white">
-                                  {item.itemName}
-                                </span>
-                                <span className="text-xs text-text-muted">
-                                  PKR {item.rate}
-                                </span>
-                              </div>
-                            </td>
-                            {DAYS.map((day) => {
-                              const isChecked = itemDays.includes(day.key);
-                              const wasChecked = (
-                                originalSchedule[item.id] || []
-                              ).includes(day.key);
-                              const changed = isChecked !== wasChecked;
-
-                              return (
-                                <td
-                                  key={day.key}
-                                  className="px-2 py-3 text-center"
-                                >
-                                  <button
-                                    onClick={() => toggleDay(item.id, day.key)}
-                                    className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 mx-auto ${
-                                      isChecked
-                                        ? "bg-primary/10 text-primary hover:bg-primary/20"
-                                        : "bg-gray-100 text-gray-300 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-600 dark:hover:bg-gray-700"
-                                    } ${
-                                      changed
-                                        ? "ring-2 ring-amber-400 ring-offset-1 dark:ring-offset-transparent"
-                                        : ""
-                                    }`}
-                                    title={`${isChecked ? "Remove from" : "Add to"} ${day.full}`}
+                            {items.length > 0 ? (
+                              <div className="space-y-1">
+                                {items.map((item) => (
+                                  <div
+                                    key={item.id}
+                                    className={`text-xs px-2 py-1 rounded-md border-l-2 ${MEAL_CELL_BORDER[mealType]} bg-white dark:bg-white/5 shadow-sm`}
                                   >
-                                    {isChecked ? (
-                                      <CheckSquare size={16} />
-                                    ) : (
-                                      <Square size={16} />
-                                    )}
-                                  </button>
-                                </td>
-                              );
-                            })}
-                            <td className="px-3 py-3">
-                              <div className="flex items-center justify-center gap-1">
-                                <button
-                                  onClick={() =>
-                                    isAllSelected
-                                      ? clearAllForItem(item.id)
-                                      : selectAllForItem(item.id)
-                                  }
-                                  className={`p-1.5 rounded-lg text-xs transition-colors ${
-                                    isAllSelected
-                                      ? "bg-primary/10 text-primary hover:bg-primary/20"
-                                      : "bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
-                                  }`}
-                                  title={isAllSelected ? "Clear all days" : "Select all days"}
-                                >
-                                  {isAllSelected ? (
-                                    <CheckSquare size={14} />
-                                  ) : (
-                                    <Square size={14} />
-                                  )}
-                                </button>
-                                {!isNoneSelected && (
-                                  <button
-                                    onClick={() => clearAllForItem(item.id)}
-                                    className="p-1.5 rounded-lg text-xs bg-red-50 text-red-500 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors"
-                                    title="Clear all days"
-                                  >
-                                    <Trash2 size={14} />
-                                  </button>
-                                )}
+                                    <span className="font-medium text-text-primary dark:text-white">
+                                      {item.itemName}
+                                    </span>
+                                    <span className="text-text-muted ml-1 text-[10px]">
+                                      PKR {item.rate}
+                                    </span>
+                                  </div>
+                                ))}
                               </div>
-                            </td>
-                          </tr>
+                            ) : (
+                              <div className="flex items-center justify-center h-full">
+                                <span className="text-[10px] text-text-muted/40">--</span>
+                              </div>
+                            )}
+                          </div>
                         );
                       })}
-                    </tbody>
-                  </table>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Mobile: Stacked cards per day */}
+          <div className="md:hidden space-y-4 animate-fade-in">
+            {DAYS.map((day, dayIdx) => {
+              const dayHasItems = MEAL_TYPES.some((mt) =>
+                getItemsForDayMeal(day.key, mt).length > 0
+              );
+
+              return (
+                <div
+                  key={day.key}
+                  className="card animate-fade-in-up"
+                  style={{ animationDelay: `${dayIdx * 50}ms` }}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-base font-bold text-text-primary dark:text-white">
+                      {day.full}
+                    </h3>
+                    {(day.key === "saturday" || day.key === "sunday") && (
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                        Weekend
+                      </span>
+                    )}
+                  </div>
+
+                  {!dayHasItems ? (
+                    <p className="text-xs text-text-muted text-center py-4">No menu items for this day</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {MEAL_TYPES.map((mealType) => {
+                        const items = getItemsForDayMeal(day.key, mealType);
+                        if (items.length === 0) return null;
+
+                        return (
+                          <div key={mealType}>
+                            <span className={`inline-block text-[10px] font-bold uppercase tracking-wider ${MEAL_BADGE_BG[mealType]} px-2 py-0.5 rounded-md mb-1.5`}>
+                              {MEAL_LABELS[mealType]}
+                            </span>
+                            <div className="space-y-1 ml-1">
+                              {items.map((item) => (
+                                <div
+                                  key={item.id}
+                                  className={`text-xs px-2 py-1.5 rounded-md border-l-2 ${MEAL_CELL_BORDER[mealType]} bg-bg-main dark:bg-white/5`}
+                                >
+                                  <span className="font-medium text-text-primary dark:text-white">
+                                    {item.itemName}
+                                  </span>
+                                  <span className="text-text-muted ml-1.5">
+                                    PKR {item.rate}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
+              );
+            })}
+          </div>
+        </>
+      ) : (
+        /* ==================== EDIT VIEW (original) ==================== */
+        <>
+          {/* Quick Templates */}
+          <div className="card mb-6 animate-fade-in">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold text-text-primary dark:text-white">
+                  Quick Templates
+                </h3>
+                <p className="text-xs text-text-muted mt-0.5">
+                  Apply a template to all items at once
+                </p>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  onClick={() => applyTemplate("daily")}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/30 transition-colors"
+                >
+                  <Copy size={12} className="inline mr-1.5" />
+                  Daily (All 7 Days)
+                </button>
+                <button
+                  onClick={() => applyTemplate("weekdays")}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/30 transition-colors"
+                >
+                  <Copy size={12} className="inline mr-1.5" />
+                  Weekdays Only (Mon-Fri)
+                </button>
+                <button
+                  onClick={() => applyTemplate("weekends")}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/20 dark:text-purple-400 dark:hover:bg-purple-900/30 transition-colors"
+                >
+                  <Copy size={12} className="inline mr-1.5" />
+                  Weekends Only (Sat-Sun)
+                </button>
               </div>
             </div>
-          ))}
-        </div>
+          </div>
+
+          {/* Schedule Table */}
+          <div className="space-y-6">
+            {groupedItems.map((group, gi) => (
+              <div
+                key={group.type}
+                className="animate-fade-in-up"
+                style={{ animationDelay: `${gi * 100}ms` }}
+              >
+                {/* Meal Type Header */}
+                <div className="flex items-center gap-3 mb-3">
+                  <div
+                    className={`w-1 h-8 rounded-full bg-gradient-to-b ${MEAL_COLORS[group.type]}`}
+                  />
+                  <h3 className="text-lg font-bold text-text-primary dark:text-white">
+                    {MEAL_LABELS[group.type]}
+                  </h3>
+                  <span className="text-xs text-text-muted bg-bg-main dark:bg-[#111C2E] px-2 py-0.5 rounded-full">
+                    {group.items.length} items
+                  </span>
+                </div>
+
+                {/* Table */}
+                <div className={`rounded-xl border overflow-hidden ${MEAL_BG[group.type]}`}>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-black/5 dark:border-white/5">
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-text-secondary dark:text-gray-400 uppercase tracking-wider min-w-[200px]">
+                            Menu Item
+                          </th>
+                          {DAYS.map((day) => (
+                            <th
+                              key={day.key}
+                              className="px-2 py-3 text-center text-xs font-semibold text-text-secondary dark:text-gray-400 uppercase tracking-wider w-16"
+                            >
+                              <span className="hidden sm:inline">{day.label}</span>
+                              <span className="sm:hidden">{day.label.charAt(0)}</span>
+                            </th>
+                          ))}
+                          <th className="px-3 py-3 text-center text-xs font-semibold text-text-secondary dark:text-gray-400 uppercase tracking-wider w-24">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {group.items.map((item, idx) => {
+                          const itemDays = schedule[item.id] || [];
+                          const isAllSelected = ALL_DAYS.every((d) =>
+                            itemDays.includes(d)
+                          );
+                          const isNoneSelected = itemDays.length === 0;
+
+                          return (
+                            <tr
+                              key={item.id}
+                              className={`transition-colors hover:bg-black/[0.02] dark:hover:bg-white/[0.02] ${
+                                idx !== group.items.length - 1
+                                  ? "border-b border-black/5 dark:border-white/5"
+                                  : ""
+                              }`}
+                            >
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-medium text-text-primary dark:text-white">
+                                    {item.itemName}
+                                  </span>
+                                  <span className="text-xs text-text-muted">
+                                    PKR {item.rate}
+                                  </span>
+                                </div>
+                              </td>
+                              {DAYS.map((day) => {
+                                const isChecked = itemDays.includes(day.key);
+                                const wasChecked = (
+                                  originalSchedule[item.id] || []
+                                ).includes(day.key);
+                                const changed = isChecked !== wasChecked;
+
+                                return (
+                                  <td
+                                    key={day.key}
+                                    className="px-2 py-3 text-center"
+                                  >
+                                    <button
+                                      onClick={() => toggleDay(item.id, day.key)}
+                                      className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 mx-auto ${
+                                        isChecked
+                                          ? "bg-primary/10 text-primary hover:bg-primary/20"
+                                          : "bg-gray-100 text-gray-300 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-600 dark:hover:bg-gray-700"
+                                      } ${
+                                        changed
+                                          ? "ring-2 ring-amber-400 ring-offset-1 dark:ring-offset-transparent"
+                                          : ""
+                                      }`}
+                                      title={`${isChecked ? "Remove from" : "Add to"} ${day.full}`}
+                                    >
+                                      {isChecked ? (
+                                        <CheckSquare size={16} />
+                                      ) : (
+                                        <Square size={16} />
+                                      )}
+                                    </button>
+                                  </td>
+                                );
+                              })}
+                              <td className="px-3 py-3">
+                                <div className="flex items-center justify-center gap-1">
+                                  <button
+                                    onClick={() =>
+                                      isAllSelected
+                                        ? clearAllForItem(item.id)
+                                        : selectAllForItem(item.id)
+                                    }
+                                    className={`p-1.5 rounded-lg text-xs transition-colors ${
+                                      isAllSelected
+                                        ? "bg-primary/10 text-primary hover:bg-primary/20"
+                                        : "bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+                                    }`}
+                                    title={isAllSelected ? "Clear all days" : "Select all days"}
+                                  >
+                                    {isAllSelected ? (
+                                      <CheckSquare size={14} />
+                                    ) : (
+                                      <Square size={14} />
+                                    )}
+                                  </button>
+                                  {!isNoneSelected && (
+                                    <button
+                                      onClick={() => clearAllForItem(item.id)}
+                                      className="p-1.5 rounded-lg text-xs bg-red-50 text-red-500 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30 transition-colors"
+                                      title="Clear all days"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Floating save bar when changes exist */}
-      {hasChanges && !loading && (
+      {hasChanges && !loading && viewMode === "edit" && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in-up">
           <div className="bg-sidebar dark:bg-[#111C2E] text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-4 border border-white/10">
             <span className="text-sm">
