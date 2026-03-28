@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { validateName } from "@/lib/validate";
 
 export async function GET(
   request: NextRequest,
@@ -123,6 +124,20 @@ export async function POST(
 
     if (!name || !totalFloors) {
       return NextResponse.json({ error: "Name and total floors are required" }, { status: 400 });
+    }
+
+    // Validate building name
+    const nameCheck = validateName(name.trim(), "Building name");
+    if (!nameCheck.valid) {
+      return NextResponse.json({ error: nameCheck.error }, { status: 400 });
+    }
+
+    // Check duplicate building name in this hostel
+    const existingBuilding = await prisma.building.findFirst({
+      where: { hostelId, name: name.trim() },
+    });
+    if (existingBuilding) {
+      return NextResponse.json({ error: "A building with this name already exists in this hostel" }, { status: 400 });
     }
 
     const building = await prisma.building.create({

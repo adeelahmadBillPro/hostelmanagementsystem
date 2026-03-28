@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import bcrypt from "bcryptjs";
 import { rateLimit } from "@/lib/rate-limit";
+import { validatePassword, validateName, validatePhone } from "@/lib/validate";
 
 export async function GET() {
   const session = await getSession();
@@ -92,6 +93,26 @@ export async function POST(request: NextRequest) {
         { error: "Name, email, and password are required" },
         { status: 400 }
       );
+    }
+
+    // Validate name
+    const nameCheck = validateName(name, "Manager name");
+    if (!nameCheck.valid) {
+      return NextResponse.json({ error: nameCheck.error }, { status: 400 });
+    }
+
+    // Validate password strength
+    const pwCheck = validatePassword(password);
+    if (!pwCheck.valid) {
+      return NextResponse.json({ error: pwCheck.error }, { status: 400 });
+    }
+
+    // Validate phone if provided
+    if (phone) {
+      const phoneCheck = validatePhone(phone);
+      if (!phoneCheck.valid) {
+        return NextResponse.json({ error: phoneCheck.error }, { status: 400 });
+      }
     }
 
     // Check if email already exists

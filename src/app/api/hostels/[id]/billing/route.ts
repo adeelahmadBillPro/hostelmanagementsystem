@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
 import { markOverdueBills } from "@/lib/billing";
+import { validateMonthYear } from "@/lib/validate";
 
 // Helper: get week number of the year
 function getWeekNumber(date: Date): number {
@@ -126,6 +127,12 @@ export async function POST(
 
     if (!month || !year) {
       return NextResponse.json({ error: "Month and year are required" }, { status: 400 });
+    }
+
+    // Validate month/year range
+    const myCheck = validateMonthYear(month, year);
+    if (!myCheck.valid) {
+      return NextResponse.json({ error: myCheck.error }, { status: 400 });
     }
 
     // Determine billing period

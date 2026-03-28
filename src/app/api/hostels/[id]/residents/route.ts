@@ -5,6 +5,7 @@ import { getSession } from "@/lib/session";
 import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
 import { rateLimit } from "@/lib/rate-limit";
+import { validateCNIC, validatePhone, validateAmount } from "@/lib/validate";
 
 export async function GET(
   request: NextRequest,
@@ -174,6 +175,36 @@ export async function POST(
         { error: "Name, email, room, bed, and move-in date are required" },
         { status: 400 }
       );
+    }
+
+    // Validate CNIC
+    const cnicCheck = validateCNIC(cnic);
+    if (!cnicCheck.valid) {
+      return NextResponse.json({ error: cnicCheck.error }, { status: 400 });
+    }
+
+    // Validate phone
+    const phoneCheck = validatePhone(phone);
+    if (!phoneCheck.valid) {
+      return NextResponse.json({ error: phoneCheck.error }, { status: 400 });
+    }
+
+    // Check CNIC duplicate
+    if (cnicCheck.clean) {
+      const existingCnic = await prisma.user.findFirst({ where: { cnic: cnicCheck.clean } });
+      if (existingCnic) {
+        return NextResponse.json({ error: "A user with this CNIC already exists" }, { status: 400 });
+      }
+    }
+
+    // Validate amounts
+    const advanceCheck = validateAmount(advancePaid, "Advance paid", 0);
+    if (!advanceCheck.valid) {
+      return NextResponse.json({ error: advanceCheck.error }, { status: 400 });
+    }
+    const depositCheck = validateAmount(securityDeposit, "Security deposit", 0);
+    if (!depositCheck.valid) {
+      return NextResponse.json({ error: depositCheck.error }, { status: 400 });
     }
 
     // Check if email already exists

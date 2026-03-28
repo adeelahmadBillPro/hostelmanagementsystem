@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
+import { validateName, validateEmail, validatePhone } from "@/lib/validate";
 
 export async function GET() {
   const session = await getSession();
@@ -37,6 +38,26 @@ export async function POST(request: NextRequest) {
       { error: "Name and email are required" },
       { status: 400 }
     );
+  }
+
+  // Validate tenant name
+  const nameCheck = validateName(name, "Tenant name");
+  if (!nameCheck.valid) {
+    return NextResponse.json({ error: nameCheck.error }, { status: 400 });
+  }
+
+  // Validate email format
+  const emailCheck = validateEmail(email);
+  if (!emailCheck.valid) {
+    return NextResponse.json({ error: emailCheck.error }, { status: 400 });
+  }
+
+  // Validate phone if provided
+  if (phone) {
+    const phoneCheck = validatePhone(phone);
+    if (!phoneCheck.valid) {
+      return NextResponse.json({ error: phoneCheck.error }, { status: 400 });
+    }
   }
 
   const existing = await prisma.tenant.findUnique({ where: { email } });

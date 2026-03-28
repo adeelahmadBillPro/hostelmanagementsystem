@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
+import { validateMonthYear } from '@/lib/validate';
 
 export async function GET(
   request: NextRequest,
@@ -65,6 +66,12 @@ export async function POST(
 
     if (!month || !year) {
       return NextResponse.json({ error: 'Month and year are required' }, { status: 400 });
+    }
+
+    // Validate month/year range
+    const myCheck = validateMonthYear(month, year);
+    if (!myCheck.valid) {
+      return NextResponse.json({ error: myCheck.error }, { status: 400 });
     }
 
     const existingRecords = await prisma.staffSalary.findMany({

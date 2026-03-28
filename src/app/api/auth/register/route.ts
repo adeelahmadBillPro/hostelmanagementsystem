@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
+import { validatePhone } from "@/lib/validate";
 
 export async function POST(req: Request) {
   const limited = rateLimit(req, "strict");
@@ -28,11 +29,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
     }
 
-    // Validate phone (+92 format, 12 digits)
-    const cleanPhone = phone.replace(/\D/g, "");
-    if (cleanPhone.length !== 12 || !cleanPhone.startsWith("923")) {
-      return NextResponse.json({ error: "Phone must be a valid Pakistani number (+92 3XX XXXXXXX)" }, { status: 400 });
+    // Validate phone (repeated digits + format check)
+    const phoneCheck = validatePhone(phone);
+    if (!phoneCheck.valid) {
+      return NextResponse.json({ error: phoneCheck.error }, { status: 400 });
     }
+    const cleanPhone = phoneCheck.clean;
 
     // Validate password strength
     if (password.length < 8) {
