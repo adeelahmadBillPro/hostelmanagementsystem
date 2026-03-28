@@ -148,12 +148,12 @@ function BedVisual({
     >
       {/* Hover tooltip for occupied beds */}
       {showTooltip && bed.resident && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 animate-fade-in">
-          <div className="bg-gray-900 text-white text-[11px] rounded-lg px-3 py-2 shadow-xl whitespace-nowrap">
-            <p className="font-bold text-xs">{bed.resident.name}</p>
-            <p className="text-gray-400 mt-0.5">Bed: {bed.bedNumber}</p>
-            {bed.resident.phone && <p className="text-gray-400">{bed.resident.phone}</p>}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900" />
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 z-[999] pointer-events-none" style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.3))" }}>
+          <div className="bg-gray-900 text-white rounded-lg px-3 py-2 whitespace-nowrap min-w-[120px]">
+            <p className="font-bold text-[12px]">{bed.resident.name}</p>
+            <p className="text-[10px] text-gray-400 mt-0.5">Bed {bed.bedNumber}</p>
+            {bed.resident.phone && <p className="text-[10px] text-gray-400">{bed.resident.phone}</p>}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-r-[5px] border-t-[5px] border-transparent border-t-gray-900" />
           </div>
         </div>
       )}
@@ -349,7 +349,7 @@ function RoomBlock({
           relative cursor-pointer transition-all duration-500
           ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
           border-2 ${getRoomBorderColor(room)} ${getRoomBgColor(room)}
-          rounded-md overflow-hidden
+          rounded-md overflow-visible
           hover:shadow-lg hover:-translate-y-0.5
           ${
             isSelected
