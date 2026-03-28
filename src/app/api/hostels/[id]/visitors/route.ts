@@ -92,16 +92,47 @@ export async function POST(
     const { name, cnic, phone, purpose, residentId } = body;
 
     if (!name || !cnic || !phone || !purpose || !residentId) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+      return NextResponse.json({ error: 'Name, CNIC, phone, purpose, and resident are required' }, { status: 400 });
+    }
+
+    // Validate name
+    if (name.trim().length < 2) {
+      return NextResponse.json({ error: 'Visitor name must be at least 2 characters' }, { status: 400 });
+    }
+    if (/(.)\1{4,}/.test(name)) {
+      return NextResponse.json({ error: 'Visitor name contains too many repeated characters' }, { status: 400 });
+    }
+
+    // Validate CNIC
+    const cleanCnic = cnic.replace(/\D/g, '');
+    if (cleanCnic.length !== 13) {
+      return NextResponse.json({ error: 'CNIC must be exactly 13 digits (XXXXX-XXXXXXX-X)' }, { status: 400 });
+    }
+    if (/^(\d)\1{12}$/.test(cleanCnic)) {
+      return NextResponse.json({ error: 'CNIC cannot be all same digits' }, { status: 400 });
+    }
+
+    // Validate phone
+    const cleanPhone = phone.replace(/\D/g, '');
+    if (cleanPhone.length < 10 || cleanPhone.length > 12) {
+      return NextResponse.json({ error: 'Phone must be 10-12 digits' }, { status: 400 });
+    }
+    if (/^(\d)\1{9,}$/.test(cleanPhone)) {
+      return NextResponse.json({ error: 'Phone cannot be all same digits' }, { status: 400 });
+    }
+
+    // Validate purpose
+    if (purpose.trim().length < 2) {
+      return NextResponse.json({ error: 'Purpose must be at least 2 characters' }, { status: 400 });
     }
 
     const visitor = await prisma.visitor.create({
       data: {
         hostelId: params.id,
-        name,
-        cnic,
-        phone,
-        purpose,
+        name: name.trim(),
+        cnic: cleanCnic,
+        phone: cleanPhone,
+        purpose: purpose.trim(),
         residentId,
         timeIn: new Date(),
       },

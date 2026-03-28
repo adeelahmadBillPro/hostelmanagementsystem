@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import ReactDOM from "react-dom";
 import { BedDouble, User } from "lucide-react";
 
 // ==================== TYPES ====================
@@ -133,27 +134,69 @@ function BedVisual({
     return () => clearTimeout(timer);
   }, [delay]);
 
+  const bedRef = useRef<HTMLDivElement>(null);
+  const [hover, setHover] = useState(false);
+  const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 });
+
   const residentLabel = bed.resident?.name
     ? bed.resident.name.slice(0, 3).toUpperCase()
     : "";
 
-  const tooltipText = bed.resident
-    ? `${bed.resident.name}\nBed: ${bed.bedNumber}\n${bed.resident.phone ? `Phone: ${bed.resident.phone}` : ""}`.trim()
-    : `${bed.bedNumber} - ${bed.status}`;
+  const handleMouseEnter = () => {
+    if (!bed.resident || !bedRef.current) return;
+    const rect = bedRef.current.getBoundingClientRect();
+    setTooltipPos({
+      top: rect.top + window.scrollY - 8,
+      left: rect.left + rect.width / 2,
+    });
+    setHover(true);
+  };
 
   return (
     <div
+      ref={bedRef}
       className={`relative transition-all duration-300 ${
         visible ? "scale-100 opacity-100" : "scale-0 opacity-0"
       }`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={() => setHover(false)}
     >
-      {/* Bed shape - rounded rectangle with headboard */}
+      {/* Modern tooltip via portal */}
+      {hover && bed.resident && typeof document !== "undefined" &&
+        ReactDOM.createPortal(
+          <div
+            className="fixed z-[99999] pointer-events-none animate-fade-in"
+            style={{ top: tooltipPos.top, left: tooltipPos.left, transform: "translate(-50%, -100%)" }}
+          >
+            <div className="bg-gray-900/95 backdrop-blur-md text-white rounded-xl px-4 py-3 shadow-2xl border border-white/10 min-w-[160px]">
+              <div className="flex items-center gap-2.5 mb-1.5">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">
+                  {bed.resident.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
+                </div>
+                <div>
+                  <p className="font-semibold text-[13px] leading-tight">{bed.resident.name}</p>
+                  <p className="text-[10px] text-gray-400">Bed {bed.bedNumber}</p>
+                </div>
+              </div>
+              {bed.resident.phone && (
+                <div className="flex items-center gap-1.5 mt-1 pt-1.5 border-t border-white/10">
+                  <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                  <span className="text-[11px] text-gray-300">{bed.resident.phone}</span>
+                </div>
+              )}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-transparent border-t-gray-900/95" />
+            </div>
+          </div>,
+          document.body
+        )
+      }
+
+      {/* Bed shape */}
       <div
         className={`relative rounded-sm border-2 ${getBedColor(
           bed.status
         )} flex flex-col items-center justify-center overflow-hidden cursor-pointer group`}
         style={{ width: "38px", height: "52px" }}
-        title={tooltipText}
       >
         {/* Hover glow effect for occupied */}
         {bed.resident && (

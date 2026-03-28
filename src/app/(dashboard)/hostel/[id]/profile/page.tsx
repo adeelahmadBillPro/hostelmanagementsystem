@@ -263,9 +263,10 @@ export default function HostelProfilePage() {
                       {/* Toggle switch */}
                       <button
                         onClick={() => toggleAmenity(amenity.id, amenity.isAvailable)}
-                        className={`relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ${
+                        className={`relative rounded-full transition-colors duration-200 flex-shrink-0 ${
                           amenity.isAvailable ? "bg-success" : "bg-gray-300 dark:bg-gray-600"
                         }`}
+                        style={{ width: "44px", height: "24px", minWidth: "44px" }}
                       >
                         <span
                           className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
@@ -276,7 +277,7 @@ export default function HostelProfilePage() {
 
                       {/* Name */}
                       <span
-                        className={`text-sm flex-1 ${
+                        className={`text-sm flex-1 ml-1 ${
                           amenity.isAvailable
                             ? "text-text-primary dark:text-white font-medium"
                             : "text-text-muted line-through"
