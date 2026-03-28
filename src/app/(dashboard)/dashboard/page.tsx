@@ -273,6 +273,50 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {/* Quick Overview: Food Plans + Staff */}
+          {(data as any)?.foodPlanStats && (
+            <div className="card opacity-0 animate-fade-in-up" style={{ animationDelay: "450ms" }}>
+              <h3 className="font-semibold text-text-primary dark:text-white mb-3 text-sm">Residents by Food Plan</h3>
+              <div className="space-y-2">
+                {[
+                  { label: "Full Mess", key: "FULL_MESS", color: "bg-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
+                  { label: "No Mess", key: "NO_MESS", color: "bg-slate-400", bg: "bg-slate-50 dark:bg-slate-800/30" },
+                  { label: "Custom", key: "CUSTOM", color: "bg-amber-500", bg: "bg-amber-50 dark:bg-amber-900/20" },
+                ].map((plan) => {
+                  const count = (data as any).foodPlanStats[plan.key] || 0;
+                  const total = data?.stats.totalResidents || 1;
+                  const pct = Math.round((count / total) * 100);
+                  return (
+                    <div key={plan.key} className={`flex items-center justify-between px-3 py-2 rounded-lg ${plan.bg}`}>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${plan.color}`} />
+                        <span className="text-xs font-medium text-text-secondary dark:text-slate-300">{plan.label}</span>
+                      </div>
+                      <span className="text-sm font-bold text-text-primary dark:text-white">{count} <span className="text-[10px] text-text-muted font-normal">({pct}%)</span></span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {(data as any)?.staffStats && (
+            <div className="card opacity-0 animate-fade-in-up" style={{ animationDelay: "500ms" }}>
+              <h3 className="font-semibold text-text-primary dark:text-white mb-3 text-sm">Staff Overview ({(data as any).staffStats.total})</h3>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries((data as any).staffStats.byType || {}).map(([type, count]) => (
+                  <div key={type} className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/30 px-2.5 py-1.5 rounded-lg">
+                    <span className="text-[11px] text-text-muted">{type.charAt(0) + type.slice(1).toLowerCase()}</span>
+                    <span className="text-xs font-bold text-text-primary dark:text-white">{count as number}</span>
+                  </div>
+                ))}
+                {Object.keys((data as any).staffStats.byType || {}).length === 0 && (
+                  <p className="text-xs text-text-muted">No staff added yet</p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Revenue by Hostel Chart */}
           <div className="card lg:col-span-2 opacity-0 animate-fade-in-up" style={{ animationDelay: "500ms" }}>
             <h3 className="font-semibold text-text-primary dark:text-white mb-2">Revenue by Hostel</h3>

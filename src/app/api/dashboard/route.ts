@@ -121,6 +121,26 @@ export async function GET() {
       0
     );
 
+    // Food plan breakdown
+    const hostelIds = hostels.map(h => h.id);
+    const messCounts = await prisma.resident.groupBy({
+      by: ["foodPlan"],
+      where: { hostelId: { in: hostelIds }, status: "ACTIVE" },
+      _count: true,
+    });
+    const foodPlanStats: Record<string, number> = { FULL_MESS: 0, NO_MESS: 0, CUSTOM: 0 };
+    messCounts.forEach((m: any) => { foodPlanStats[m.foodPlan] = m._count; });
+
+    // Staff breakdown
+    const staffCounts = await prisma.staff.groupBy({
+      by: ["staffType"],
+      where: { hostelId: { in: hostelIds }, isActive: true },
+      _count: true,
+    });
+    const staffStats: Record<string, number> = {};
+    let totalStaff = 0;
+    staffCounts.forEach((s: any) => { staffStats[s.staffType] = s._count; totalStaff += s._count; });
+
     return NextResponse.json({
       stats: {
         totalHostels,
@@ -128,6 +148,8 @@ export async function GET() {
         monthlyRevenue,
         pendingPayments,
       },
+      foodPlanStats,
+      staffStats: { total: totalStaff, byType: staffStats },
       hostels: hostelStats,
     });
   } catch (error) {

@@ -104,6 +104,7 @@ export default function ResidentsPage() {
   });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"ALL" | "ACTIVE" | "CHECKED_OUT">("ALL");
+  const [foodFilter, setFoodFilter] = useState<"ALL" | "FULL_MESS" | "NO_MESS" | "CUSTOM">("ALL");
   const [search, setSearch] = useState("");
   const [checkoutResident, setCheckoutResident] = useState<ResidentData | null>(null);
   const [resetCreds, setResetCreds] = useState<{ name: string; email: string; password: string } | null>(null);
@@ -266,6 +267,20 @@ export default function ResidentsPage() {
       },
     },
     {
+      key: "foodPlan",
+      label: "Food",
+      render: (row: ResidentData) => {
+        const plan = (row as any).foodPlan || "FULL_MESS";
+        const planMap: Record<string, { class: string; label: string }> = {
+          FULL_MESS: { class: "badge-success", label: "Mess" },
+          NO_MESS: { class: "badge-secondary", label: "No Mess" },
+          CUSTOM: { class: "badge-warning", label: "Custom" },
+        };
+        const p = planMap[plan] || { class: "badge-primary", label: plan };
+        return <span className={p.class}>{p.label}</span>;
+      },
+    },
+    {
       key: "moveInDate",
       label: "Move-in Date",
       render: (row: ResidentData) => (
@@ -340,13 +355,25 @@ export default function ResidentsPage() {
           ))}
         </div>
 
-        <button
-          onClick={() => router.push(`/hostel/${hostelId}/residents/add`)}
-          className="btn-primary flex items-center gap-2"
-        >
-          <Plus size={18} />
-          Add Resident
-        </button>
+        <div className="flex items-center gap-2">
+          <select
+            value={foodFilter}
+            onChange={(e) => setFoodFilter(e.target.value as any)}
+            className="select !h-10 text-xs !w-auto"
+          >
+            <option value="ALL">All Plans</option>
+            <option value="FULL_MESS">Full Mess</option>
+            <option value="NO_MESS">No Mess</option>
+            <option value="CUSTOM">Custom</option>
+          </select>
+          <button
+            onClick={() => router.push(`/hostel/${hostelId}/residents/add`)}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Plus size={18} />
+            Add Resident
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -381,7 +408,7 @@ export default function ResidentsPage() {
         ) : (
           <DataTable
             columns={columns}
-            data={residents}
+            data={foodFilter === "ALL" ? residents : residents.filter((r: any) => (r.foodPlan || "FULL_MESS") === foodFilter)}
             searchable={false}
             pageSize={10}
             emptyMessage="No residents found"
