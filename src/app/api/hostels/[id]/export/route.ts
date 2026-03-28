@@ -124,6 +124,50 @@ export async function GET(
       return NextResponse.json({ data, type: "billing" });
     }
 
+    if (type === "rooms") {
+      const rooms = await prisma.room.findMany({
+        where: { floor: { building: { hostelId } } },
+        include: {
+          floor: { include: { building: { select: { name: true } } } },
+          beds: { select: { status: true } },
+        },
+        orderBy: { roomNumber: "asc" },
+      });
+
+      const data = rooms.map((r) => ({
+        RoomNumber: r.roomNumber,
+        Building: r.floor.building.name,
+        Floor: r.floor.name,
+        Type: r.type,
+        TotalBeds: r.totalBeds,
+        Occupied: r.beds.filter((b) => b.status === "OCCUPIED").length,
+        Vacant: r.beds.filter((b) => b.status === "VACANT").length,
+        RentPerBed: r.rentPerBed,
+        Status: r.status,
+      }));
+
+      return NextResponse.json({ data, type: "rooms" });
+    }
+
+    if (type === "expenses") {
+      const expenses = await prisma.expense.findMany({
+        where: { hostelId },
+        include: { category: { select: { name: true } } },
+        orderBy: { date: "desc" },
+        take: 500,
+      });
+
+      const data = expenses.map((e: any) => ({
+        Date: e.date.toISOString().split("T")[0],
+        Category: e.category?.name || "Uncategorized",
+        Amount: e.amount,
+        Description: e.description || "",
+        ReceiptURL: e.receiptUrl || "",
+      }));
+
+      return NextResponse.json({ data, type: "expenses" });
+    }
+
     return NextResponse.json({ error: "Invalid export type" }, { status: 400 });
   } catch (error) {
     console.error("Export error:", error);
