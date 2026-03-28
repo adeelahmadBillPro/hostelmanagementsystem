@@ -528,7 +528,7 @@ export default function PortalMessagesPage() {
                   onChange={(e) => setNewFirstMessage(e.target.value)}
                   placeholder="Write your message..."
                   rows={4}
-                  className="input w-full resize-none"
+                  className="textarea w-full"
                 />
               </div>
               <div className="flex gap-3 justify-end">
