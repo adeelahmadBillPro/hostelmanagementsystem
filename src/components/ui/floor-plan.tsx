@@ -127,7 +127,6 @@ function BedVisual({
   delay: number;
 }) {
   const [visible, setVisible] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), delay);
@@ -138,33 +137,28 @@ function BedVisual({
     ? bed.resident.name.slice(0, 3).toUpperCase()
     : "";
 
+  const tooltipText = bed.resident
+    ? `${bed.resident.name}\nBed: ${bed.bedNumber}\n${bed.resident.phone ? `Phone: ${bed.resident.phone}` : ""}`.trim()
+    : `${bed.bedNumber} - ${bed.status}`;
+
   return (
     <div
       className={`relative transition-all duration-300 ${
         visible ? "scale-100 opacity-100" : "scale-0 opacity-0"
       }`}
-      onMouseEnter={() => bed.resident && setShowTooltip(true)}
-      onMouseLeave={() => setShowTooltip(false)}
     >
-      {/* Hover tooltip for occupied beds */}
-      {showTooltip && bed.resident && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 z-[999] pointer-events-none" style={{ filter: "drop-shadow(0 4px 12px rgba(0,0,0,0.3))" }}>
-          <div className="bg-gray-900 text-white rounded-lg px-3 py-2 whitespace-nowrap min-w-[120px]">
-            <p className="font-bold text-[12px]">{bed.resident.name}</p>
-            <p className="text-[10px] text-gray-400 mt-0.5">Bed {bed.bedNumber}</p>
-            {bed.resident.phone && <p className="text-[10px] text-gray-400">{bed.resident.phone}</p>}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-r-[5px] border-t-[5px] border-transparent border-t-gray-900" />
-          </div>
-        </div>
-      )}
-
       {/* Bed shape - rounded rectangle with headboard */}
       <div
         className={`relative rounded-sm border-2 ${getBedColor(
           bed.status
-        )} flex flex-col items-center justify-center overflow-hidden cursor-pointer`}
+        )} flex flex-col items-center justify-center overflow-hidden cursor-pointer group`}
         style={{ width: "38px", height: "52px" }}
+        title={tooltipText}
       >
+        {/* Hover glow effect for occupied */}
+        {bed.resident && (
+          <div className="absolute inset-0 bg-white/0 group-hover:bg-white/20 transition-all duration-200" />
+        )}
         {/* Headboard */}
         <div
           className="absolute top-0 left-0 right-0 h-[6px] rounded-t-sm"
@@ -332,7 +326,6 @@ function RoomBlock({
   animDelay: number;
 }) {
   const [visible, setVisible] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), animDelay);
@@ -343,8 +336,6 @@ function RoomBlock({
     <div className={`${getRoomColSpan(room.type)} ${getRoomWidth(room.type)}`}>
       <div
         onClick={onClick}
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
         className={`
           relative cursor-pointer transition-all duration-500
           ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
@@ -405,8 +396,7 @@ function RoomBlock({
           )}
         </div>
 
-        {/* Tooltip */}
-        {showTooltip && <RoomTooltip room={room} />}
+        {/* Room info shown on click via parent handler */}
       </div>
     </div>
   );

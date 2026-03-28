@@ -323,6 +323,7 @@ model Room {
   totalBeds  Int
   rentPerBed Float
   rentPerRoom Float?
+  features   String[]   @default([]) // AC, Fan, Attached Washroom, Geyser, etc.
   status     RoomStatus @default(ACTIVE)
 
   floorId String
