@@ -19,6 +19,7 @@ import {
   Percent,
   Sparkles,
 } from "lucide-react";
+import { useToast } from "@/components/providers";
 
 interface FloorData {
   id: string;
@@ -54,6 +55,7 @@ interface Stats {
 export default function BuildingsPage() {
   const params = useParams();
   const hostelId = params.id as string;
+  const { addToast } = useToast();
 
   const [buildings, setBuildings] = useState<BuildingData[]>([]);
   const [stats, setStats] = useState<Stats>({
@@ -115,7 +117,7 @@ export default function BuildingsPage() {
       });
       if (!res.ok) {
         const err = await res.json();
-        alert(err.error || "Failed to create building");
+        addToast(err.error || "Failed to create building", "error");
         return;
       }
       setShowAddModal(false);
@@ -142,7 +144,7 @@ export default function BuildingsPage() {
       );
       if (!res.ok) {
         const err = await res.json();
-        alert(err.error || "Failed to update building");
+        addToast(err.error || "Failed to update building", "error");
         return;
       }
       setShowEditModal(false);
@@ -166,7 +168,7 @@ export default function BuildingsPage() {
       );
       if (!res.ok) {
         const err = await res.json();
-        alert(err.error || "Failed to delete building");
+        addToast(err.error || "Failed to delete building", "error");
         return;
       }
       setShowDeleteDialog(false);

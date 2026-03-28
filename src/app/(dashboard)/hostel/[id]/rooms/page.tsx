@@ -18,6 +18,7 @@ import {
   Building2,
   Layers,
 } from "lucide-react";
+import { useToast } from "@/components/providers";
 
 interface BedData {
   id: string;
@@ -154,6 +155,7 @@ export default function RoomsPage() {
   const params = useParams();
   const router = useRouter();
   const hostelId = params.id as string;
+  const { addToast } = useToast();
 
   const [rooms, setRooms] = useState<RoomData[]>([]);
   const [buildings, setBuildings] = useState<BuildingOption[]>([]);
@@ -284,7 +286,7 @@ export default function RoomsPage() {
       });
       if (!res.ok) {
         const err = await res.json();
-        alert(err.error || "Failed to create room");
+        addToast(err.error || "Failed to create room", "error");
         return;
       }
       setShowAddModal(false);
@@ -774,13 +776,13 @@ export default function RoomsPage() {
                     });
                     const data = await res.json();
                     if (!res.ok) {
-                      alert(data.error || "Failed to create rooms");
+                      addToast(data.error || "Failed to create rooms", "error");
                     } else {
                       setShowAddModal(false);
                       fetchRooms();
-                      alert(data.message || `Created ${data.created} rooms`);
+                      addToast(data.message || `Created ${data.created} rooms`, "success");
                     }
-                  } catch { alert("Something went wrong"); }
+                  } catch { addToast("Something went wrong", "error"); }
                   finally { setSaving(false); }
                 } else {
                   // Single create (existing logic)

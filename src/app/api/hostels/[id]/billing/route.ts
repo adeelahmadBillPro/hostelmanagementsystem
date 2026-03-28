@@ -282,7 +282,7 @@ export async function POST(
         totalAmount: Math.max(0, totalAmount),
         paidAmount: 0,
         balance: Math.max(0, totalAmount),
-        status: "UNPAID" as const,
+        status: (Math.max(0, totalAmount) === 0 ? "PAID" : "UNPAID") as any,
         dueDate,
       });
     }

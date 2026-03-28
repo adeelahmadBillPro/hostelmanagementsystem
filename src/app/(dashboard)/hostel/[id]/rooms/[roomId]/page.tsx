@@ -23,6 +23,7 @@ import {
   Wrench,
   ShieldCheck,
 } from "lucide-react";
+import { useToast } from "@/components/providers";
 
 interface BedResident {
   id: string;
@@ -79,6 +80,7 @@ export default function RoomDetailPage() {
   const router = useRouter();
   const hostelId = params.id as string;
   const roomId = params.roomId as string;
+  const { addToast } = useToast();
 
   const [room, setRoom] = useState<RoomDetail | null>(null);
   const [beds, setBeds] = useState<BedData[]>([]);
@@ -118,7 +120,7 @@ export default function RoomDetailPage() {
       });
       if (!res.ok) {
         const err = await res.json();
-        alert(err.error || "Failed to delete room");
+        addToast(err.error || "Failed to delete room", "error");
         setDeleting(false);
         return;
       }

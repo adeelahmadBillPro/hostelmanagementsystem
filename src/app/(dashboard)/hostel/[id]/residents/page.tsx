@@ -22,6 +22,7 @@ import {
   Copy,
   Check,
 } from "lucide-react";
+import { useToast } from "@/components/providers";
 
 interface ResidentData {
   id: string;
@@ -92,6 +93,7 @@ export default function ResidentsPage() {
   const params = useParams();
   const router = useRouter();
   const hostelId = params.id as string;
+  const { addToast } = useToast();
 
   const [residents, setResidents] = useState<ResidentData[]>([]);
   const [stats, setStats] = useState<Stats>({
@@ -119,7 +121,7 @@ export default function ResidentsPage() {
       if (!res.ok) throw new Error(data.error);
       setResetCreds(data.credentials);
     } catch (err: any) {
-      alert(err.message || "Failed to reset password");
+      addToast(err.message || "Failed to reset password", "error");
     } finally {
       setResettingId(null);
     }

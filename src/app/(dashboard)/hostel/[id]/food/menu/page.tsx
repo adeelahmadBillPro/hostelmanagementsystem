@@ -25,6 +25,7 @@ import {
   Cookie,
   Sparkles,
 } from "lucide-react";
+import { useToast } from "@/components/providers";
 
 interface MenuItem {
   id: string;
@@ -127,6 +128,7 @@ const emptyForm = {
 export default function FoodMenuPage() {
   const params = useParams();
   const hostelId = params.id as string;
+  const { addToast } = useToast();
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [stats, setStats] = useState<Stats>({ totalItems: 0, activeItems: 0, avgPrice: 0 });
@@ -201,7 +203,7 @@ export default function FoodMenuPage() {
       }
       if (!res.ok) {
         const err = await res.json();
-        alert(err.error || "Failed to save menu item");
+        addToast(err.error || "Failed to save menu item", "error");
         return;
       }
       setShowModal(false);
@@ -210,7 +212,7 @@ export default function FoodMenuPage() {
       fetchMenu();
     } catch (error) {
       console.error("Save error:", error);
-      alert("Failed to save menu item");
+      addToast("Failed to save menu item", "error");
     } finally {
       setSubmitting(false);
     }

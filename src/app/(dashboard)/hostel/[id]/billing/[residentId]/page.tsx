@@ -18,6 +18,7 @@ import {
   Smartphone,
   CheckCircle,
 } from "lucide-react";
+import { useToast } from "@/components/providers";
 
 interface BillDetail {
   id: string;
@@ -78,6 +79,7 @@ export default function ResidentBillDetailPage() {
   const router = useRouter();
   const hostelId = params.id as string;
   const residentId = params.residentId as string;
+  const { addToast } = useToast();
 
   const now = new Date();
   const month = parseInt(searchParams.get("month") || String(now.getMonth() + 1));
@@ -137,7 +139,7 @@ export default function ResidentBillDetailPage() {
 
       if (!res.ok) {
         const err = await res.json();
-        alert(err.error || "Failed to record payment");
+        addToast(err.error || "Failed to record payment", "error");
         return;
       }
 
@@ -146,7 +148,7 @@ export default function ResidentBillDetailPage() {
       fetchBill();
     } catch (error) {
       console.error("Payment error:", error);
-      alert("Failed to record payment");
+      addToast("Failed to record payment", "error");
     } finally {
       setSubmitting(false);
     }
@@ -171,7 +173,7 @@ export default function ResidentBillDetailPage() {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Download error:", error);
-      alert("Failed to download receipt");
+      addToast("Failed to download receipt", "error");
     } finally {
       setDownloading(false);
     }
@@ -353,6 +355,26 @@ export default function ResidentBillDetailPage() {
             >
               <CreditCard size={16} />
               <span className="hidden sm:inline">Record</span> Payment
+            </button>
+          )}
+          {bill.paidAmount === 0 && (
+            <button
+              onClick={async () => {
+                if (!confirm("Delete this bill? This cannot be undone.")) return;
+                try {
+                  const res = await fetch(`/api/hostels/${hostelId}/billing/${bill.id}`, { method: "DELETE" });
+                  if (res.ok) {
+                    addToast("Bill deleted successfully", "success");
+                    router.push(`/hostel/${hostelId}/billing`);
+                  } else {
+                    const data = await res.json();
+                    addToast(data.error || "Failed to delete bill", "error");
+                  }
+                } catch { addToast("Failed to delete bill", "error"); }
+              }}
+              className="btn-danger flex items-center gap-2"
+            >
+              Delete Bill
             </button>
           )}
         </div>

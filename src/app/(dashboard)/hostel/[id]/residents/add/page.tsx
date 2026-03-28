@@ -805,14 +805,14 @@ export default function AddResidentPage() {
                 onChange={(e) => setFoodPlan(e.target.value)}
                 className="select"
               >
-                <option value="FULL_MESS">Full Mess (Fixed monthly fee)</option>
-                <option value="NO_MESS">No Mess (Only app orders)</option>
-                <option value="CUSTOM">Custom Fee</option>
+                <option value="FULL_MESS">Full Mess - Fixed monthly fee</option>
+                <option value="NO_MESS">No Mess - Only app food orders (Rs 0 fixed)</option>
+                <option value="CUSTOM">Custom Fee - Set your own amount</option>
               </select>
               <p className="text-[11px] text-text-muted mt-1">
-                {foodPlan === "FULL_MESS" && "Charged hostel's fixed food fee each billing cycle"}
-                {foodPlan === "NO_MESS" && "No fixed food charge, only charged for app food orders"}
-                {foodPlan === "CUSTOM" && "Set a custom food fee for this resident"}
+                {foodPlan === "FULL_MESS" && "Hostel's fixed food fee will be charged every billing cycle. Set the amount in Billing → Settings."}
+                {foodPlan === "NO_MESS" && "No fixed food charge. Only charged if resident orders food through the app."}
+                {foodPlan === "CUSTOM" && "Set a custom monthly food fee for this resident (different from hostel default)."}
               </p>
             </div>
             {foodPlan === "CUSTOM" && (

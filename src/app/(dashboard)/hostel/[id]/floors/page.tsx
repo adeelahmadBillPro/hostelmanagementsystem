@@ -15,6 +15,7 @@ import {
   Building2,
   Users,
 } from "lucide-react";
+import { useToast } from "@/components/providers";
 
 interface BuildingOption {
   id: string;
@@ -38,6 +39,7 @@ interface FloorData {
 export default function FloorsPage() {
   const params = useParams();
   const hostelId = params.id as string;
+  const { addToast } = useToast();
 
   const [floors, setFloors] = useState<FloorData[]>([]);
   const [buildings, setBuildings] = useState<BuildingOption[]>([]);
@@ -88,7 +90,7 @@ export default function FloorsPage() {
       });
       if (!res.ok) {
         const err = await res.json();
-        alert(err.error || "Failed to create floor");
+        addToast(err.error || "Failed to create floor", "error");
         return;
       }
       setShowAddModal(false);

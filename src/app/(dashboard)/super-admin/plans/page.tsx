@@ -5,6 +5,7 @@ import DashboardLayout from "@/components/layout/dashboard-layout";
 import Modal from "@/components/ui/modal";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
 import { Plus, Edit2, Trash2, Check, Building2, Users } from "lucide-react";
+import { useToast } from "@/components/providers";
 
 interface Plan {
   id: string;
@@ -27,6 +28,7 @@ const defaultForm = {
 };
 
 export default function PlansPage() {
+  const { addToast } = useToast();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -138,7 +140,7 @@ export default function PlansPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        alert(data.error || "Failed to delete plan");
+        addToast(data.error || "Failed to delete plan", "error");
         return;
       }
 
