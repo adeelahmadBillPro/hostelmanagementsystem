@@ -161,6 +161,13 @@ export async function POST(
       moveInDate,
     } = body;
 
+    // Check plan limits
+    const { canAddResident } = require("@/lib/plan-limits");
+    const limitCheck = await canAddResident(session.user.tenantId!, hostelId);
+    if (!limitCheck.allowed) {
+      return NextResponse.json({ error: limitCheck.reason }, { status: 403 });
+    }
+
     // Validate required fields
     if (!name || !email || !roomId || !bedId || !moveInDate) {
       return NextResponse.json(

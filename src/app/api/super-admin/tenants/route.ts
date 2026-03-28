@@ -63,12 +63,32 @@ export async function POST(request: NextRequest) {
 
   const result = await prisma.$transaction(async (tx: any) => {
     // Create tenant
+    // Set trial period based on plan
+    let trialEndsAt = null;
+    let isTrial = true;
+    if (planId) {
+      const selectedPlan = await tx.subscriptionPlan.findUnique({ where: { id: planId } });
+      if (selectedPlan && selectedPlan.trialDays > 0) {
+        trialEndsAt = new Date();
+        trialEndsAt.setDate(trialEndsAt.getDate() + selectedPlan.trialDays);
+      } else if (selectedPlan && selectedPlan.price > 0) {
+        isTrial = false; // Paid plan, no trial
+      }
+    } else {
+      // No plan selected - give 14-day trial
+      trialEndsAt = new Date();
+      trialEndsAt.setDate(trialEndsAt.getDate() + 14);
+    }
+
     const tenant = await tx.tenant.create({
       data: {
         name,
         email,
         phone: phone || null,
         planId: planId || null,
+        isTrial,
+        trialEndsAt,
+        planStartedAt: new Date(),
       },
     });
 

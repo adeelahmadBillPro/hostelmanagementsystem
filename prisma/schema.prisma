@@ -170,8 +170,11 @@ model Tenant {
   logo      String?
   status    TenantStatus @default(ACTIVE)
 
-  planId String?
-  plan   SubscriptionPlan? @relation(fields: [planId], references: [id])
+  planId      String?
+  plan        SubscriptionPlan? @relation(fields: [planId], references: [id])
+  trialEndsAt DateTime?         // When free trial expires
+  planStartedAt DateTime?       // When current plan started
+  isTrial     Boolean  @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -185,10 +188,15 @@ model SubscriptionPlan {
   id           String  @id @default(cuid())
   name         String
   price        Float
+  billingPeriod String @default("MONTHLY") // MONTHLY, YEARLY
   maxHostels   Int
-  maxResidents Int
+  maxResidents Int     // Per hostel
+  maxRooms     Int     @default(999)
+  maxStaff     Int     @default(999)
+  trialDays    Int     @default(0) // 0 = no trial, 14 = 14-day trial
   features     String[] // Array of feature strings
   isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

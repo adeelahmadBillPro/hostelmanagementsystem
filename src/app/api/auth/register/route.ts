@@ -32,12 +32,39 @@ export async function POST(req: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
+    // Find or create free trial plan
+    let trialPlan = await prisma.subscriptionPlan.findFirst({
+      where: { name: "Free Trial", isActive: true },
+    });
+    if (!trialPlan) {
+      trialPlan = await prisma.subscriptionPlan.create({
+        data: {
+          name: "Free Trial",
+          price: 0,
+          maxHostels: 1,
+          maxResidents: 20,
+          maxRooms: 50,
+          maxStaff: 5,
+          trialDays: 14,
+          features: ["rooms", "residents", "billing", "food", "complaints"],
+          sortOrder: 0,
+        },
+      });
+    }
+
+    const trialEndsAt = new Date();
+    trialEndsAt.setDate(trialEndsAt.getDate() + (trialPlan.trialDays || 14));
+
     // Create tenant and user together
     const tenant = await prisma.tenant.create({
       data: {
         name: `${name}'s Organization`,
         email,
         phone,
+        planId: trialPlan.id,
+        isTrial: true,
+        trialEndsAt,
+        planStartedAt: new Date(),
         users: {
           create: {
             name,

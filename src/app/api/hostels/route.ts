@@ -132,6 +132,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    // Check plan limits
+    const { canAddHostel } = require("@/lib/plan-limits");
+    const limitCheck = await canAddHostel(tenantId);
+    if (!limitCheck.allowed) {
+      return NextResponse.json({ error: limitCheck.reason }, { status: 403 });
+    }
+
     const body = await request.json();
     const parsed = hostelSchema.safeParse(body);
     if (!parsed.success) {

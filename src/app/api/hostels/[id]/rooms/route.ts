@@ -162,6 +162,14 @@ export async function POST(
     if (!hostel) return NextResponse.json({ error: "The requested item was not found" }, { status: 404 });
 
     const body = await request.json();
+    // Check plan limits
+    const { canAddRooms } = require("@/lib/plan-limits");
+    const roomCount = Number(body.roomCount) || 1;
+    const roomLimit = await canAddRooms(session.user.tenantId!, hostelId, roomCount);
+    if (!roomLimit.allowed) {
+      return NextResponse.json({ error: roomLimit.reason }, { status: 403 });
+    }
+
     // Convert string numbers from form to actual numbers
     const parsed = roomSchema.safeParse({
       ...body,

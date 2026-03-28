@@ -21,7 +21,11 @@ import {
   BedDouble,
   Receipt,
   Wallet,
+  Crown,
+  Clock,
+  Zap,
 } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
 
 interface HostelStat {
   id: string;
@@ -52,6 +56,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [planStatus, setPlanStatus] = useState<any>(null);
 
   useEffect(() => {
     fetch("/api/dashboard")
@@ -59,6 +64,11 @@ export default function DashboardPage() {
       .then(setData)
       .catch(() => {})
       .finally(() => setLoading(false));
+    // Fetch plan status
+    fetch("/api/plan-status")
+      .then((r) => r.ok ? r.json() : null)
+      .then(setPlanStatus)
+      .catch(() => {});
   }, []);
 
   const fmt = (n: number) => `PKR ${n.toLocaleString()}`;
@@ -102,6 +112,91 @@ export default function DashboardPage() {
   return (
     <DashboardLayout title="Dashboard">
       <div className="space-y-6">
+        {/* Plan Status Banner */}
+        {planStatus?.plan && (planStatus.plan.trialExpired || (planStatus.plan.isTrial && planStatus.plan.daysLeft !== null && planStatus.plan.daysLeft <= 7)) && (
+          <div className={`rounded-2xl p-4 flex items-center justify-between gap-4 animate-fade-in ${
+            planStatus.plan.trialExpired
+              ? "bg-red-50 border border-red-200 dark:bg-red-900/20 dark:border-red-800"
+              : "bg-amber-50 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-800"
+          }`}>
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                planStatus.plan.trialExpired ? "bg-red-100 dark:bg-red-900/40" : "bg-amber-100 dark:bg-amber-900/40"
+              }`}>
+                {planStatus.plan.trialExpired
+                  ? <AlertCircle size={20} className="text-red-600 dark:text-red-400" />
+                  : <Clock size={20} className="text-amber-600 dark:text-amber-400" />
+                }
+              </div>
+              <div>
+                <p className={`text-sm font-bold ${planStatus.plan.trialExpired ? "text-red-800 dark:text-red-300" : "text-amber-800 dark:text-amber-300"}`}>
+                  {planStatus.plan.trialExpired
+                    ? "Your free trial has expired!"
+                    : `Free trial ends in ${planStatus.plan.daysLeft} day(s)`
+                  }
+                </p>
+                <p className="text-xs text-text-muted mt-0.5">
+                  {planStatus.plan.trialExpired
+                    ? "Upgrade to continue adding hostels, rooms, and residents."
+                    : `Current: ${planStatus.usage.hostels}/${planStatus.limits.maxHostels} hostels, ${planStatus.usage.residents}/${planStatus.limits.maxResidents} residents`
+                  }
+                </p>
+              </div>
+            </div>
+            <button onClick={() => router.push("/plans")} className="btn-primary !py-2 !px-4 !text-xs flex items-center gap-1.5 flex-shrink-0">
+              <Zap size={14} />
+              Upgrade Plan
+            </button>
+          </div>
+        )}
+
+        {/* Plan Usage Bar (always show for trial users) */}
+        {planStatus?.plan?.isTrial && !planStatus.plan.trialExpired && (
+          <div className="card !p-4 animate-fade-in">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Crown size={16} className="text-amber-500" />
+                <span className="text-sm font-bold text-text-primary dark:text-white">{planStatus.plan.name}</span>
+                {planStatus.plan.daysLeft !== null && (
+                  <span className="text-[10px] font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">
+                    {planStatus.plan.daysLeft} days left
+                  </span>
+                )}
+              </div>
+              <button onClick={() => router.push("/plans")} className="text-xs font-semibold text-primary hover:text-primary-dark transition-colors">
+                View Plans →
+              </button>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { label: "Hostels", used: planStatus.usage.hostels, max: planStatus.limits.maxHostels, color: "bg-indigo-500" },
+                { label: "Residents", used: planStatus.usage.residents, max: planStatus.limits.maxResidents, color: "bg-emerald-500" },
+                { label: "Rooms", used: planStatus.usage.rooms, max: planStatus.limits.maxRooms, color: "bg-amber-500" },
+                { label: "Staff", used: planStatus.usage.staff, max: planStatus.limits.maxStaff, color: "bg-sky-500" },
+              ].map((item) => {
+                const pct = Math.min(100, Math.round((item.used / item.max) * 100));
+                const isNearLimit = pct >= 80;
+                return (
+                  <div key={item.label} className="bg-slate-50 dark:bg-[#0B1222] rounded-xl p-3">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[11px] font-semibold text-text-muted">{item.label}</span>
+                      <span className={`text-[11px] font-bold ${isNearLimit ? "text-red-500" : "text-text-primary dark:text-white"}`}>
+                        {item.used}/{item.max}
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${isNearLimit ? "bg-red-500" : item.color}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
