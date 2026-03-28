@@ -208,7 +208,7 @@ function BedLayout({ room, baseDelay }: { room: FloorRoom; baseDelay: number }) 
     beds.length > 0
       ? beds.map((b) => ({
           status: b.status,
-          resident: b.resident ? { name: b.resident.name } : null,
+          resident: b.resident ? { name: b.resident.name, phone: b.resident.phone } : null,
           bedNumber: b.bedNumber,
         }))
       : Array.from({ length: room.totalBeds }, (_, i) => {
