@@ -298,7 +298,11 @@ export default function Header({ title, onMenuClick, onToggleCollapse, sidebarCo
               </div>
               <div className="border-t border-border dark:border-[#1E2D42] pt-1">
                 <button
-                  onClick={() => signOut({ callbackUrl: "/login" })}
+                  onClick={() => {
+                    signOut({ redirect: false }).then(() => {
+                      window.location.href = "/login";
+                    });
+                  }}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-danger hover:bg-danger/5 dark:hover:bg-red-900/20 transition-colors rounded-lg mx-1.5"
                   style={{ width: "calc(100% - 12px)" }}
                 >
