@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import { Users, Building2, DollarSign, UserCheck } from "lucide-react";
 import StatCard from "@/components/ui/stat-card";
+import { formatCurrency } from "@/lib/utils";
 import RevenueChart from "./revenue-chart";
 import { PageLoader } from "@/components/ui/loading";
 
@@ -97,7 +98,7 @@ export default function SuperAdminDashboard() {
           />
           <StatCard
             label="Monthly Revenue"
-            value={`PKR ${data.monthlyRevenue.toLocaleString()}`}
+            value={formatCurrency(data.monthlyRevenue)}
             icon={DollarSign}
             iconBg="#F0F9FF"
             iconColor="#0EA5E9"

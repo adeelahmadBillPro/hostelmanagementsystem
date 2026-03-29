@@ -51,11 +51,11 @@ export default function LoginPage() {
         const role = session?.user?.role;
 
         if (role === "SUPER_ADMIN") {
-          router.push("/super-admin/dashboard");
+          window.location.href = "/super-admin/dashboard";
         } else if (role === "RESIDENT" || role === "STAFF") {
-          router.push("/portal/dashboard");
+          window.location.href = "/portal/dashboard";
         } else {
-          router.push("/dashboard");
+          window.location.href = "/dashboard";
         }
       }
     } catch {

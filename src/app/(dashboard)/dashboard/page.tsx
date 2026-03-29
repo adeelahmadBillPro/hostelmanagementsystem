@@ -71,7 +71,7 @@ export default function DashboardPage() {
       .catch(() => {});
   }, []);
 
-  const fmt = (n: number) => `PKR ${n.toLocaleString()}`;
+  const fmt = (n: number) => formatCurrency(n);
 
   const getTypeBadge = (type: string) => {
     if (type === "PRIVATE") return "badge-primary";

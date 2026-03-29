@@ -132,7 +132,7 @@ export default function RegisterPage() {
       });
 
       if (loginResult?.ok) {
-        router.push("/dashboard");
+        window.location.href = "/dashboard";
         return;
       }
 

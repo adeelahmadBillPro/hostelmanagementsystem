@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import Modal from "@/components/ui/modal";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
+import { formatCurrency } from "@/lib/utils";
 import {
   Plus,
   Edit2,
@@ -205,9 +206,7 @@ export default function HostelsPage() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return `PKR ${amount.toLocaleString()}`;
-  };
+  // Using shared formatCurrency from imports
 
   const getTypeBadgeClass = (type: string) => {
     switch (type) {
