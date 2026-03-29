@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/dashboard-layout';
 import Modal from '@/components/ui/modal';
 import { formatCurrency, formatDate } from '@/lib/utils';
@@ -113,6 +114,7 @@ interface BillDetail {
 // ==================== COMPONENT ====================
 
 export default function MyBillsPage() {
+  const router = useRouter();
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedBill, setExpandedBill] = useState<string | null>(null);
@@ -525,7 +527,7 @@ export default function MyBillsPage() {
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-2 pt-2">
           {bill.status !== 'PAID' && (
-            <button className="btn-primary text-sm">Pay Now</button>
+            <button onClick={() => router.push("/portal/pay")} className="btn-primary text-sm">Pay Now</button>
           )}
           <button
             onClick={(e) => {
