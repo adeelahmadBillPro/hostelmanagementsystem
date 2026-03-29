@@ -181,6 +181,23 @@ export async function GET() {
           });
         }
 
+        // Open bill disputes
+        const openDisputes = await prisma.billDispute.count({
+          where: {
+            bill: { hostelId: { in: hostelIds } },
+            status: "OPEN",
+          },
+        });
+        if (openDisputes > 0) {
+          notifications.push({
+            type: "dispute",
+            text: `${openDisputes} open bill dispute${openDisputes > 1 ? "s" : ""}`,
+            link: `/hostel/${primaryHostelId}/disputes`,
+            count: openDisputes,
+            icon: "dispute",
+          });
+        }
+
         // Pending gate pass requests
         const pendingPasses = await prisma.gatePass.count({
           where: {

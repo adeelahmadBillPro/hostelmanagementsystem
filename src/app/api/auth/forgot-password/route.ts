@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import { createResetToken } from "@/lib/reset-tokens";
+import { sendEmail, passwordResetEmail } from "@/lib/email";
+import bcrypt from "bcryptjs";
+import { randomBytes } from "crypto";
 
 export async function POST(req: Request) {
   const limited = rateLimit(req, "strict");
@@ -12,10 +15,7 @@ export async function POST(req: Request) {
     const { email } = body;
 
     if (!email) {
-      return NextResponse.json(
-        { error: "Email is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
     const user = await prisma.user.findUnique({
@@ -23,21 +23,27 @@ export async function POST(req: Request) {
     });
 
     if (!user) {
-      // Don't reveal whether user exists - but for testing, we return an error
       return NextResponse.json(
         { error: "No account found with this email address" },
         { status: 404 }
       );
     }
 
-    const token = createResetToken(user.id, user.email);
+    // Generate new password and update
+    const newPassword = randomBytes(4).toString("hex");
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // In production, you would send this token via email
-    // For now, we return it in the response for testing
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword },
+    });
+
+    // Send email with new password
+    const emailData = passwordResetEmail(user.name, user.email, newPassword);
+    await sendEmail(emailData);
+
     return NextResponse.json({
-      message: "Password reset token generated",
-      token, // Remove this in production - send via email instead
-      email: user.email,
+      message: "A new password has been sent to your email. Please check your inbox.",
     });
   } catch (error) {
     console.error("Forgot password error:", error);

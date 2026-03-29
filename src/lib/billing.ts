@@ -4,8 +4,7 @@ type PrismaTx = Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transa
 
 /**
  * Generate a monthly bill for a single resident.
- * Calculates: roomRent, foodCharges, parkingFee, meterCharges, previousBalance, advanceDeduction.
- * Returns the created bill or null if already exists.
+ * Handles: freeRoom, rentOverride, foodPlan (FULL_MESS/NO_MESS/CUSTOM), fixedFoodFee, dueDate.
  */
 export async function generateBillForResident(
   residentId: string,
@@ -14,39 +13,47 @@ export async function generateBillForResident(
   hostelId: string,
   tx: PrismaTx
 ) {
-  // Check if bill already exists
   const existing = await tx.monthlyBill.findFirst({
     where: { residentId, month, year, weekNumber: null },
   });
   if (existing) return null;
 
-  // Get resident with room info
   const resident = await tx.resident.findUnique({
     where: { id: residentId },
     include: {
       room: true,
       bed: true,
       parking: true,
+      hostel: true,
     },
   });
   if (!resident || resident.status !== "ACTIVE") return null;
 
-  // Room rent
-  const roomRent = resident.room.rentPerBed;
+  // Room rent: freeRoom = 0, rentOverride = custom, else room's rentPerBed
+  const roomRent = (resident as any).freeRoom
+    ? 0
+    : ((resident as any).rentOverride ?? resident.room.rentPerBed);
 
-  // Food charges - sum of food orders for this month
+  // Food charges from app orders
   const monthStart = new Date(year, month - 1, 1);
   const monthEnd = new Date(year, month, 1);
 
   const foodAgg = await tx.foodOrder.aggregate({
-    where: {
-      residentId,
-      hostelId,
-      orderDate: { gte: monthStart, lt: monthEnd },
-    },
+    where: { residentId, hostelId, orderDate: { gte: monthStart, lt: monthEnd } },
     _sum: { totalAmount: true },
   });
   const foodCharges = foodAgg._sum.totalAmount || 0;
+
+  // Fixed food fee based on food plan
+  const hostelFoodCharge = (resident.hostel as any).fixedFoodCharge || 0;
+  const foodPlan = (resident as any).foodPlan || "FULL_MESS";
+  let fixedFoodFee = 0;
+  if (foodPlan === "FULL_MESS") {
+    fixedFoodFee = hostelFoodCharge;
+  } else if (foodPlan === "CUSTOM") {
+    fixedFoodFee = (resident as any).customFoodFee || 0;
+  }
+  // NO_MESS = 0 fixed fee
 
   // Parking fee
   const parkingFee = resident.parking.reduce(
@@ -56,16 +63,12 @@ export async function generateBillForResident(
 
   // Meter charges
   const meterAgg = await tx.meterReading.aggregate({
-    where: {
-      roomId: resident.roomId,
-      hostelId,
-      readingDate: { gte: monthStart, lt: monthEnd },
-    },
+    where: { roomId: resident.roomId, hostelId, readingDate: { gte: monthStart, lt: monthEnd } },
     _sum: { amount: true },
   });
   const meterCharges = meterAgg._sum.amount || 0;
 
-  // Previous balance from last bill
+  // Previous balance
   const prevBill = await tx.monthlyBill.findFirst({
     where: { residentId, hostelId },
     orderBy: { createdAt: "desc" },
@@ -79,8 +82,13 @@ export async function generateBillForResident(
     advanceDeduction = resident.advancePaid;
   }
 
-  const totalAmount =
-    roomRent + foodCharges + parkingFee + meterCharges + previousBalance - advanceDeduction;
+  // Due date from hostel settings
+  const dueDays = (resident.hostel as any).billingDueDays || 7;
+  const dueDate = new Date();
+  dueDate.setDate(dueDate.getDate() + dueDays);
+
+  const totalAmount = roomRent + foodCharges + fixedFoodFee + parkingFee +
+    meterCharges + previousBalance - advanceDeduction;
   const balance = Math.max(0, totalAmount);
 
   const bill = await tx.monthlyBill.create({
@@ -92,7 +100,7 @@ export async function generateBillForResident(
       billingCycle: "MONTHLY",
       roomRent,
       foodCharges,
-      fixedFoodFee: 0,
+      fixedFoodFee,
       otherCharges: 0,
       meterCharges,
       parkingFee,
@@ -101,7 +109,8 @@ export async function generateBillForResident(
       totalAmount: balance,
       paidAmount: 0,
       balance,
-      status: "UNPAID",
+      status: balance === 0 ? "PAID" : "UNPAID",
+      dueDate,
     },
   });
 

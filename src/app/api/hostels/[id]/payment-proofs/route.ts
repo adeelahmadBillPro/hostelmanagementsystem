@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { generateReceiptNumber } from "@/lib/utils";
+import { auditLog } from "@/lib/audit-log";
 
 // GET: Return all payment proofs for this hostel (manager view)
 export async function GET(
@@ -130,6 +131,8 @@ export async function PATCH(
         },
       });
 
+      await auditLog({ action: "REJECT", entityType: "payment_proof", entityId: proofId, userId: session.user.id, details: `Rejected: ${rejectionReason}` });
+
       return NextResponse.json(updatedProof);
     }
 
@@ -181,6 +184,8 @@ export async function PATCH(
 
       return { proof: updatedProof, payment };
     });
+
+    await auditLog({ action: "APPROVE", entityType: "payment_proof", entityId: proofId, userId: session.user.id, details: `Approved payment proof, amount: ${proof.amount}` });
 
     return NextResponse.json(result);
   } catch (error) {
