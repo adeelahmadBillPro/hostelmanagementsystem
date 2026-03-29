@@ -379,83 +379,54 @@ export default function RoomsPage() {
 
       {/* Filter Bar */}
       <div className="card !py-3 !px-4 mb-6">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1.5 text-text-muted flex-shrink-0 mr-1">
-            <Filter size={14} />
-            <span className="text-xs font-semibold hidden sm:inline">Filters:</span>
-          </div>
-          <select
-            className="select !h-9 text-xs !w-auto !min-w-0"
-            value={filterBuilding}
-            onChange={(e) => { setFilterBuilding(e.target.value); setFilterFloor(""); }}
-          >
-            <option value="">All Buildings</option>
-            {buildings.map((b) => (
-              <option key={b.id} value={b.id}>{b.name}</option>
-            ))}
-          </select>
-          <select
-            className="select !h-9 text-xs !w-auto !min-w-0"
-            value={filterFloor}
-            onChange={(e) => setFilterFloor(e.target.value)}
-          >
-            <option value="">All Floors</option>
-            {filteredFloors.map((f) => (
-              <option key={f.id} value={f.id}>{f.name}</option>
-            ))}
-          </select>
-          <select
-            className="select !h-9 text-xs !w-auto !min-w-0"
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-          >
-            <option value="">All Types</option>
-            <option value="SINGLE">Single</option>
-            <option value="DOUBLE">Double</option>
-            <option value="TRIPLE">Triple</option>
-            <option value="QUAD">Quad</option>
-          </select>
-          <select
-            className="select !h-9 text-xs !w-auto !min-w-0"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <option value="">All Status</option>
-            <option value="ACTIVE">Active</option>
-            <option value="MAINTENANCE">Maintenance</option>
-            <option value="INACTIVE">Inactive</option>
-          </select>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 flex-1">
+            <div className="flex items-center gap-1.5 text-text-muted flex-shrink-0">
+              <Filter size={14} />
+              <span className="text-xs font-semibold hidden sm:inline">Filters:</span>
+            </div>
+            <select className="select !h-9 text-xs !w-auto !min-w-0" value={filterBuilding} onChange={(e) => { setFilterBuilding(e.target.value); setFilterFloor(""); }}>
+              <option value="">All Buildings</option>
+              {buildings.map((b) => (<option key={b.id} value={b.id}>{b.name}</option>))}
+            </select>
+            <select className="select !h-9 text-xs !w-auto !min-w-0" value={filterFloor} onChange={(e) => setFilterFloor(e.target.value)}>
+              <option value="">All Floors</option>
+              {filteredFloors.map((f) => (<option key={f.id} value={f.id}>{f.name}</option>))}
+            </select>
+            <select className="select !h-9 text-xs !w-auto !min-w-0" value={filterType} onChange={(e) => setFilterType(e.target.value)}>
+              <option value="">All Types</option>
+              <option value="SINGLE">Single</option>
+              <option value="DOUBLE">Double</option>
+              <option value="TRIPLE">Triple</option>
+              <option value="QUAD">Quad</option>
+            </select>
+            <select className="select !h-9 text-xs !w-auto !min-w-0" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+              <option value="">All Status</option>
+              <option value="ACTIVE">Active</option>
+              <option value="MAINTENANCE">Maintenance</option>
+              <option value="INACTIVE">Inactive</option>
+            </select>
             {(filterBuilding || filterFloor || filterType || filterStatus) && (
-              <button
-                className="text-xs font-medium text-primary hover:text-primary-dark transition-colors px-2"
-                onClick={() => { setFilterBuilding(""); setFilterFloor(""); setFilterType(""); setFilterStatus(""); }}
-              >
+              <button className="text-xs font-medium text-primary hover:text-primary-dark px-2" onClick={() => { setFilterBuilding(""); setFilterFloor(""); setFilterType(""); setFilterStatus(""); }}>
                 Clear all
               </button>
             )}
           </div>
-          <button onClick={() => router.push(`/hostel/${hostelId}/buildings`)} className="btn-secondary flex items-center gap-2">
-            <Building2 size={16} /> Buildings
-          </button>
-          <button
-            className="btn-primary flex items-center gap-2 whitespace-nowrap flex-shrink-0"
-            onClick={() => {
-              setFormData({
-                buildingId: "",
-                floorId: "",
-                roomNumber: "",
-                roomCount: "1",
-                type: "SINGLE",
-                totalBeds: "1",
-                rentPerBed: "",
-                rentPerRoom: "",
-              });
-              setShowAddModal(true);
-            }}
-          >
-            <Plus size={16} />
-            Add Room
-          </button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button onClick={() => router.push(`/hostel/${hostelId}/buildings`)} className="btn-secondary flex items-center gap-2 !py-2 !text-xs">
+              <Building2 size={14} /> Buildings
+            </button>
+            <button
+              className="btn-primary flex items-center gap-2 whitespace-nowrap !py-2 !text-xs"
+              onClick={() => {
+                setFormData({ buildingId: "", floorId: "", roomNumber: "", roomCount: "1", type: "SINGLE", totalBeds: "1", rentPerBed: "", rentPerRoom: "" });
+                setShowAddModal(true);
+              }}
+            >
+              <Plus size={14} /> Add Room
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Color Legend */}
