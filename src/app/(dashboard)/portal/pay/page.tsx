@@ -83,9 +83,10 @@ export default function PayBillPage() {
       ]);
 
       if (billsRes.ok) {
-        const allBills = await billsRes.json();
-        const unpaidBills = Array.isArray(allBills)
-          ? allBills.filter((b: Bill) => b.status !== "PAID" && b.balance > 0)
+        const allBillsData = await billsRes.json();
+        const billsArray = allBillsData.bills || allBillsData || [];
+        const unpaidBills = Array.isArray(billsArray)
+          ? billsArray.filter((b: Bill) => b.status !== "PAID" && b.balance > 0)
           : [];
         setBills(unpaidBills);
       }
