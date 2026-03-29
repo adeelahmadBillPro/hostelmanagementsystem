@@ -122,7 +122,7 @@ export default function SalarySheetPage() {
   return (
     <DashboardLayout title="Salary Sheet" hostelId={hostelId}>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push(`/hostel/${hostelId}/staff`)}
@@ -137,7 +137,7 @@ export default function SalarySheetPage() {
             <button
               onClick={generateSalarySheet}
               disabled={generating}
-              className="btn-primary flex items-center gap-2"
+              className="btn-primary flex items-center gap-2 text-xs sm:text-sm"
             >
               <FileText size={16} />
               {generating ? 'Generating...' : 'Generate Salary Sheet'}
@@ -145,7 +145,7 @@ export default function SalarySheetPage() {
             {unpaidCount > 0 && (
               <button
                 onClick={markAllPaid}
-                className="btn-success flex items-center gap-2"
+                className="btn-success flex items-center gap-2 text-xs sm:text-sm"
               >
                 <CheckCircle size={16} />
                 Mark All Paid

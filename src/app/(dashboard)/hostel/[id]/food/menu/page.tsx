@@ -267,7 +267,7 @@ export default function FoodMenuPage() {
   return (
     <DashboardLayout title="Food Menu" hostelId={hostelId}>
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-3 mb-6">
         <StatCard label="Total Items" value={stats.totalItems} icon={ListChecks} iconBg="#EEF2FF" iconColor="#4F46E5" delay={0} />
         <StatCard label="Active Items" value={stats.activeItems} icon={Activity} iconBg="#F0FDF4" iconColor="#16A34A" delay={100} />
         <StatCard label="Avg Price" value={formatCurrency(stats.avgPrice)} icon={TrendingUp} iconBg="#FFFBEB" iconColor="#D97706" delay={200} />
@@ -275,7 +275,7 @@ export default function FoodMenuPage() {
 
       {/* Tabs + Add Button */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#0B1222] rounded-2xl p-1.5">
+        <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#0B1222] rounded-2xl p-1.5 overflow-x-auto flex-nowrap">
           {MEAL_TYPES.map((type) => {
             const isActive = activeTab === type;
             const colors = MEAL_COLORS[type];
@@ -283,7 +283,7 @@ export default function FoodMenuPage() {
               <button
                 key={type}
                 onClick={() => setActiveTab(type)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 flex-shrink-0 ${
                   isActive
                     ? colors.tab
                     : "text-text-muted hover:text-text-primary dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/5"
@@ -536,15 +536,15 @@ export default function FoodMenuPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-3 pt-2">
+          <div className="flex gap-2 pt-2">
             <button
               type="button"
               onClick={() => { setShowModal(false); setEditItem(null); setForm(emptyForm); }}
-              className="btn-secondary"
+              className="btn-secondary flex-1"
             >
               Cancel
             </button>
-            <button type="submit" className="btn-primary" disabled={submitting}>
+            <button type="submit" className="btn-primary flex-1" disabled={submitting}>
               {submitting ? (
                 <span className="flex items-center gap-2">
                   <Loader2 size={16} className="animate-spin" />

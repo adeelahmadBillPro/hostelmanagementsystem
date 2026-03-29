@@ -220,12 +220,12 @@ export default function PaymentProofsPage() {
       {/* Tabs + Search */}
       <div className="card mb-6 animate-fade-in" style={{ animationDelay: "150ms" }}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex gap-1 bg-bg-main dark:bg-[#0B1222] rounded-xl p-1">
+          <div className="flex gap-1 bg-bg-main dark:bg-[#0B1222] rounded-xl p-1 overflow-x-auto">
             {tabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 flex items-center gap-2 flex-shrink-0 ${
                   activeTab === tab.key
                     ? "bg-white dark:bg-[#111C2E] text-text-primary dark:text-white shadow-sm"
                     : "text-text-muted dark:text-slate-400 hover:text-text-primary dark:hover:text-white"
