@@ -104,6 +104,58 @@ export async function GET() {
             icon: "gatepass",
           });
         }
+
+        // Food orders - recently delivered or preparing
+        const activeOrders = await prisma.foodOrder.count({
+          where: {
+            residentId: residentId,
+            status: { in: ["PREPARING"] },
+            orderDate: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+          },
+        });
+        if (activeOrders > 0) {
+          notifications.push({
+            type: "food",
+            text: `${activeOrders} order${activeOrders > 1 ? "s" : ""} being prepared`,
+            link: "/portal/food",
+            count: activeOrders,
+            icon: "food",
+          });
+        }
+
+        const deliveredOrders = await prisma.foodOrder.count({
+          where: {
+            residentId: residentId,
+            status: "DELIVERED",
+            deliveredAt: { gte: new Date(Date.now() - 2 * 60 * 60 * 1000) }, // Last 2 hours
+          },
+        });
+        if (deliveredOrders > 0) {
+          notifications.push({
+            type: "food",
+            text: `${deliveredOrders} order${deliveredOrders > 1 ? "s" : ""} delivered`,
+            link: "/portal/food",
+            count: deliveredOrders,
+            icon: "food",
+          });
+        }
+
+        // Recent notices
+        const recentNotices = await prisma.notice.count({
+          where: {
+            hostelId: resident.hostelId,
+            createdAt: { gte: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000) },
+          },
+        });
+        if (recentNotices > 0) {
+          notifications.push({
+            type: "notice",
+            text: `${recentNotices} recent notice${recentNotices > 1 ? "s" : ""}`,
+            link: "/portal/notices",
+            count: recentNotices,
+            icon: "notice",
+          });
+        }
       }
     } else if (
       role === "HOSTEL_MANAGER" ||
@@ -195,6 +247,24 @@ export async function GET() {
             link: `/hostel/${primaryHostelId}/disputes`,
             count: openDisputes,
             icon: "dispute",
+          });
+        }
+
+        // Pending food orders (today)
+        const pendingFoodOrders = await prisma.foodOrder.count({
+          where: {
+            hostelId: { in: hostelIds },
+            status: "PENDING",
+            orderDate: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
+          },
+        });
+        if (pendingFoodOrders > 0) {
+          notifications.push({
+            type: "food",
+            text: `${pendingFoodOrders} pending food order${pendingFoodOrders > 1 ? "s" : ""}`,
+            link: `/hostel/${primaryHostelId}/food/orders`,
+            count: pendingFoodOrders,
+            icon: "food",
           });
         }
 

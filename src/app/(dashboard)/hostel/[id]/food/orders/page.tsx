@@ -242,7 +242,7 @@ export default function FoodOrdersPage() {
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard
-          label="Total Orders"
+          label="Items Ordered"
           value={stats.totalOrders}
           icon={ShoppingBag}
           iconBg="#EEF2FF"
