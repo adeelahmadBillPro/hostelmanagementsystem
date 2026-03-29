@@ -79,7 +79,7 @@ export default function SuperAdminDashboard() {
     <DashboardLayout title="Super Admin Dashboard">
       <div className="space-y-6">
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <StatCard
             label="Total Tenants"
             value={data.totalTenants}
@@ -116,10 +116,10 @@ export default function SuperAdminDashboard() {
 
         {/* Revenue Chart */}
         <div
-          className="card opacity-0 animate-fade-in-up"
+          className="card opacity-0 animate-fade-in-up overflow-hidden"
           style={{ animationDelay: "400ms" }}
         >
-          <h2 className="section-title mb-4">Revenue Overview (Last 6 Months)</h2>
+          <h2 className="text-base sm:text-lg font-bold text-text-primary dark:text-white mb-4">Revenue Overview (Last 6 Months)</h2>
           <RevenueChart data={data.revenueByMonth} />
         </div>
 
