@@ -51,6 +51,7 @@ export async function GET() {
           amount: bill.totalAmount,
           status: bill.status,
           month: `${monthNames[bill.month - 1]} ${bill.year}`,
+          dueDate: bill.dueDate?.toISOString() || null,
         };
       }
     } catch {
@@ -95,6 +96,8 @@ export async function GET() {
         monthlyRent: room?.rentPerBed || 0,
         roomType: room?.type || 'N/A',
         status: (resident as any).status || 'ACTIVE',
+        foodPlan: (resident as any).foodPlan || 'FULL_MESS',
+        customFoodFee: (resident as any).customFoodFee || 0,
       },
       currentBill,
       recentNotices: formattedNotices,

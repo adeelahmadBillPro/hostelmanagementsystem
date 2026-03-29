@@ -122,13 +122,46 @@ export async function GET(_request: NextRequest) {
     });
 
     const todayOrders = todayOrdersRaw.map((o: any) => ({
+      id: o.id,
       itemName: o.menu?.itemName || 'Unknown',
       mealType: o.menu?.mealType || 'SNACK',
       quantity: o.quantity,
       totalAmount: o.totalAmount,
+      status: o.status || 'PENDING',
+      deliveredAt: o.deliveredAt,
+      createdAt: o.createdAt,
     }));
 
-    return NextResponse.json({ menu, summary, orderingWindows, todayOrders });
+    // Recent orders (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const recentOrdersRaw = await prisma.foodOrder.findMany({
+      where: { residentId: resident.id, orderDate: { gte: sevenDaysAgo } },
+      include: { menu: { select: { itemName: true, mealType: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
+    const recentOrders = recentOrdersRaw.map((o: any) => ({
+      id: o.id,
+      itemName: o.menu?.itemName || 'Unknown',
+      mealType: o.menu?.mealType || 'SNACK',
+      quantity: o.quantity,
+      totalAmount: o.totalAmount,
+      status: o.status || 'PENDING',
+      orderDate: o.orderDate,
+      createdAt: o.createdAt,
+    }));
+
+    return NextResponse.json({
+      menu,
+      summary,
+      orderingWindows,
+      todayOrders,
+      recentOrders,
+      foodPlan: (resident as any).foodPlan || 'FULL_MESS',
+      customFoodFee: (resident as any).customFoodFee || 0,
+      hostelFoodCharge: (resident.hostel as any).fixedFoodCharge || 0,
+    });
   } catch (error) {
     console.error('Failed to fetch food menu:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
