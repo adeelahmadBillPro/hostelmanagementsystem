@@ -33,6 +33,7 @@ import {
   Loader2,
   UtensilsCrossed,
   MessageSquare,
+  FileText,
 } from "lucide-react";
 
 interface PaymentData {
@@ -50,7 +51,25 @@ interface FoodOrderData {
   quantity: number;
   totalAmount: number;
   orderDate: string;
+  status: string;
   menu: { id: string; itemName: string; mealType: string };
+}
+
+interface MonthlyBillData {
+  id: string;
+  month: number;
+  year: number;
+  roomRent: number;
+  foodCharges: number;
+  fixedFoodFee: number;
+  otherCharges: number;
+  meterCharges: number;
+  parkingFee: number;
+  totalAmount: number;
+  paidAmount: number;
+  balance: number;
+  status: string;
+  dueDate: string | null;
 }
 
 interface ComplaintData {
@@ -97,9 +116,12 @@ interface ResidentDetail {
     };
   };
   bed: { id: string; bedNumber: string; status: string };
+  foodPlan: string;
+  customFoodFee: number;
   payments: PaymentData[];
   foodOrders: FoodOrderData[];
   complaints: ComplaintData[];
+  monthlyBills: MonthlyBillData[];
   financialSummary: {
     totalPaid: number;
     totalBilled: number;
@@ -156,7 +178,7 @@ export default function ResidentProfilePage() {
   const [resident, setResident] = useState<ResidentDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    "payments" | "food" | "complaints"
+    "payments" | "food" | "complaints" | "billing"
   >("payments");
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
@@ -493,6 +515,54 @@ export default function ResidentProfilePage() {
         </div>
       </div>
 
+      {/* Agreement Details Card */}
+      <div
+        className="card p-6 mb-6 opacity-0 animate-fade-in-up"
+        style={{ animationDelay: "150ms" }}
+      >
+        <h2 className="section-title mb-4">Agreement Details</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div>
+            <p className="text-xs text-text-muted mb-1">Move-in Date</p>
+            <span className="text-sm font-medium text-text-primary dark:text-white">
+              {formatDate(resident.moveInDate)}
+            </span>
+          </div>
+          <div>
+            <p className="text-xs text-text-muted mb-1">Monthly Rent</p>
+            <span className="text-sm font-bold text-primary">
+              {formatCurrency(resident.room.rentPerBed)}
+            </span>
+          </div>
+          <div>
+            <p className="text-xs text-text-muted mb-1">Advance Paid</p>
+            <span className="text-sm font-medium text-text-primary dark:text-white">
+              {formatCurrency(resident.advancePaid)}
+            </span>
+          </div>
+          <div>
+            <p className="text-xs text-text-muted mb-1">Security Deposit</p>
+            <span className="text-sm font-medium text-text-primary dark:text-white">
+              {formatCurrency(resident.securityDeposit)}
+            </span>
+          </div>
+          <div>
+            <p className="text-xs text-text-muted mb-1">Food Plan</p>
+            <span className="text-sm font-medium text-text-primary dark:text-white">
+              {resident.foodPlan === "FULL_MESS"
+                ? "Full Mess"
+                : resident.foodPlan === "NO_MESS"
+                ? "No Mess"
+                : `Custom (${formatCurrency(resident.customFoodFee)})`}
+            </span>
+          </div>
+          <div>
+            <p className="text-xs text-text-muted mb-1">Status</p>
+            <span className={statusInfo.class}>{statusInfo.label}</span>
+          </div>
+        </div>
+      </div>
+
       {/* Financial Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard
@@ -538,6 +608,7 @@ export default function ResidentProfilePage() {
           {[
             { key: "payments" as const, label: "Payment History", icon: DollarSign },
             { key: "food" as const, label: "Food Orders", icon: UtensilsCrossed },
+            { key: "billing" as const, label: "Billing History", icon: FileText },
             { key: "complaints" as const, label: "Complaints", icon: MessageSquare },
           ].map((tab) => {
             const TabIcon = tab.icon;
@@ -651,20 +722,29 @@ export default function ResidentProfilePage() {
                     <th className="table-header">Meal</th>
                     <th className="table-header">Qty</th>
                     <th className="table-header">Amount</th>
+                    <th className="table-header">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {resident.foodOrders.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={6}
                         className="px-4 py-12 text-center text-text-muted text-sm"
                       >
                         No food orders found
                       </td>
                     </tr>
                   ) : (
-                    resident.foodOrders.map((order) => (
+                    resident.foodOrders.map((order) => {
+                      const orderStatusMap: Record<string, { bg: string; text: string; label: string }> = {
+                        PENDING: { bg: "bg-yellow-100 dark:bg-yellow-900/30", text: "text-yellow-700 dark:text-yellow-400", label: "Pending" },
+                        PREPARING: { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-400", label: "Preparing" },
+                        DELIVERED: { bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400", label: "Delivered" },
+                        CANCELLED: { bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-400", label: "Cancelled" },
+                      };
+                      const os = orderStatusMap[order.status] || { bg: "bg-gray-100 dark:bg-gray-800", text: "text-gray-700 dark:text-gray-400", label: order.status };
+                      return (
                       <tr key={order.id} className="table-row">
                         <td className="table-cell text-sm">
                           {formatDate(order.orderDate)}
@@ -681,8 +761,14 @@ export default function ResidentProfilePage() {
                         <td className="table-cell text-sm font-semibold">
                           {formatCurrency(order.totalAmount)}
                         </td>
+                        <td className="table-cell">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${os.bg} ${os.text}`}>
+                            {os.label}
+                          </span>
+                        </td>
                       </tr>
-                    ))
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -694,7 +780,15 @@ export default function ResidentProfilePage() {
                   No food orders found
                 </div>
               ) : (
-                resident.foodOrders.map((order) => (
+                resident.foodOrders.map((order) => {
+                  const orderStatusMap: Record<string, { bg: string; text: string; label: string }> = {
+                    PENDING: { bg: "bg-yellow-100 dark:bg-yellow-900/30", text: "text-yellow-700 dark:text-yellow-400", label: "Pending" },
+                    PREPARING: { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-400", label: "Preparing" },
+                    DELIVERED: { bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400", label: "Delivered" },
+                    CANCELLED: { bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-400", label: "Cancelled" },
+                  };
+                  const os = orderStatusMap[order.status] || { bg: "bg-gray-100 dark:bg-gray-800", text: "text-gray-700 dark:text-gray-400", label: order.status };
+                  return (
                   <div key={order.id} className="p-4 space-y-2">
                     <div className="flex justify-between">
                       <span className="text-sm font-medium">
@@ -704,14 +798,18 @@ export default function ResidentProfilePage() {
                         {formatCurrency(order.totalAmount)}
                       </span>
                     </div>
-                    <div className="flex justify-between text-xs text-text-muted">
+                    <div className="flex justify-between items-center text-xs text-text-muted">
                       <span>
                         {order.menu.mealType} x{order.quantity}
                       </span>
-                      <span>{formatDate(order.orderDate)}</span>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${os.bg} ${os.text}`}>
+                        {os.label}
+                      </span>
                     </div>
+                    <div className="text-xs text-text-muted">{formatDate(order.orderDate)}</div>
                   </div>
-                ))
+                  );
+                }))
               )}
             </div>
           </div>
@@ -825,6 +923,131 @@ export default function ResidentProfilePage() {
                       <p className="text-xs text-text-muted">
                         {formatDate(complaint.createdAt)}
                       </p>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Billing History Tab */}
+        {activeTab === "billing" && (
+          <div className="card p-0 overflow-hidden">
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr>
+                    <th className="table-header">Period</th>
+                    <th className="table-header">Room Rent</th>
+                    <th className="table-header">Food Charges</th>
+                    <th className="table-header">Other</th>
+                    <th className="table-header">Total</th>
+                    <th className="table-header">Paid</th>
+                    <th className="table-header">Balance</th>
+                    <th className="table-header">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {resident.monthlyBills.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={8}
+                        className="px-4 py-12 text-center text-text-muted text-sm"
+                      >
+                        No billing records found
+                      </td>
+                    </tr>
+                  ) : (
+                    resident.monthlyBills.map((bill) => {
+                      const billStatusMap: Record<string, { bg: string; text: string; label: string }> = {
+                        UNPAID: { bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-400", label: "Unpaid" },
+                        PARTIAL: { bg: "bg-yellow-100 dark:bg-yellow-900/30", text: "text-yellow-700 dark:text-yellow-400", label: "Partial" },
+                        PAID: { bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400", label: "Paid" },
+                        OVERDUE: { bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-400", label: "Overdue" },
+                      };
+                      const bs = billStatusMap[bill.status] || { bg: "bg-gray-100 dark:bg-gray-800", text: "text-gray-700 dark:text-gray-400", label: bill.status };
+                      const foodTotal = bill.foodCharges + bill.fixedFoodFee;
+                      const otherTotal = bill.otherCharges + bill.meterCharges + bill.parkingFee;
+                      return (
+                        <tr key={bill.id} className="table-row">
+                          <td className="table-cell text-sm font-medium">
+                            {MONTH_NAMES[bill.month]} {bill.year}
+                          </td>
+                          <td className="table-cell text-sm">
+                            {formatCurrency(bill.roomRent)}
+                          </td>
+                          <td className="table-cell text-sm">
+                            {formatCurrency(foodTotal)}
+                          </td>
+                          <td className="table-cell text-sm">
+                            {formatCurrency(otherTotal)}
+                          </td>
+                          <td className="table-cell text-sm font-semibold">
+                            {formatCurrency(bill.totalAmount)}
+                          </td>
+                          <td className="table-cell text-sm text-success font-medium">
+                            {formatCurrency(bill.paidAmount)}
+                          </td>
+                          <td className="table-cell text-sm font-semibold text-danger">
+                            {formatCurrency(bill.balance)}
+                          </td>
+                          <td className="table-cell">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${bs.bg} ${bs.text}`}>
+                              {bs.label}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile view */}
+            <div className="md:hidden divide-y divide-border dark:divide-[#1E2D42]">
+              {resident.monthlyBills.length === 0 ? (
+                <div className="px-4 py-12 text-center text-text-muted text-sm">
+                  No billing records found
+                </div>
+              ) : (
+                resident.monthlyBills.map((bill) => {
+                  const billStatusMap: Record<string, { bg: string; text: string; label: string }> = {
+                    UNPAID: { bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-400", label: "Unpaid" },
+                    PARTIAL: { bg: "bg-yellow-100 dark:bg-yellow-900/30", text: "text-yellow-700 dark:text-yellow-400", label: "Partial" },
+                    PAID: { bg: "bg-green-100 dark:bg-green-900/30", text: "text-green-700 dark:text-green-400", label: "Paid" },
+                    OVERDUE: { bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-400", label: "Overdue" },
+                  };
+                  const bs = billStatusMap[bill.status] || { bg: "bg-gray-100 dark:bg-gray-800", text: "text-gray-700 dark:text-gray-400", label: bill.status };
+                  return (
+                    <div key={bill.id} className="p-4 space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-semibold text-text-primary dark:text-white">
+                          {MONTH_NAMES[bill.month]} {bill.year}
+                        </span>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${bs.bg} ${bs.text}`}>
+                          {bs.label}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-text-muted">Total</span>
+                        <span className="font-semibold text-text-primary dark:text-white">
+                          {formatCurrency(bill.totalAmount)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-text-muted">Paid</span>
+                        <span className="text-success font-medium">
+                          {formatCurrency(bill.paidAmount)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-text-muted">Balance</span>
+                        <span className="text-danger font-semibold">
+                          {formatCurrency(bill.balance)}
+                        </span>
+                      </div>
                     </div>
                   );
                 })
