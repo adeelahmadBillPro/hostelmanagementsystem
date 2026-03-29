@@ -809,8 +809,8 @@ export default function ResidentProfilePage() {
                     <div className="text-xs text-text-muted">{formatDate(order.orderDate)}</div>
                   </div>
                   );
-                }))
-              )}
+                }))}
+
             </div>
           </div>
         )}

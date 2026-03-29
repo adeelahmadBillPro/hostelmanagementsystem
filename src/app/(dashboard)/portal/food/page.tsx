@@ -760,7 +760,6 @@ export default function FoodOrderingPage() {
                   </div>
                 </div>
               )}
-            </div>
 
               {/* Recent Order History (7 days) */}
               {recentOrders.length > 0 && (
