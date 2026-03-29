@@ -128,6 +128,8 @@ export default function MyBillsPage() {
   const [disputeCategory, setDisputeCategory] = useState('food');
   const [disputeDescription, setDisputeDescription] = useState('');
   const [disputeSubmitting, setDisputeSubmitting] = useState(false);
+  const [disputeFile, setDisputeFile] = useState<File | null>(null);
+  const [disputeFilePreview, setDisputeFilePreview] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchBills = async () => {
@@ -186,18 +188,32 @@ export default function MyBillsPage() {
     if (!disputeBillId || !disputeDescription.trim()) return;
     setDisputeSubmitting(true);
     try {
+      // Upload evidence file if attached
+      let evidenceUrl = null;
+      if (disputeFile) {
+        const formData = new FormData();
+        formData.append("file", disputeFile);
+        const uploadRes = await fetch("/api/upload", { method: "POST", body: formData });
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json();
+          evidenceUrl = uploadData.url;
+        }
+      }
+
       const res = await fetch('/api/portal/disputes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           billId: disputeBillId,
           category: disputeCategory,
-          description: disputeDescription.trim(),
+          description: disputeDescription.trim() + (evidenceUrl ? `\n\nEvidence: ${evidenceUrl}` : ""),
         }),
       });
       if (res.ok) {
         setDisputeModal(false);
-        // Refresh the bill detail
+        setDisputeFile(null);
+        setDisputeFilePreview(null);
+        setDisputeDescription("");
         setBillDetails((prev) => {
           const copy = { ...prev };
           delete copy[disputeBillId!];
@@ -680,6 +696,60 @@ export default function MyBillsPage() {
               className="input-field w-full resize-none"
             />
           </div>
+          {/* Evidence Upload */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Evidence (optional)
+            </label>
+            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-4 text-center">
+              {disputeFilePreview ? (
+                <div className="space-y-2">
+                  {disputeFile?.type.startsWith("image/") ? (
+                    <img src={disputeFilePreview} alt="Evidence" className="max-h-32 mx-auto rounded-lg" />
+                  ) : (
+                    <div className="text-sm text-primary font-medium">{disputeFile?.name}</div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => { setDisputeFile(null); setDisputeFilePreview(null); }}
+                    className="text-xs text-red-500 hover:text-red-700"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <label className="cursor-pointer">
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    <span className="text-primary font-medium">Click to upload</span> screenshot, photo, or PDF
+                  </div>
+                  <p className="text-[10px] text-gray-400 mt-1">JPG, PNG, PDF up to 5MB</p>
+                  <input
+                    type="file"
+                    accept="image/*,.pdf"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        if (file.size > 5 * 1024 * 1024) {
+                          alert("File must be under 5MB");
+                          return;
+                        }
+                        setDisputeFile(file);
+                        if (file.type.startsWith("image/")) {
+                          const reader = new FileReader();
+                          reader.onload = (ev) => setDisputeFilePreview(ev.target?.result as string);
+                          reader.readAsDataURL(file);
+                        } else {
+                          setDisputeFilePreview(file.name);
+                        }
+                      }
+                    }}
+                  />
+                </label>
+              )}
+            </div>
+          </div>
+
           <div className="flex gap-3 pt-2">
             <button
               onClick={submitDispute}
