@@ -267,7 +267,7 @@ export default function FoodMenuPage() {
   return (
     <DashboardLayout title="Food Menu" hostelId={hostelId}>
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
         <StatCard label="Total Items" value={stats.totalItems} icon={ListChecks} iconBg="#EEF2FF" iconColor="#4F46E5" delay={0} />
         <StatCard label="Active Items" value={stats.activeItems} icon={Activity} iconBg="#F0FDF4" iconColor="#16A34A" delay={100} />
         <StatCard label="Avg Price" value={formatCurrency(stats.avgPrice)} icon={TrendingUp} iconBg="#FFFBEB" iconColor="#D97706" delay={200} />
