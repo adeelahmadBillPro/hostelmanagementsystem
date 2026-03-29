@@ -91,6 +91,11 @@ export default function AddResidentPage() {
   const [securityDeposit, setSecurityDeposit] = useState("");
   const [foodPlan, setFoodPlan] = useState("FULL_MESS");
   const [customFoodFee, setCustomFoodFee] = useState("");
+  const [residentType, setResidentType] = useState("SELF_PAYING");
+  const [freeRoom, setFreeRoom] = useState(false);
+  const [rentOverride, setRentOverride] = useState("");
+  const [sponsorName, setSponsorName] = useState("");
+  const [residentNotes, setResidentNotes] = useState("");
   const [moveInDate, setMoveInDate] = useState(
     new Date().toISOString().split("T")[0]
   );
@@ -283,6 +288,11 @@ export default function AddResidentPage() {
           securityDeposit: parseFloat(securityDeposit) || 0,
           foodPlan,
           customFoodFee: parseFloat(customFoodFee) || 0,
+          residentType,
+          freeRoom,
+          rentOverride: rentOverride ? parseFloat(rentOverride) : null,
+          sponsorName: sponsorName.trim() || null,
+          notes: residentNotes.trim() || null,
           moveInDate,
         }),
       });
@@ -822,6 +832,56 @@ export default function AddResidentPage() {
                 min="0"
               />
             </div>
+          </div>
+
+          {/* Food Plan */}
+          {/* Resident Type & Rent */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label className="label">Resident Type</label>
+              <select value={residentType} onChange={(e) => {
+                setResidentType(e.target.value);
+                if (e.target.value === "GOVERNMENT" || e.target.value === "SCHOLARSHIP") setFreeRoom(true);
+                else setFreeRoom(false);
+              }} className="select">
+                <option value="SELF_PAYING">Self Paying (Full rent)</option>
+                <option value="SCHOLARSHIP">Scholarship (Free room)</option>
+                <option value="GOVERNMENT">Government (Free room)</option>
+                <option value="SPONSORED">Sponsored (Organization pays)</option>
+              </select>
+              <p className="text-[10px] text-text-muted mt-1">
+                {residentType === "SELF_PAYING" && "Resident pays full room rent + food charges"}
+                {residentType === "SCHOLARSHIP" && "Room is free. Only food/other charges apply."}
+                {residentType === "GOVERNMENT" && "Government hostel - no room rent."}
+                {residentType === "SPONSORED" && "Sponsored by an organization. Enter sponsor name below."}
+              </p>
+            </div>
+            <div>
+              {(residentType === "SPONSORED" || !freeRoom) && (
+                <>
+                  <label className="label">{freeRoom ? "Sponsor Name" : "Rent Override (PKR)"}</label>
+                  {freeRoom || residentType === "SPONSORED" ? (
+                    <input type="text" value={sponsorName} onChange={(e) => setSponsorName(e.target.value)} className="input" placeholder="Organization / sponsor name" />
+                  ) : (
+                    <>
+                      <input type="number" value={rentOverride} onChange={(e) => setRentOverride(e.target.value)} className="input" placeholder={`Default: ${rentPerBed} (leave empty for room rent)`} min="0" />
+                      <p className="text-[10px] text-text-muted mt-1">Leave empty to use room&apos;s default rent. Set custom amount for special pricing.</p>
+                    </>
+                  )}
+                </>
+              )}
+              {freeRoom && residentType !== "SPONSORED" && (
+                <div className="flex items-center gap-2 mt-2 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
+                  <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300">Free Room - No rent will be charged</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div className="mt-4">
+            <label className="label">Additional Notes</label>
+            <textarea value={residentNotes} onChange={(e) => setResidentNotes(e.target.value)} className="textarea" rows={2} placeholder="Any special notes about this resident (optional)" />
           </div>
 
           {/* Food Plan */}

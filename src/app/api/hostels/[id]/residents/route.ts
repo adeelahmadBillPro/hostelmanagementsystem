@@ -159,6 +159,11 @@ export async function POST(
       securityDeposit,
       foodPlan,
       customFoodFee,
+      residentType,
+      freeRoom,
+      rentOverride,
+      sponsorName,
+      notes,
       moveInDate,
     } = body;
 
@@ -257,6 +262,11 @@ export async function POST(
           securityDeposit: parseFloat(securityDeposit) || 0,
           foodPlan: foodPlan || "FULL_MESS",
           customFoodFee: parseFloat(customFoodFee) || 0,
+          residentType: residentType || "SELF_PAYING",
+          freeRoom: !!freeRoom,
+          rentOverride: rentOverride ? parseFloat(rentOverride) : null,
+          sponsorName: sponsorName || null,
+          notes: notes || null,
           status: "ACTIVE",
           gender: gender || null,
           institution: institution || null,

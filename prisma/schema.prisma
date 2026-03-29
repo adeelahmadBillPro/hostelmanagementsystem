@@ -372,8 +372,13 @@ model Resident {
   moveOutDate      DateTime?
   advancePaid      Float          @default(0)
   securityDeposit  Float          @default(0)
+  rentOverride     Float?         // Custom rent (null = use room's rentPerBed)
+  freeRoom         Boolean        @default(false) // Govt/scholarship - no rent
   foodPlan         String         @default("FULL_MESS") // FULL_MESS, NO_MESS, CUSTOM
   customFoodFee    Float          @default(0) // Only used when foodPlan = CUSTOM
+  residentType     String         @default("SELF_PAYING") // SELF_PAYING, SCHOLARSHIP, GOVERNMENT, SPONSORED
+  sponsorName      String?        // Sponsor/organization name if sponsored
+  notes            String?        // Additional notes about the resident
   status           ResidentStatus @default(ACTIVE)
 
   userId   String  @unique

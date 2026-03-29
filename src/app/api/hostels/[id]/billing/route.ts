@@ -207,7 +207,9 @@ export async function POST(
     const billsToCreate = [];
 
     for (const resident of newResidents) {
-      const roomRent = Math.round(resident.room.rentPerBed * rentMultiplier);
+      // Rent: free room = 0, override = custom amount, else room's rentPerBed
+      const baseRent = (resident as any).freeRoom ? 0 : ((resident as any).rentOverride ?? resident.room.rentPerBed);
+      const roomRent = Math.round(baseRent * rentMultiplier);
 
       // Food order charges for this period
       const foodOrders = await prisma.foodOrder.findMany({
