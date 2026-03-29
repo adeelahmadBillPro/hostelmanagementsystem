@@ -156,13 +156,13 @@ export default function Header({ title, onMenuClick, onToggleCollapse, sidebarCo
             )}
           </button>
         )}
-        <h1 className="text-lg font-semibold text-text-primary dark:text-white truncate">
+        <h1 className="text-sm sm:text-lg font-semibold text-text-primary dark:text-white truncate max-w-[140px] sm:max-w-none">
           {title}
         </h1>
       </div>
 
       {/* Right */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
         {/* Theme toggle */}
         <button
           onClick={toggleTheme}
@@ -255,7 +255,7 @@ export default function Header({ title, onMenuClick, onToggleCollapse, sidebarCo
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setShowDropdown(!showDropdown)}
-            className="flex items-center gap-2 py-1.5 px-2 rounded-xl hover:bg-bg-main dark:hover:bg-[#0B1222] transition-all duration-200 ml-1"
+            className="flex items-center gap-1.5 py-1 px-1.5 sm:px-2 rounded-xl hover:bg-bg-main dark:hover:bg-[#0B1222] transition-all duration-200"
           >
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
               {session?.user?.name
