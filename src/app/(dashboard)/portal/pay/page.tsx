@@ -417,7 +417,7 @@ export default function PayBillPage() {
                     className="p-3 rounded-xl border border-border dark:border-[#1E2D42] bg-bg-main dark:bg-[#0B1222] animate-fade-in-up"
                     style={{ animationDelay: `${idx * 50}ms` }}
                   >
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
                       <span className="text-sm font-semibold text-text-primary dark:text-white">
                         {formatCurrency(proof.amount)}
                       </span>

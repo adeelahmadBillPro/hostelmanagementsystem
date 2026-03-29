@@ -480,7 +480,7 @@ export default function MyBillsPage() {
             </div>
             <div className="divide-y divide-gray-100 dark:divide-[#1E2D42]">
               {payments.map((payment) => (
-                <div key={payment.id} className="flex items-center justify-between px-4 py-3 text-sm">
+                <div key={payment.id} className="flex items-center justify-between flex-wrap gap-2 px-4 py-3 text-sm">
                   <div>
                     <p className="font-medium text-gray-800 dark:text-gray-200">{formatCurrency(payment.amount)}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -506,7 +506,7 @@ export default function MyBillsPage() {
             <div className="divide-y divide-orange-100 dark:divide-orange-900/30">
               {disputes.map((dispute) => (
                 <div key={dispute.id} className="px-4 py-3 text-sm">
-                  <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center justify-between flex-wrap gap-2 mb-1">
                     <span className="font-medium text-gray-800 dark:text-gray-200">
                       {categoryLabels[dispute.category] || dispute.category}
                     </span>
@@ -584,7 +584,7 @@ export default function MyBillsPage() {
                 className="card transition-all duration-200 hover:shadow-md dark:bg-[#111C2E] dark:border-[#1E2D42]"
               >
                 <div
-                  className="flex items-center justify-between cursor-pointer"
+                  className="flex items-center justify-between flex-wrap gap-2 cursor-pointer"
                   onClick={() => toggleExpand(bill.id)}
                 >
                   <div className="flex items-center gap-4">

@@ -153,15 +153,15 @@ export default function PortalDashboardPage() {
                   <span className="text-gray-500 dark:text-slate-400">Room Type</span>
                   <span className="font-semibold">{(data as any).agreement.roomType}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between flex-wrap gap-2">
                   <span className="text-gray-500 dark:text-slate-400">Monthly Rent</span>
                   <span className="font-bold text-primary">{formatCurrency((data as any).agreement.monthlyRent)}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between flex-wrap gap-2">
                   <span className="text-gray-500 dark:text-slate-400">Advance Paid</span>
                   <span className="font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency((data as any).agreement.advancePaid)}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between flex-wrap gap-2">
                   <span className="text-gray-500 dark:text-slate-400">Security Deposit</span>
                   <span className="font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency((data as any).agreement.securityDeposit)}</span>
                 </div>
@@ -176,7 +176,7 @@ export default function PortalDashboardPage() {
                   </span>
                 </div>
                 {(data as any).agreement.foodPlan === 'CUSTOM' && (data as any).agreement.customFoodFee > 0 && (
-                  <div className="flex justify-between">
+                  <div className="flex justify-between flex-wrap gap-2">
                     <span className="text-gray-500 dark:text-slate-400">Custom Food Fee</span>
                     <span className="font-semibold">{formatCurrency((data as any).agreement.customFoodFee)}/month</span>
                   </div>
@@ -205,7 +205,7 @@ export default function PortalDashboardPage() {
                   <span className="text-gray-500 dark:text-slate-400">Month</span>
                   <span className="font-semibold">{data.currentBill.month}</span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between flex-wrap gap-2">
                   <span className="text-gray-500 dark:text-slate-400">Amount</span>
                   <span className="text-2xl font-bold">{formatCurrency(data.currentBill.amount)}</span>
                 </div>
