@@ -21,6 +21,7 @@ import {
   Save,
   Zap,
 } from "lucide-react";
+import { useToast } from "@/components/providers";
 
 interface BillData {
   id: string;
@@ -74,6 +75,7 @@ export default function BillingPage() {
   const params = useParams();
   const router = useRouter();
   const hostelId = params.id as string;
+  const { addToast } = useToast();
 
   const now = new Date();
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -133,10 +135,10 @@ export default function BillingPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to generate");
-      alert(data.message);
+      addToast(data.message, "success");
       fetchBills();
     } catch (error: any) {
-      alert(error.message || "Failed to generate bills");
+      addToast(error.message || "Failed to generate bills", "error");
     } finally {
       setGenerating(false);
     }
@@ -156,9 +158,9 @@ export default function BillingPage() {
       });
       if (!res.ok) throw new Error("Failed to save");
       setShowSettings(false);
-      alert("Billing settings saved!");
+      addToast("Billing settings saved!", "success");
     } catch {
-      alert("Failed to save settings");
+      addToast("Failed to save settings", "error");
     } finally {
       setSavingSettings(false);
     }
