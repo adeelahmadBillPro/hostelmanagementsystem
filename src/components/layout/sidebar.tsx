@@ -346,6 +346,11 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
       icon: <MessageSquare size={20} />,
     },
     {
+      label: "Bill Disputes",
+      href: "/portal/bill-disputes",
+      icon: <Scale size={20} />,
+    },
+    {
       label: "Gate Pass",
       href: "/portal/gate-pass",
       icon: <Truck size={20} />,

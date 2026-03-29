@@ -326,7 +326,7 @@ export default function RoomsPage() {
   return (
     <DashboardLayout title="Room Management" hostelId={hostelId}>
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+      <div className="grid grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
         <StatCard
           label="Total Rooms"
           value={stats.totalRooms}
@@ -434,6 +434,9 @@ export default function RoomsPage() {
               </button>
             )}
           </div>
+          <button onClick={() => router.push(`/hostel/${hostelId}/buildings`)} className="btn-secondary flex items-center gap-2">
+            <Building2 size={16} /> Buildings
+          </button>
           <button
             className="btn-primary flex items-center gap-2 whitespace-nowrap flex-shrink-0"
             onClick={() => {

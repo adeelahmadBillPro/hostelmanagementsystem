@@ -201,7 +201,7 @@ export default function BuildingsPage() {
   return (
     <DashboardLayout title="Buildings & Infrastructure" hostelId={hostelId}>
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
         <StatCard label="Buildings" value={stats.totalBuildings} icon={Building2} iconBg="#EEF2FF" iconColor="#4F46E5" delay={0} />
         <StatCard label="Floors" value={stats.totalFloors} icon={Layers} iconBg="#F0FDF4" iconColor="#10B981" delay={50} />
         <StatCard label="Rooms" value={stats.totalRooms} icon={DoorOpen} iconBg="#FFF7ED" iconColor="#F59E0B" delay={100} />

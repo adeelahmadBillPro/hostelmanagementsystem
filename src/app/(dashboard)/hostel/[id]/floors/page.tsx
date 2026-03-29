@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import Modal from "@/components/ui/modal";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
@@ -14,6 +14,7 @@ import {
   BedDouble,
   Building2,
   Users,
+  ArrowLeft,
 } from "lucide-react";
 import { useToast } from "@/components/providers";
 
@@ -38,6 +39,7 @@ interface FloorData {
 
 export default function FloorsPage() {
   const params = useParams();
+  const router = useRouter();
   const hostelId = params.id as string;
   const { addToast } = useToast();
 
@@ -177,6 +179,9 @@ export default function FloorsPage() {
 
   return (
     <DashboardLayout title="Floor Management" hostelId={hostelId}>
+      <button onClick={() => router.push(`/hostel/${hostelId}/buildings`)} className="btn-ghost text-sm flex items-center gap-1.5 mb-4">
+        <ArrowLeft size={14} /> Manage in Buildings view
+      </button>
       {/* Filter bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
