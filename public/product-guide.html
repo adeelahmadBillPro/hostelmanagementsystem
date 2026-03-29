@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HostelHub - Product Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; color: #1e293b; background: #fff; }
+  @page { margin: 0; size: A4; }
+  @media print { .no-print { display: none !important; } .page-break { page-break-before: always; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+
+  .download-btn { position: fixed; top: 20px; right: 20px; z-index: 999; background: linear-gradient(135deg, #4F46E5, #7C3AED); color: white; border: none; padding: 12px 28px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; box-shadow: 0 8px 24px rgba(79,70,229,0.3); font-family: Inter; }
+  .download-btn:hover { transform: translateY(-1px); box-shadow: 0 12px 32px rgba(79,70,229,0.4); }
+
+  /* Hero */
+  .hero { background: linear-gradient(135deg, #0B1929 0%, #1a1a4e 50%, #3730A3 100%); color: white; padding: 80px 60px; text-align: center; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; top: -50%; right: -20%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(79,70,229,0.3), transparent 60%); }
+  .hero::after { content: ''; position: absolute; bottom: -30%; left: -10%; width: 400px; height: 400px; background: radial-gradient(circle, rgba(16,185,129,0.2), transparent 60%); }
+  .hero-content { position: relative; z-index: 1; }
+  .logo { display: inline-flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+  .logo-icon { width: 56px; height: 56px; background: linear-gradient(135deg, #10B981, #14B8A6); border-radius: 16px; display: flex; align-items: center; justify-content: center; }
+  .logo-text { font-size: 36px; font-weight: 800; letter-spacing: -1px; }
+  .logo-text span { color: #10B981; }
+  .hero h1 { font-size: 42px; font-weight: 800; line-height: 1.2; margin-bottom: 16px; }
+  .hero h1 em { font-style: normal; background: linear-gradient(90deg, #a5b4fc, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero p { font-size: 18px; color: #a5b4fc; max-width: 600px; margin: 0 auto 32px; }
+  .hero-stats { display: flex; justify-content: center; gap: 48px; margin-top: 40px; }
+  .hero-stat { text-align: center; }
+  .hero-stat .num { font-size: 32px; font-weight: 800; }
+  .hero-stat .label { font-size: 13px; color: #a5b4fc; margin-top: 4px; }
+
+  /* Section */
+  .section { padding: 60px; }
+  .section-alt { background: #f8fafc; }
+  .section-title { font-size: 28px; font-weight: 800; color: #1e293b; margin-bottom: 8px; }
+  .section-subtitle { font-size: 15px; color: #64748b; margin-bottom: 32px; }
+  .badge { display: inline-flex; align-items: center; gap: 6px; background: #EEF2FF; color: #4F46E5; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 20px; margin-bottom: 12px; }
+
+  /* Feature Grid */
+  .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .feature-card { background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; transition: all 0.2s; }
+  .feature-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.08); transform: translateY(-2px); }
+  .feature-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; font-size: 22px; }
+  .feature-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: #1e293b; }
+  .feature-card p { font-size: 13px; color: #64748b; line-height: 1.5; }
+  .feature-card ul { font-size: 12px; color: #64748b; margin-top: 8px; padding-left: 16px; }
+  .feature-card ul li { margin: 4px 0; }
+
+  /* Mockup Screens */
+  .mockup { background: #f1f5f9; border-radius: 16px; padding: 20px; margin: 20px 0; border: 1px solid #e2e8f0; }
+  .mockup-header { display: flex; gap: 6px; margin-bottom: 12px; }
+  .mockup-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .mockup-content { background: white; border-radius: 8px; padding: 20px; }
+  .mockup-sidebar { display: flex; gap: 0; }
+  .mockup-side { width: 180px; background: #0B1929; border-radius: 8px 0 0 8px; padding: 16px; }
+  .mockup-side-item { color: #94a3b8; font-size: 11px; padding: 8px 12px; border-radius: 6px; margin: 2px 0; }
+  .mockup-side-item.active { background: rgba(255,255,255,0.08); color: white; }
+  .mockup-main { flex: 1; background: #f8fafc; border-radius: 0 8px 8px 0; padding: 20px; }
+
+  /* Stats Row */
+  .stats-row { display: flex; gap: 12px; margin-bottom: 16px; }
+  .stat-box { flex: 1; background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; }
+  .stat-box .val { font-size: 20px; font-weight: 700; color: #1e293b; }
+  .stat-box .lbl { font-size: 11px; color: #64748b; }
+
+  /* Room Grid */
+  .room-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .room-cell { border-radius: 8px; padding: 10px; text-align: center; font-size: 11px; font-weight: 600; }
+  .room-vacant { background: #ecfdf5; border: 2px solid #10b981; color: #065f46; }
+  .room-partial { background: #fffbeb; border: 2px solid #f59e0b; color: #92400e; }
+  .room-full { background: #fef2f2; border: 2px solid #ef4444; color: #991b1b; }
+
+  /* Pricing */
+  .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .price-card { border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; text-align: center; }
+  .price-card.popular { border: 2px solid #4F46E5; box-shadow: 0 8px 24px rgba(79,70,229,0.15); position: relative; }
+  .price-card.popular::before { content: 'MOST POPULAR'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #4F46E5, #7C3AED); color: white; font-size: 10px; font-weight: 700; padding: 4px 16px; border-radius: 20px; }
+  .price-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .price-amount { font-size: 28px; font-weight: 800; color: #4F46E5; margin: 12px 0; }
+  .price-amount small { font-size: 14px; color: #94a3b8; font-weight: 400; }
+  .price-features { text-align: left; margin-top: 16px; }
+  .price-features li { font-size: 12px; color: #475569; padding: 4px 0; list-style: none; }
+  .price-features li::before { content: '\2713'; color: #10b981; font-weight: 700; margin-right: 8px; }
+
+  /* Flow Diagram */
+  .flow { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 24px 0; }
+  .flow-step { background: white; border: 2px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; text-align: center; min-width: 140px; }
+  .flow-step.active { border-color: #4F46E5; background: #EEF2FF; }
+  .flow-step .num { font-size: 20px; font-weight: 800; color: #4F46E5; }
+  .flow-step .txt { font-size: 11px; color: #64748b; margin-top: 4px; }
+  .flow-arrow { font-size: 24px; color: #cbd5e1; }
+
+  /* Role Cards */
+  .role-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .role-card { border-radius: 12px; padding: 20px; text-align: center; color: white; }
+  .role-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  .role-card p { font-size: 11px; opacity: 0.85; }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+  th { background: #f1f5f9; font-weight: 600; text-align: left; padding: 10px 14px; border: 1px solid #e2e8f0; }
+  td { padding: 10px 14px; border: 1px solid #e2e8f0; }
+
+  /* Footer */
+  .footer { background: #0B1929; color: white; padding: 40px 60px; text-align: center; }
+  .footer p { color: #94a3b8; font-size: 13px; margin-top: 8px; }
+
+  /* Two Column */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }
+</style>
+</head>
+<body>
+
+<button class="download-btn no-print" onclick="window.print()">Download PDF</button>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-content">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 21v-4h6v4M12 7v6"/></svg>
+      </div>
+      <div class="logo-text">Hostel<span>Hub</span></div>
+    </div>
+    <h1>Complete Hostel<br><em>Management Platform</em></h1>
+    <p>Manage rooms, residents, billing, food, staff - all in one place. Built for hostel owners in Pakistan who want to go digital.</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="num">28+</div><div class="label">Modules</div></div>
+      <div class="hero-stat"><div class="num">5</div><div class="label">User Roles</div></div>
+      <div class="hero-stat"><div class="num">28</div><div class="label">Database Tables</div></div>
+      <div class="hero-stat"><div class="num">35K+</div><div class="label">Lines of Code</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD MOCKUP -->
+<div class="section">
+  <div class="badge">Dashboard Preview</div>
+  <div class="section-title">Admin Dashboard</div>
+  <div class="section-subtitle">Real-time overview of all hostel operations at a glance</div>
+
+  <div class="mockup">
+    <div class="mockup-header">
+      <div class="mockup-dot" style="background:#ef4444;"></div>
+      <div class="mockup-dot" style="background:#f59e0b;"></div>
+      <div class="mockup-dot" style="background:#10b981;"></div>
+    </div>
+    <div class="mockup-sidebar">
+      <div class="mockup-side">
+        <div style="color:white;font-weight:700;font-size:14px;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+          <div style="width:28px;height:28px;background:linear-gradient(135deg,#10B981,#14B8A6);border-radius:8px;"></div>
+          HostelHub
+        </div>
+        <div class="mockup-side-item active">Dashboard</div>
+        <div class="mockup-side-item">Hostels</div>
+        <div class="mockup-side-item">Managers</div>
+        <div class="mockup-side-item">Residents</div>
+        <div class="mockup-side-item">Food Menu</div>
+        <div class="mockup-side-item">Billing</div>
+        <div class="mockup-side-item">Staff</div>
+        <div class="mockup-side-item">Expenses</div>
+        <div class="mockup-side-item">Reports</div>
+      </div>
+      <div class="mockup-main">
+        <div class="stats-row">
+          <div class="stat-box"><div class="val" style="color:#4F46E5;">3</div><div class="lbl">Total Hostels</div></div>
+          <div class="stat-box"><div class="val" style="color:#10B981;">156</div><div class="lbl">Residents</div></div>
+          <div class="stat-box"><div class="val" style="color:#F59E0B;">PKR 2.4M</div><div class="lbl">Revenue</div></div>
+          <div class="stat-box"><div class="val" style="color:#EF4444;">12</div><div class="lbl">Pending</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;">
+          <div style="background:white;border:1px solid #e2e8f0;border-radius:8px;padding:16px;">
+            <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:12px;">Monthly Revenue</div>
+            <div style="display:flex;align-items:end;gap:4px;height:80px;">
+              <div style="flex:1;background:linear-gradient(to top,#4F46E5,#818cf8);border-radius:3px 3px 0 0;height:40%;"></div>
+              <div style="flex:1;background:linear-gradient(to top,#4F46E5,#818cf8);border-radius:3px 3px 0 0;height:55%;"></div>
+              <div style="flex:1;background:linear-gradient(to top,#4F46E5,#818cf8);border-radius:3px 3px 0 0;height:35%;"></div>
+              <div style="flex:1;background:linear-gradient(to top,#4F46E5,#818cf8);border-radius:3px 3px 0 0;height:70%;"></div>
+              <div style="flex:1;background:linear-gradient(to top,#4F46E5,#818cf8);border-radius:3px 3px 0 0;height:60%;"></div>
+              <div style="flex:1;background:linear-gradient(to top,#4F46E5,#818cf8);border-radius:3px 3px 0 0;height:80%;"></div>
+              <div style="flex:1;background:linear-gradient(to top,#4F46E5,#818cf8);border-radius:3px 3px 0 0;height:65%;"></div>
+              <div style="flex:1;background:linear-gradient(to top,#4F46E5,#818cf8);border-radius:3px 3px 0 0;height:90%;"></div>
+              <div style="flex:1;background:linear-gradient(to top,#4F46E5,#818cf8);border-radius:3px 3px 0 0;height:75%;"></div>
+              <div style="flex:1;background:linear-gradient(to top,#4F46E5,#818cf8);border-radius:3px 3px 0 0;height:95%;"></div>
+              <div style="flex:1;background:linear-gradient(to top,#4F46E5,#818cf8);border-radius:3px 3px 0 0;height:85%;"></div>
+              <div style="flex:1;background:linear-gradient(to top,#10B981,#34d399);border-radius:3px 3px 0 0;height:100%;"></div>
+            </div>
+          </div>
+          <div style="background:white;border:1px solid #e2e8f0;border-radius:8px;padding:16px;">
+            <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:8px;">Occupancy Rate</div>
+            <div style="width:80px;height:80px;border-radius:50%;border:6px solid #e2e8f0;border-top-color:#10B981;border-right-color:#10B981;border-bottom-color:#10B981;margin:8px auto;display:flex;align-items:center;justify-content:center;">
+              <span style="font-size:18px;font-weight:800;color:#10B981;">78%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ROOM MAP MOCKUP -->
+<div class="section section-alt page-break">
+  <div class="badge">Visual Room Map</div>
+  <div class="section-title">Interactive Floor Plan</div>
+  <div class="section-subtitle">Color-coded rooms with hover tooltips showing resident details</div>
+
+  <div class="mockup">
+    <div class="mockup-header">
+      <div class="mockup-dot" style="background:#ef4444;"></div>
+      <div class="mockup-dot" style="background:#f59e0b;"></div>
+      <div class="mockup-dot" style="background:#10b981;"></div>
+    </div>
+    <div class="mockup-content">
+      <div style="font-weight:700;margin-bottom:12px;">Block A - Floor 1</div>
+      <div class="room-grid">
+        <div class="room-vacant"><div style="font-size:16px;font-weight:700;">101</div>SINGLE<br>0/1 Beds</div>
+        <div class="room-full"><div style="font-size:16px;font-weight:700;">102</div>SINGLE<br>1/1 Beds</div>
+        <div class="room-vacant"><div style="font-size:16px;font-weight:700;">103</div>DOUBLE<br>0/2 Beds</div>
+        <div class="room-partial"><div style="font-size:16px;font-weight:700;">104</div>DOUBLE<br>1/2 Beds</div>
+        <div class="room-full"><div style="font-size:16px;font-weight:700;">105</div>TRIPLE<br>3/3 Beds</div>
+        <div class="room-vacant"><div style="font-size:16px;font-weight:700;">201</div>SINGLE<br>0/1 Beds</div>
+        <div class="room-partial"><div style="font-size:16px;font-weight:700;">202</div>DOUBLE<br>1/2 Beds</div>
+        <div class="room-full"><div style="font-size:16px;font-weight:700;">203</div>DOUBLE<br>2/2 Beds</div>
+        <div class="room-vacant"><div style="font-size:16px;font-weight:700;">204</div>SINGLE<br>0/1 Beds</div>
+        <div class="room-full"><div style="font-size:16px;font-weight:700;">205</div>TRIPLE<br>3/3 Beds</div>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:12px;font-size:11px;color:#64748b;">
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10b981;"></span> Vacant</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;"></span> Partial</span>
+        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;"></span> Full</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<div class="section page-break">
+  <div class="badge">28+ Modules</div>
+  <div class="section-title">Complete Feature Set</div>
+  <div class="section-subtitle">Everything a hostel needs - from room management to billing and food ordering</div>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#EEF2FF;color:#4F46E5;">&#127970;</div>
+      <h3>Multi-Hostel Management</h3>
+      <p>Manage multiple hostels from a single dashboard with unified analytics and separate data.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#ECFDF5;color:#10B981;">&#128101;</div>
+      <h3>Resident Management</h3>
+      <p>Add residents with CNIC, auto-assign rooms, generate login credentials with WhatsApp share.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#FEF3C7;color:#F59E0B;">&#127858;</div>
+      <h3>Food Ordering System</h3>
+      <p>Menu management, resident ordering, cart, order tracking (Pending > Preparing > Delivered).</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#FEE2E2;color:#EF4444;">&#128176;</div>
+      <h3>Smart Billing</h3>
+      <p>Weekly/monthly cycles, fixed food fee, per-resident food plans, auto-calculate all charges.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#E0E7FF;color:#6366F1;">&#128116;</div>
+      <h3>Staff & Salary</h3>
+      <p>Staff types, benefits (free room/food), attendance tracking, salary sheet generation.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#F0FDF4;color:#22C55E;">&#128179;</div>
+      <h3>Payment Tracking</h3>
+      <p>Cash, Bank, JazzCash, EasyPaisa. PDF receipts, WhatsApp sharing, payment proofs.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#FDF2F8;color:#EC4899;">&#128202;</div>
+      <h3>Reports & Analytics</h3>
+      <p>Occupancy rates, revenue trends, expense breakdowns, P&L summary per hostel.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#F5F3FF;color:#8B5CF6;">&#128274;</div>
+      <h3>Gate Pass & Visitors</h3>
+      <p>Digital gate passes, visitor log with CNIC, time in/out tracking, purpose recording.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#ECFEFF;color:#06B6D4;">&#128225;</div>
+      <h3>Complaints & Notices</h3>
+      <p>Residents file complaints, managers resolve. Notice board visible to all residents.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#FFF7ED;color:#F97316;">&#128196;</div>
+      <h3>Excel Import/Export</h3>
+      <p>Bulk import residents, rooms, food menu. Export all data to Excel with one click.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#F1F5F9;color:#475569;">&#128241;</div>
+      <h3>Resident Portal</h3>
+      <p>Dedicated portal: view bills, order food, file complaints, gate passes, messages.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon" style="background:#FEF9C3;color:#CA8A04;">&#127775;</div>
+      <h3>Plan Enforcement</h3>
+      <p>Free trial (14 days), 4 pricing tiers, usage tracking, upgrade prompts, limit enforcement.</p>
+    </div>
+  </div>
+</div>
+
+<!-- USER ROLES -->
+<div class="section section-alt page-break">
+  <div class="badge">5 User Roles</div>
+  <div class="section-title">Role-Based Access Control</div>
+  <div class="section-subtitle">Each user sees only what they need - secure and organized</div>
+
+  <div class="role-grid">
+    <div class="role-card" style="background:linear-gradient(135deg,#F59E0B,#D97706);">
+      <div style="font-size:28px;margin-bottom:8px;">&#128081;</div>
+      <h4>Super Admin</h4>
+      <p>Platform owner. Manages tenants, plans, analytics.</p>
+    </div>
+    <div class="role-card" style="background:linear-gradient(135deg,#4F46E5,#3730A3);">
+      <div style="font-size:28px;margin-bottom:8px;">&#127970;</div>
+      <h4>Tenant Admin</h4>
+      <p>Hostel owner. Manages hostels, staff, billing.</p>
+    </div>
+    <div class="role-card" style="background:linear-gradient(135deg,#10B981,#059669);">
+      <div style="font-size:28px;margin-bottom:8px;">&#128188;</div>
+      <h4>Manager</h4>
+      <p>Day-to-day operations for assigned hostels.</p>
+    </div>
+    <div class="role-card" style="background:linear-gradient(135deg,#0EA5E9,#0284C7);">
+      <div style="font-size:28px;margin-bottom:8px;">&#128100;</div>
+      <h4>Resident</h4>
+      <p>View bills, order food, file complaints.</p>
+    </div>
+    <div class="role-card" style="background:linear-gradient(135deg,#8B5CF6,#7C3AED);">
+      <div style="font-size:28px;margin-bottom:8px;">&#128737;</div>
+      <h4>Staff</h4>
+      <p>Portal access, attendance tracking.</p>
+    </div>
+  </div>
+
+  <!-- Flow -->
+  <div style="margin-top:40px;">
+    <div style="font-weight:700;font-size:16px;margin-bottom:16px;text-align:center;">Complete Onboarding Flow</div>
+    <div class="flow">
+      <div class="flow-step active"><div class="num">1</div><div class="txt">Super Admin<br>adds Tenant</div></div>
+      <div class="flow-arrow">&#8594;</div>
+      <div class="flow-step"><div class="num">2</div><div class="txt">Tenant creates<br>Hostel</div></div>
+      <div class="flow-arrow">&#8594;</div>
+      <div class="flow-step"><div class="num">3</div><div class="txt">Add Buildings<br>Rooms & Beds</div></div>
+      <div class="flow-arrow">&#8594;</div>
+      <div class="flow-step"><div class="num">4</div><div class="txt">Add Staff<br>& Managers</div></div>
+      <div class="flow-arrow">&#8594;</div>
+      <div class="flow-step"><div class="num">5</div><div class="txt">Add Residents<br>Share Credentials</div></div>
+      <div class="flow-arrow">&#8594;</div>
+      <div class="flow-step"><div class="num">6</div><div class="txt">Generate Bills<br>Collect Payments</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING -->
+<div class="section page-break">
+  <div class="badge">Simple Pricing</div>
+  <div class="section-title">Choose Your Plan</div>
+  <div class="section-subtitle">Start free, upgrade when you need. No hidden fees.</div>
+
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-name">Free Trial</div>
+      <div style="color:#64748b;font-size:12px;">14 days free</div>
+      <div class="price-amount" style="color:#10B981;">FREE</div>
+      <ul class="price-features">
+        <li>1 Hostel</li>
+        <li>5 Residents</li>
+        <li>10 Rooms</li>
+        <li>2 Staff</li>
+        <li>Basic Billing</li>
+        <li>Food Menu</li>
+      </ul>
+    </div>
+    <div class="price-card">
+      <div class="price-name">Starter</div>
+      <div style="color:#64748b;font-size:12px;">For small hostels</div>
+      <div class="price-amount">PKR 2K<small>/mo</small></div>
+      <ul class="price-features">
+        <li>1 Hostel</li>
+        <li>50 Residents</li>
+        <li>30 Rooms</li>
+        <li>5 Staff</li>
+        <li>Full Billing</li>
+        <li>Food Orders</li>
+        <li>Reports</li>
+      </ul>
+    </div>
+    <div class="price-card popular">
+      <div class="price-name">Pro</div>
+      <div style="color:#64748b;font-size:12px;">Growing hostels</div>
+      <div class="price-amount">PKR 5K<small>/mo</small></div>
+      <ul class="price-features">
+        <li>3 Hostels</li>
+        <li>200 Residents</li>
+        <li>100 Rooms</li>
+        <li>20 Staff</li>
+        <li>Multi-Hostel</li>
+        <li>Managers</li>
+        <li>Analytics</li>
+        <li>Messaging</li>
+      </ul>
+    </div>
+    <div class="price-card">
+      <div class="price-name">Enterprise</div>
+      <div style="color:#64748b;font-size:12px;">Hostel chains</div>
+      <div class="price-amount">PKR 10K<small>/mo</small></div>
+      <ul class="price-features">
+        <li>Unlimited Hostels</li>
+        <li>Unlimited Residents</li>
+        <li>Unlimited Rooms</li>
+        <li>Unlimited Staff</li>
+        <li>API Access</li>
+        <li>Custom Branding</li>
+        <li>Priority Support</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- FOOD ORDER FLOW -->
+<div class="section section-alt page-break">
+  <div class="badge">Food System</div>
+  <div class="section-title">Food Ordering Flow</div>
+  <div class="section-subtitle">Complete meal management from menu setup to delivery tracking</div>
+
+  <div class="flow">
+    <div class="flow-step" style="border-color:#F59E0B;background:#FFFBEB;">
+      <div style="font-size:24px;">&#127858;</div>
+      <div class="txt"><strong>Admin</strong><br>Sets up menu</div>
+    </div>
+    <div class="flow-arrow">&#8594;</div>
+    <div class="flow-step" style="border-color:#4F46E5;background:#EEF2FF;">
+      <div style="font-size:24px;">&#128722;</div>
+      <div class="txt"><strong>Resident</strong><br>Orders food</div>
+    </div>
+    <div class="flow-arrow">&#8594;</div>
+    <div class="flow-step" style="border-color:#F59E0B;background:#FEF3C7;">
+      <div style="font-size:24px;">&#9203;</div>
+      <div class="txt"><strong>Status</strong><br>Pending</div>
+    </div>
+    <div class="flow-arrow">&#8594;</div>
+    <div class="flow-step" style="border-color:#3B82F6;background:#EFF6FF;">
+      <div style="font-size:24px;">&#128104;&#8205;&#127859;</div>
+      <div class="txt"><strong>Kitchen</strong><br>Preparing</div>
+    </div>
+    <div class="flow-arrow">&#8594;</div>
+    <div class="flow-step" style="border-color:#10B981;background:#ECFDF5;">
+      <div style="font-size:24px;">&#9989;</div>
+      <div class="txt"><strong>Done</strong><br>Delivered</div>
+    </div>
+  </div>
+
+  <div class="two-col" style="margin-top:32px;">
+    <div>
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:12px;">Billing Calculation</h3>
+      <table>
+        <tr><td style="font-weight:600;">Room Rent</td><td>Per bed/month (prorated for weekly)</td></tr>
+        <tr><td style="font-weight:600;">Fixed Food Fee</td><td>Based on food plan (Full Mess/No Mess/Custom)</td></tr>
+        <tr><td style="font-weight:600;">App Food Orders</td><td>Sum of all food orders in period</td></tr>
+        <tr><td style="font-weight:600;">Meter Charges</td><td>Electricity/water readings</td></tr>
+        <tr><td style="font-weight:600;">Parking Fee</td><td>Vehicle parking charges</td></tr>
+        <tr><td style="font-weight:600;">Previous Balance</td><td>Carried forward from last bill</td></tr>
+        <tr><td style="font-weight:600;color:#EF4444;">- Advance Deduction</td><td>Applied on first bill only</td></tr>
+        <tr style="background:#f0fdf4;"><td style="font-weight:700;">= Total Due</td><td style="font-weight:700;">Auto-calculated</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3 style="font-size:18px;font-weight:700;margin-bottom:12px;">Payment Methods</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div style="background:#f1f5f9;border-radius:10px;padding:14px;text-align:center;"><div style="font-size:20px;">&#128181;</div><div style="font-size:12px;font-weight:600;margin-top:4px;">Cash</div></div>
+        <div style="background:#f1f5f9;border-radius:10px;padding:14px;text-align:center;"><div style="font-size:20px;">&#127974;</div><div style="font-size:12px;font-weight:600;margin-top:4px;">Bank Transfer</div></div>
+        <div style="background:#f1f5f9;border-radius:10px;padding:14px;text-align:center;"><div style="font-size:20px;">&#128241;</div><div style="font-size:12px;font-weight:600;margin-top:4px;">JazzCash</div></div>
+        <div style="background:#f1f5f9;border-radius:10px;padding:14px;text-align:center;"><div style="font-size:20px;">&#128242;</div><div style="font-size:12px;font-weight:600;margin-top:4px;">EasyPaisa</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TECH STACK -->
+<div class="section page-break">
+  <div class="badge">Technology</div>
+  <div class="section-title">Built with Modern Tech Stack</div>
+  <div class="section-subtitle">Enterprise-grade architecture designed for performance and scalability</div>
+
+  <div class="features-grid" style="grid-template-columns: repeat(4, 1fr);">
+    <div class="feature-card" style="text-align:center;">
+      <div style="font-size:32px;margin-bottom:8px;">&#9889;</div>
+      <h3>Next.js 14</h3>
+      <p>App Router, SSR, API Routes</p>
+    </div>
+    <div class="feature-card" style="text-align:center;">
+      <div style="font-size:32px;margin-bottom:8px;">&#128451;</div>
+      <h3>PostgreSQL</h3>
+      <p>28 tables, Prisma ORM</p>
+    </div>
+    <div class="feature-card" style="text-align:center;">
+      <div style="font-size:32px;margin-bottom:8px;">&#127912;</div>
+      <h3>Tailwind CSS</h3>
+      <p>Custom design system</p>
+    </div>
+    <div class="feature-card" style="text-align:center;">
+      <div style="font-size:32px;margin-bottom:8px;">&#128272;</div>
+      <h3>TypeScript</h3>
+      <p>Full type safety</p>
+    </div>
+  </div>
+
+  <div style="margin-top:32px;background:linear-gradient(135deg,#0B1929,#1a1a4e);border-radius:16px;padding:32px;color:white;">
+    <h3 style="font-size:18px;font-weight:700;margin-bottom:16px;">Security Features</h3>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+      <div style="font-size:13px;">&#128274; Role-based access (5 roles)</div>
+      <div style="font-size:13px;">&#128272; JWT session management</div>
+      <div style="font-size:13px;">&#128275; bcrypt password hashing</div>
+      <div style="font-size:13px;">&#9989; Server-side validation on all APIs</div>
+      <div style="font-size:13px;">&#128683; Rate limiting (3 tiers)</div>
+      <div style="font-size:13px;">&#128231; Disposable email blocking</div>
+      <div style="font-size:13px;">&#127470;&#127465; CNIC validation (13-digit)</div>
+      <div style="font-size:13px;">&#128241; Phone format validation</div>
+      <div style="font-size:13px;">&#128170; Password strength enforcement</div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="logo" style="justify-content:center;">
+    <div class="logo-icon" style="width:40px;height:40px;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 21v-4h6v4M12 7v6"/></svg>
+    </div>
+    <div class="logo-text" style="font-size:24px;">Hostel<span>Hub</span></div>
+  </div>
+  <p style="margin-top:16px;">Complete Hostel Management Platform</p>
+  <p style="margin-top:8px;color:#4F46E5;">Built with Next.js 14 | TypeScript | PostgreSQL | Tailwind CSS</p>
+  <p style="margin-top:24px;font-size:11px;color:#475569;">© 2026 HostelHub. All rights reserved.</p>
+</div>
+
+</body>
+</html>
