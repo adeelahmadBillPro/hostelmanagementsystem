@@ -166,6 +166,22 @@ export default function PortalDashboardPage() {
                   <span className="font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency((data as any).agreement.securityDeposit)}</span>
                 </div>
                 <div className="flex justify-between">
+                  <span className="text-gray-500 dark:text-slate-400">Food Plan</span>
+                  <span className={
+                    (data as any).agreement.foodPlan === 'FULL_MESS' ? 'badge-success' :
+                    (data as any).agreement.foodPlan === 'NO_MESS' ? 'badge-secondary' : 'badge-warning'
+                  }>
+                    {(data as any).agreement.foodPlan === 'FULL_MESS' ? 'Full Mess' :
+                     (data as any).agreement.foodPlan === 'NO_MESS' ? 'No Mess' : 'Custom'}
+                  </span>
+                </div>
+                {(data as any).agreement.foodPlan === 'CUSTOM' && (data as any).agreement.customFoodFee > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 dark:text-slate-400">Custom Food Fee</span>
+                    <span className="font-semibold">{formatCurrency((data as any).agreement.customFoodFee)}/month</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
                   <span className="text-gray-500 dark:text-slate-400">Status</span>
                   <span className={(data as any).agreement.status === 'ACTIVE' ? 'badge-success' : 'badge-warning'}>
                     {(data as any).agreement.status}

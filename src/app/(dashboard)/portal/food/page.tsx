@@ -125,7 +125,9 @@ export default function FoodOrderingPage() {
   const [summary, setSummary] = useState<MonthlySummary | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [todayOrders, setTodayOrders] = useState<any[]>([]);
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [orderingWindows, setOrderingWindows] = useState<any[]>([]);
+  const [foodPlanInfo, setFoodPlanInfo] = useState<{ plan: string; customFee: number; hostelFee: number } | null>(null);
 
   // Fetch menu
   useEffect(() => {
@@ -138,6 +140,10 @@ export default function FoodOrderingPage() {
           setSummary(data.summary || null);
           setOrderingWindows(data.orderingWindows || []);
           setTodayOrders(data.todayOrders || []);
+          setRecentOrders(data.recentOrders || []);
+          if (data.foodPlan) {
+            setFoodPlanInfo({ plan: data.foodPlan, customFee: data.customFoodFee || 0, hostelFee: data.hostelFoodCharge || 0 });
+          }
           // Auto-select first meal tab that has items
           const items: MenuItem[] = data.menu || [];
           const available = MEAL_TABS.find((t) =>
@@ -292,6 +298,7 @@ export default function FoodOrderingPage() {
           const data = await menuRes.json();
           setSummary(data.summary || null);
           setTodayOrders(data.todayOrders || []);
+          setRecentOrders(data.recentOrders || []);
         }
       } else {
         const err = await res.json().catch(() => null);
@@ -356,6 +363,35 @@ export default function FoodOrderingPage() {
             </div>
           )}
         </div>
+
+        {/* Food Plan Banner */}
+        {foodPlanInfo && (
+          <div className={`rounded-xl p-3.5 flex items-start gap-3 text-sm ${
+            foodPlanInfo.plan === "FULL_MESS" ? "bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800" :
+            foodPlanInfo.plan === "NO_MESS" ? "bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800" :
+            "bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800"
+          }`}>
+            <UtensilsCrossed size={18} className={
+              foodPlanInfo.plan === "FULL_MESS" ? "text-emerald-600 mt-0.5" :
+              foodPlanInfo.plan === "NO_MESS" ? "text-amber-600 mt-0.5" : "text-indigo-600 mt-0.5"
+            } />
+            <div>
+              <p className={`font-semibold ${
+                foodPlanInfo.plan === "FULL_MESS" ? "text-emerald-800 dark:text-emerald-300" :
+                foodPlanInfo.plan === "NO_MESS" ? "text-amber-800 dark:text-amber-300" : "text-indigo-800 dark:text-indigo-300"
+              }`}>
+                {foodPlanInfo.plan === "FULL_MESS" && `Full Mess Plan (${formatCurrency(foodPlanInfo.hostelFee)}/month)`}
+                {foodPlanInfo.plan === "NO_MESS" && "No Mess Plan"}
+                {foodPlanInfo.plan === "CUSTOM" && `Custom Plan (${formatCurrency(foodPlanInfo.customFee)}/month)`}
+              </p>
+              <p className="text-xs text-text-muted mt-0.5">
+                {foodPlanInfo.plan === "FULL_MESS" && "Your mess fee is fixed. Extra orders below will be charged separately on your bill."}
+                {foodPlanInfo.plan === "NO_MESS" && "You don't have a mess plan. All orders below will be charged to your monthly bill."}
+                {foodPlanInfo.plan === "CUSTOM" && "Extra orders below will be charged separately on top of your custom food fee."}
+              </p>
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -698,17 +734,66 @@ export default function FoodOrderingPage() {
                     </span>
                   </div>
                   <div className="space-y-1.5 max-h-[200px] overflow-y-auto">
-                    {todayOrders.map((order: any, i: number) => (
-                      <div key={i} className="flex items-center justify-between py-1.5 px-2 rounded-lg bg-slate-50 dark:bg-[#0B1222] text-xs">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-text-primary dark:text-white truncate">
-                            {order.quantity}x {order.itemName}
-                          </p>
-                          <p className="text-text-muted">{order.mealType?.charAt(0) + order.mealType?.slice(1).toLowerCase()}</p>
+                    {todayOrders.map((order: any, i: number) => {
+                      const statusMap: Record<string, { cls: string; label: string }> = {
+                        PENDING: { cls: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300", label: "Pending" },
+                        PREPARING: { cls: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300", label: "Preparing" },
+                        DELIVERED: { cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300", label: "Delivered" },
+                        CANCELLED: { cls: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300", label: "Cancelled" },
+                      };
+                      const s = statusMap[order.status] || statusMap.PENDING;
+                      return (
+                        <div key={order.id || i} className="flex items-center justify-between py-2 px-2.5 rounded-lg bg-slate-50 dark:bg-[#0B1222] text-xs">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-text-primary dark:text-white truncate">
+                              {order.quantity}x {order.itemName}
+                            </p>
+                            <p className="text-text-muted">{order.mealType?.charAt(0) + order.mealType?.slice(1).toLowerCase()}</p>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${s.cls}`}>{s.label}</span>
+                            <span className="font-bold text-text-primary dark:text-white">{formatCurrency(order.totalAmount)}</span>
+                          </div>
                         </div>
-                        <span className="font-bold text-text-primary dark:text-white">{formatCurrency(order.totalAmount)}</span>
-                      </div>
-                    ))}
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+              {/* Recent Order History (7 days) */}
+              {recentOrders.length > 0 && (
+                <div className="card animate-fade-in-up">
+                  <div className="flex items-center gap-2 mb-3">
+                    <History size={16} className="text-text-muted" />
+                    <h3 className="text-sm font-bold text-text-primary dark:text-white">Order History (7 days)</h3>
+                  </div>
+                  <div className="space-y-1.5 max-h-[250px] overflow-y-auto">
+                    {recentOrders.map((order: any, i: number) => {
+                      const statusMap: Record<string, { cls: string; label: string }> = {
+                        PENDING: { cls: "bg-amber-100 text-amber-700", label: "Pending" },
+                        PREPARING: { cls: "bg-blue-100 text-blue-700", label: "Preparing" },
+                        DELIVERED: { cls: "bg-emerald-100 text-emerald-700", label: "Delivered" },
+                        CANCELLED: { cls: "bg-red-100 text-red-700", label: "Cancelled" },
+                      };
+                      const s = statusMap[order.status] || statusMap.PENDING;
+                      const date = new Date(order.orderDate || order.createdAt);
+                      return (
+                        <div key={order.id || i} className="flex items-center justify-between py-2 px-2.5 rounded-lg bg-slate-50 dark:bg-[#0B1222] text-xs">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-text-primary dark:text-white truncate">
+                              {order.quantity}x {order.itemName}
+                            </p>
+                            <p className="text-text-muted">{date.toLocaleDateString("en-PK", { day: "numeric", month: "short" })}</p>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${s.cls}`}>{s.label}</span>
+                            <span className="font-bold text-text-primary dark:text-white">{formatCurrency(order.totalAmount)}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
