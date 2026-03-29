@@ -275,7 +275,7 @@ export default function FoodMenuPage() {
 
       {/* Tabs + Add Button */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#0B1222] rounded-2xl p-1.5 overflow-x-auto flex-nowrap">
+        <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#0B1222] rounded-2xl p-1.5 overflow-x-auto w-full sm:w-auto" style={{ WebkitOverflowScrolling: "touch" }}>
           {MEAL_TYPES.map((type) => {
             const isActive = activeTab === type;
             const colors = MEAL_COLORS[type];
