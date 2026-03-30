@@ -84,7 +84,7 @@ export default function MyGatePassesPage() {
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="btn-primary flex items-center gap-2"
+            className="btn-primary flex items-center gap-2 text-xs sm:text-sm"
           >
             <Plus size={16} />
             Apply for Gate Pass

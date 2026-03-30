@@ -350,6 +350,7 @@ export default function ResidentProfilePage() {
 
   return (
     <DashboardLayout title="Resident Profile" hostelId={hostelId}>
+      <div className="overflow-x-hidden">
       {/* Back button */}
       <button
         onClick={() => router.push(`/hostel/${hostelId}/residents`)}
@@ -604,7 +605,7 @@ export default function ResidentProfilePage() {
         className="opacity-0 animate-fade-in-up"
         style={{ animationDelay: "400ms" }}
       >
-        <div className="flex items-center gap-1 mb-4 bg-white dark:bg-[#111C2E] rounded-xl p-1 shadow-sm border border-border dark:border-[#1E2D42] w-fit">
+        <div className="flex items-center gap-1 mb-4 bg-white dark:bg-[#111C2E] rounded-xl p-1 shadow-sm border border-border dark:border-[#1E2D42] w-fit max-w-full overflow-x-auto">
           {[
             { key: "payments" as const, label: "Payment History", icon: DollarSign },
             { key: "food" as const, label: "Food Orders", icon: UtensilsCrossed },
@@ -616,7 +617,7 @@ export default function ResidentProfilePage() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+                className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex items-center gap-2 flex-shrink-0 ${
                   activeTab === tab.key
                     ? "bg-primary text-white shadow-sm"
                     : "text-text-secondary hover:text-text-primary hover:bg-bg-main dark:hover:bg-[#0B1222]"
@@ -1215,6 +1216,7 @@ export default function ResidentProfilePage() {
         confirmVariant="danger"
         loading={checkoutLoading}
       />
+      </div>
     </DashboardLayout>
   );
 }

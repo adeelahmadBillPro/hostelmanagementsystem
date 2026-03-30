@@ -60,11 +60,11 @@
 @layer components {
   /* ─── Typography ─── */
   .page-title {
-    @apply text-[28px] font-bold text-text-primary dark:text-white tracking-tight;
+    @apply text-xl sm:text-[28px] font-bold text-text-primary dark:text-white tracking-tight;
   }
 
   .section-title {
-    @apply text-[22px] font-semibold text-text-primary dark:text-white tracking-tight;
+    @apply text-lg sm:text-[22px] font-semibold text-text-primary dark:text-white tracking-tight;
   }
 
   /* ─── Cards ─── */

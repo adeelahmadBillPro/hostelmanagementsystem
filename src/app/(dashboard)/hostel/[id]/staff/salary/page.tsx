@@ -137,7 +137,7 @@ export default function SalarySheetPage() {
             <button
               onClick={generateSalarySheet}
               disabled={generating}
-              className="btn-primary flex items-center gap-2 text-xs sm:text-sm"
+              className="btn-primary flex items-center gap-2 text-xs sm:text-sm whitespace-nowrap"
             >
               <FileText size={16} />
               {generating ? 'Generating...' : 'Generate Salary Sheet'}

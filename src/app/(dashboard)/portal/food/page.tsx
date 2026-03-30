@@ -871,14 +871,14 @@ export default function FoodOrderingPage() {
           <div className="flex gap-2 pt-2">
             <button
               onClick={() => setShowReviewModal(false)}
-              className="btn-secondary flex-1 !text-xs sm:!text-sm"
+              className="btn-secondary flex-1 !text-xs sm:!text-sm !py-2"
             >
               Go Back & Edit
             </button>
             <button
               onClick={submitOrder}
               disabled={submitting}
-              className="btn-success flex-1 relative !text-xs sm:!text-sm"
+              className="btn-success flex-1 relative !text-xs sm:!text-sm !py-2"
             >
               {submitting ? (
                 <>

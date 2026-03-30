@@ -128,7 +128,7 @@ export default function ComplaintsPage() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-t-lg text-xs sm:text-sm font-medium transition-colors flex-shrink-0 ${
+              className={`px-4 py-2 rounded-t-lg text-xs sm:text-sm font-medium transition-colors flex-shrink-0 whitespace-nowrap ${
                 activeTab === tab
                   ? 'bg-indigo-600 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'

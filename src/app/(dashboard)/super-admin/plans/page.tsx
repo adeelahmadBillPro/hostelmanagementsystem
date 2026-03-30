@@ -239,22 +239,22 @@ export default function PlansPage() {
                     </div>
 
                     {/* Limits */}
-                    <div className="flex gap-4 mb-4">
+                    <div className="flex gap-2 sm:gap-4 mb-4 flex-wrap">
                       <div
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg"
+                        className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg"
                         style={{ backgroundColor: bgColor }}
                       >
-                        <Building2 size={16} style={{ color }} />
-                        <span className="text-sm font-medium text-text-primary dark:text-white">
+                        <Building2 size={14} className="sm:w-4 sm:h-4" style={{ color }} />
+                        <span className="text-xs sm:text-sm font-medium text-text-primary dark:text-white">
                           {plan.maxHostels} Hostels
                         </span>
                       </div>
                       <div
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg"
+                        className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg"
                         style={{ backgroundColor: bgColor }}
                       >
-                        <Users size={16} style={{ color }} />
-                        <span className="text-sm font-medium text-text-primary dark:text-white">
+                        <Users size={14} className="sm:w-4 sm:h-4" style={{ color }} />
+                        <span className="text-xs sm:text-sm font-medium text-text-primary dark:text-white">
                           {plan.maxResidents} Residents
                         </span>
                       </div>
@@ -266,10 +266,10 @@ export default function PlansPage() {
                         {plan.features.map((feature, fi) => (
                           <div key={fi} className="flex items-center gap-2">
                             <div
-                              className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                              className="w-5 h-5 sm:w-5 sm:h-5 rounded-full flex items-center justify-center flex-shrink-0"
                               style={{ backgroundColor: bgColor }}
                             >
-                              <Check size={12} style={{ color }} />
+                              <Check size={10} className="sm:w-3 sm:h-3" style={{ color }} />
                             </div>
                             <span className="text-sm text-text-secondary dark:text-gray-300">
                               {feature}
