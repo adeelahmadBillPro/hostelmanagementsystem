@@ -203,6 +203,12 @@ export default function BillingPage() {
             {row.fixedFoodFee > 0 && row.foodCharges > 0 && (
               <p className="text-[10px] text-text-muted">Mess: {formatCurrency(row.fixedFoodFee)} + Orders: {formatCurrency(row.foodCharges)}</p>
             )}
+            {row.fixedFoodFee > 0 && !row.foodCharges && (
+              <p className="text-[10px] text-text-muted">Mess: {formatCurrency(row.fixedFoodFee)}</p>
+            )}
+            {!row.fixedFoodFee && row.foodCharges > 0 && (
+              <p className="text-[10px] text-text-muted">Orders: {formatCurrency(row.foodCharges)}</p>
+            )}
           </div>
         );
       },
@@ -309,6 +315,18 @@ export default function BillingPage() {
             )}
           </button>
         </div>
+      </div>
+
+      {/* Info Banner */}
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6 text-sm">
+        <p className="font-semibold text-blue-800 dark:text-blue-300 mb-2">How billing works:</p>
+        <ul className="text-blue-700 dark:text-blue-400 space-y-1 text-xs">
+          <li>• Click &quot;Generate Bills&quot; to create bills for ALL active residents</li>
+          <li>• Each resident&apos;s bill includes: Room Rent + Food Fee + App Orders + Meter + Parking</li>
+          <li>• Scholarship/Govt residents get Rs 0 rent automatically</li>
+          <li>• Food fee based on each resident&apos;s plan (Full Mess / No Mess / Custom)</li>
+          <li>• Advance is deducted on first bill only</li>
+        </ul>
       </div>
 
       {/* Stats */}

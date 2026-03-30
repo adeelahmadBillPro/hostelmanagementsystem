@@ -47,6 +47,7 @@ interface BillDetail {
     year: number;
     roomRent: number;
     foodCharges: number;
+    fixedFoodFee: number;
     otherCharges: number;
     meterCharges: number;
     parkingFee: number;
@@ -61,6 +62,7 @@ interface BillDetail {
     notes: string | null;
     isDisputed: boolean;
   };
+  foodPlan: string;
   room: {
     roomNumber: string;
     type: string;
@@ -292,17 +294,22 @@ export default function MyBillsPage() {
         </div>
 
         {/* Food Section */}
-        {(bill.foodCharges > 0 || foodOrders.length > 0) && (
+        {(bill.foodCharges > 0 || (bill.fixedFoodFee || 0) > 0 || foodOrders.length > 0) && (
           <div className="rounded-lg border border-gray-200 dark:border-[#1E2D42] overflow-hidden">
             <div
               className="flex items-center gap-2 px-4 py-3 bg-gray-50 dark:bg-[#0B1222] cursor-pointer"
               onClick={() => toggleSection(foodSectionKey)}
             >
               <Utensils size={16} className="text-orange-500" />
-              <span className="font-semibold text-sm text-gray-700 dark:text-gray-200">
-                Food Charges ({foodOrders.length} orders)
-              </span>
-              <span className="ml-auto font-bold text-sm mr-2">{formatCurrency(bill.foodCharges)}</span>
+              <div>
+                <span className="font-semibold text-sm text-gray-700 dark:text-gray-200">
+                  Food Charges
+                </span>
+                <span className="text-[10px] ml-2 text-gray-500 dark:text-gray-400">
+                  Plan: {detail.foodPlan === "FULL_MESS" ? "Full Mess" : detail.foodPlan === "NO_MESS" ? "No Mess" : "Custom"}
+                </span>
+              </div>
+              <span className="ml-auto font-bold text-sm mr-2">{formatCurrency(bill.foodCharges + (bill.fixedFoodFee || 0))}</span>
               {expandedSections[foodSectionKey] ? (
                 <ChevronUp size={16} className="text-gray-400" />
               ) : (
@@ -311,6 +318,23 @@ export default function MyBillsPage() {
             </div>
             {expandedSections[foodSectionKey] && (
               <div className="max-h-64 overflow-y-auto">
+                {/* Mess fee vs app orders breakdown */}
+                {((bill.fixedFoodFee || 0) > 0 || bill.foodCharges > 0) && (
+                  <div className="px-4 py-2 text-xs space-y-1 border-b border-gray-100 dark:border-[#1E2D42] bg-orange-50/50 dark:bg-orange-900/10">
+                    {(bill.fixedFoodFee || 0) > 0 && (
+                      <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                        <span>Mess Fee (Fixed)</span>
+                        <span className="font-medium">{formatCurrency(bill.fixedFoodFee)}</span>
+                      </div>
+                    )}
+                    {bill.foodCharges > 0 && (
+                      <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                        <span>Food Orders (App) - {foodOrders.length} orders</span>
+                        <span className="font-medium">{formatCurrency(bill.foodCharges)}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
                 {foodOrders.length === 0 ? (
                   <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">No food orders this month.</div>
                 ) : (
@@ -428,9 +452,15 @@ export default function MyBillsPage() {
               <span>Room Rent</span>
               <span>{formatCurrency(bill.roomRent)}</span>
             </div>
+            {(bill.fixedFoodFee || 0) > 0 && (
+              <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                <span>Mess Fee (Fixed)</span>
+                <span>{formatCurrency(bill.fixedFoodFee)}</span>
+              </div>
+            )}
             {bill.foodCharges > 0 && (
               <div className="flex justify-between text-gray-600 dark:text-gray-400">
-                <span>Food Charges</span>
+                <span>Food Orders (App)</span>
                 <span>{formatCurrency(bill.foodCharges)}</span>
               </div>
             )}

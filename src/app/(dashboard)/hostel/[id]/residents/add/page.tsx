@@ -958,6 +958,61 @@ export default function AddResidentPage() {
               </div>
             </div>
           </div>
+
+          {/* Monthly Bill Preview */}
+          <div className="mt-4 p-4 rounded-xl bg-indigo-50 dark:bg-indigo-900/15 border border-indigo-200 dark:border-indigo-800/40">
+            <h3 className="text-sm font-semibold text-indigo-800 dark:text-indigo-300 mb-3">
+              Monthly Bill Preview
+            </h3>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-indigo-700 dark:text-indigo-400">Room Rent</span>
+                <span className="font-medium text-indigo-900 dark:text-indigo-200">
+                  {(residentType === "SCHOLARSHIP" || residentType === "GOVERNMENT") && freeRoom
+                    ? "Free (Scholarship/Govt)"
+                    : rentOverride
+                    ? formatCurrency(parseFloat(rentOverride) || 0)
+                    : formatCurrency(rentPerBed)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-indigo-700 dark:text-indigo-400">
+                  Mess Fee ({foodPlan === "FULL_MESS" ? "Full Mess" : foodPlan === "NO_MESS" ? "No Mess" : "Custom"})
+                </span>
+                <span className="font-medium text-indigo-900 dark:text-indigo-200">
+                  {foodPlan === "FULL_MESS"
+                    ? "Per hostel settings"
+                    : foodPlan === "NO_MESS"
+                    ? formatCurrency(0)
+                    : formatCurrency(parseFloat(customFoodFee) || 0)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-indigo-700 dark:text-indigo-400">App Orders</span>
+                <span className="font-medium text-indigo-900 dark:text-indigo-200">Variable</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-indigo-700 dark:text-indigo-400">Meter + Parking</span>
+                <span className="font-medium text-indigo-900 dark:text-indigo-200">If applicable</span>
+              </div>
+              <div className="border-t border-indigo-200 dark:border-indigo-800/40 pt-2 mt-2">
+                <div className="flex justify-between">
+                  <span className="font-semibold text-indigo-800 dark:text-indigo-300">Est. Monthly</span>
+                  <span className="font-bold text-indigo-900 dark:text-indigo-200">
+                    {formatCurrency(
+                      ((residentType === "SCHOLARSHIP" || residentType === "GOVERNMENT") && freeRoom
+                        ? 0
+                        : rentOverride
+                        ? parseFloat(rentOverride) || 0
+                        : rentPerBed) +
+                      (foodPlan === "CUSTOM" ? parseFloat(customFoodFee) || 0 : 0)
+                    )}
+                    {foodPlan === "FULL_MESS" ? " + Mess Fee" : ""}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

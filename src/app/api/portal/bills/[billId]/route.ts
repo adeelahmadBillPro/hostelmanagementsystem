@@ -153,8 +153,10 @@ export async function GET(
         status: bill.status,
         dueDate: bill.dueDate?.toISOString() || null,
         notes: bill.notes,
+        fixedFoodFee: bill.fixedFoodFee,
         isDisputed: bill.isDisputed,
       },
+      foodPlan: resident.foodPlan || "FULL_MESS",
       room: {
         roomNumber: resident.room.roomNumber,
         type: resident.room.type,
