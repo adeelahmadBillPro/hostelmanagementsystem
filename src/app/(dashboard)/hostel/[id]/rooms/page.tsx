@@ -428,7 +428,10 @@ export default function RoomsPage() {
             <button
               className="btn-primary flex items-center gap-2 whitespace-nowrap !py-2 !text-xs"
               onClick={() => {
-                setFormData({ buildingId: "", floorId: "", roomNumber: "", roomCount: "1", type: "SINGLE", totalBeds: "1", rentPerBed: "", rentPerRoom: "", dailyRate: "", nightlyRate: "", weeklyRate: "" });
+                // Auto-calculate next room number from existing rooms
+                const existingNumbers = rooms.map((r) => parseInt(r.roomNumber)).filter((n) => !isNaN(n));
+                const nextNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) + 1 : 1;
+                setFormData({ buildingId: "", floorId: "", roomNumber: String(nextNumber), roomCount: "1", type: "SINGLE", totalBeds: "1", rentPerBed: "", rentPerRoom: "", dailyRate: "", nightlyRate: "", weeklyRate: "" });
                 setShowAddModal(true);
               }}
             >
@@ -663,7 +666,7 @@ export default function RoomsPage() {
                   value={formData.roomNumber}
                   onChange={(e) => setFormData({ ...formData, roomNumber: e.target.value })}
                 />
-                <p className="text-[11px] text-text-muted mt-1">Room numbering starts from here</p>
+                <p className="text-[11px] text-text-muted mt-1">Auto-set to next available number. Change if needed.</p>
               </div>
               <div>
                 <label className="label">How Many Rooms? *</label>

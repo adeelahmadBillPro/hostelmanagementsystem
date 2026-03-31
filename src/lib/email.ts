@@ -18,12 +18,21 @@ interface EmailOptions {
 
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
   try {
-    // To enable real email delivery, install one of:
-    //   npm i resend          — then set RESEND_API_KEY env var
-    //   npm i nodemailer      — then set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS env vars
-    // Without these packages, emails are logged to console (development mode).
+    // —— Resend (production) ——————————————————————————————————————————————
+    if (process.env.RESEND_API_KEY) {
+      const { Resend } = require("resend") as typeof import("resend");
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      const from = process.env.EMAIL_FROM || "HostelHub <onboarding@resend.dev>";
+      const { error } = await resend.emails.send({ from, ...options });
+      if (error) {
+        console.error("[EMAIL] Resend error:", error);
+        return false;
+      }
+      console.log(`[EMAIL] Sent via Resend to: ${options.to}`);
+      return true;
+    }
 
-    // —— Console output (dev mode) ————————————————————————————————————————
+    // —— Console fallback (dev mode) ——————————————————————————————————————
     console.log(`[EMAIL] To: ${options.to} | Subject: ${options.subject}`);
     console.log(`[EMAIL] Body preview: ${options.html.substring(0, 120)}...`);
     return true;

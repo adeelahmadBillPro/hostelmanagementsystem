@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -26,6 +26,13 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Clean up ?error=undefined from URL (NextAuth signOut artifact)
+  useEffect(() => {
+    if (window.location.search.includes("error")) {
+      window.history.replaceState({}, "", "/login");
+    }
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -44,7 +51,9 @@ export default function LoginPage() {
       });
 
       if (result?.error) {
-        setError(result.error);
+        setError(result.error === "CredentialsSignin" || result.error === "undefined"
+          ? "Invalid email or password. Please check your credentials."
+          : result.error);
       } else {
         const res = await fetch("/api/auth/session");
         const session = await res.json();

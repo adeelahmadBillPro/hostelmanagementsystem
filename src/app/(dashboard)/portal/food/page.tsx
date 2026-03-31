@@ -128,6 +128,13 @@ export default function FoodOrderingPage() {
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [orderingWindows, setOrderingWindows] = useState<any[]>([]);
   const [foodPlanInfo, setFoodPlanInfo] = useState<{ plan: string; customFee: number; hostelFee: number } | null>(null);
+  const [now, setNow] = useState(new Date());
+
+  // Live clock for countdown timers (updates every second)
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Fetch menu
   useEffect(() => {
@@ -415,13 +422,38 @@ export default function FoodOrderingPage() {
                     const count = groupedMenu[tab.key]?.length || 0;
                     const cartCount = tabCounts[tab.key];
                     const isActive = activeTab === tab.key;
+                    // Timer for this meal (live countdown using `now` state)
+                    const mealWindow = orderingWindows.find((w: any) => w.mealType === tab.key);
+                    let timerLabel = "";
+                    let isOpen = mealWindow?.isOpen;
+                    if (mealWindow) {
+                      const hr = now.getHours();
+                      const min = now.getMinutes();
+                      const sec = now.getSeconds();
+                      isOpen = hr >= mealWindow.startHour && hr < mealWindow.endHour;
+                      if (isOpen) {
+                        const totalSecsLeft = (mealWindow.endHour - hr - 1) * 3600 + (59 - min) * 60 + (60 - sec);
+                        const h = Math.floor(totalSecsLeft / 3600);
+                        const m = Math.floor((totalSecsLeft % 3600) / 60);
+                        const s = totalSecsLeft % 60;
+                        timerLabel = h > 0 ? `${h}h ${m}m ${s}s` : m > 0 ? `${m}m ${s}s` : `${s}s`;
+                      } else {
+                        let hrsUntil = mealWindow.startHour - hr;
+                        if (hrsUntil <= 0) hrsUntil += 24;
+                        const totalSecsUntil = (hrsUntil - 1) * 3600 + (59 - min) * 60 + (60 - sec);
+                        const h = Math.floor(totalSecsUntil / 3600);
+                        const m = Math.floor((totalSecsUntil % 3600) / 60);
+                        const s = totalSecsUntil % 60;
+                        timerLabel = h > 0 ? `in ${h}h ${m}m` : `in ${m}m ${s}s`;
+                      }
+                    }
                     return (
                       <button
                         key={tab.key}
                         onClick={() => setActiveTab(tab.key)}
                         disabled={count === 0}
                         className={`
-                          flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 relative
+                          flex-1 flex flex-col items-center justify-center gap-0.5 px-2 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative
                           ${isActive
                             ? 'bg-[#4F46E5] text-white shadow-md shadow-indigo-500/25'
                             : count > 0
@@ -430,13 +462,26 @@ export default function FoodOrderingPage() {
                           }
                         `}
                       >
-                        {tab.icon}
-                        <span className="hidden sm:inline">{tab.label}</span>
-                        {count > 0 && (
-                          <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
-                            isActive ? 'bg-white/20 text-white' : 'bg-bg-main dark:bg-[#1E2D42] text-text-muted'
+                        <div className="flex items-center gap-1.5">
+                          {tab.icon}
+                          <span className="hidden sm:inline">{tab.label}</span>
+                          {count > 0 && (
+                            <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
+                              isActive ? 'bg-white/20 text-white' : 'bg-bg-main dark:bg-[#1E2D42] text-text-muted'
+                            }`}>
+                              {count}
+                            </span>
+                          )}
+                        </div>
+                        {mealWindow && (
+                          <span className={`text-[9px] font-semibold ${
+                            isActive
+                              ? 'text-white/70'
+                              : isOpen
+                                ? 'text-emerald-500'
+                                : 'text-text-muted dark:text-slate-500'
                           }`}>
-                            {count}
+                            {isOpen ? `🟢 ${timerLabel}` : `${timerLabel}`}
                           </span>
                         )}
                         {cartCount > 0 && (
@@ -460,6 +505,9 @@ export default function FoodOrderingPage() {
                   {activeItems.map((item, index) => {
                     const qty = quantities[item.id] || 0;
                     const lineCalc = calcLineTotal(item, qty);
+                    // Check if ordering is currently open for this meal (live check using now state)
+                    const mw = orderingWindows.find((w: any) => w.mealType === item.mealType);
+                    const canOrder = mw ? (now.getHours() >= mw.startHour && now.getHours() < mw.endHour) : true;
                     return (
                       <div
                         key={item.id}
@@ -514,15 +562,18 @@ export default function FoodOrderingPage() {
                             </span>
                             <button
                               onClick={() => increment(item)}
-                              disabled={qty >= (item.maxQtyPerOrder || 99)}
+                              disabled={!canOrder || qty >= (item.maxQtyPerOrder || 99)}
                               className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150 ${
-                                qty >= (item.maxQtyPerOrder || 99)
+                                !canOrder || qty >= (item.maxQtyPerOrder || 99)
                                   ? 'bg-gray-100 dark:bg-[#1E2D42] text-text-muted cursor-not-allowed'
                                   : 'bg-indigo-50 dark:bg-indigo-900/20 text-[#4F46E5] dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 active:scale-95'
                               }`}
                             >
                               <Plus size={14} />
                             </button>
+                            {!canOrder && qty === 0 && (
+                              <span className="text-[10px] text-red-400 font-semibold ml-2">Closed</span>
+                            )}
                           </div>
 
                           {/* Line Total */}

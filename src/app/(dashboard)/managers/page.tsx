@@ -39,7 +39,7 @@ export default function ManagersPage() {
   const [deletingManager, setDeletingManager] = useState<Manager | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [formError, setFormError] = useState("");
-  const [createdCreds, setCreatedCreds] = useState<{ email: string; password: string } | null>(null);
+  const [createdCreds, setCreatedCreds] = useState<{ email: string; password: string; phone?: string } | null>(null);
   const [copied, setCopied] = useState("");
   const [formData, setFormData] = useState({
     name: "",
@@ -155,11 +155,6 @@ export default function ManagersPage() {
         return;
       }
     }
-    if (!editingManager && !formData.password) {
-      setFormError("Password is required for new managers");
-      setActionLoading(false);
-      return;
-    }
     if (!editingManager && formData.password && formData.password.length < 8) {
       setFormError("Password must be at least 8 characters");
       setActionLoading(false);
@@ -207,7 +202,7 @@ export default function ManagersPage() {
 
         // Show credentials if returned
         if (data.loginCredentials) {
-          setCreatedCreds(data.loginCredentials);
+          setCreatedCreds({ ...data.loginCredentials, phone: formData.phone || undefined });
         }
       }
 
@@ -361,7 +356,7 @@ export default function ManagersPage() {
         }}
         title={editingManager ? "Edit Manager" : "Add New Manager"}
       >
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
           {formError && (
             <div className="p-3 rounded-lg bg-danger/10 text-danger text-sm">
               {formError}
@@ -394,6 +389,7 @@ export default function ManagersPage() {
               placeholder="Enter email address"
               required
               disabled={!!editingManager}
+              autoComplete="off"
             />
           </div>
 
@@ -414,17 +410,17 @@ export default function ManagersPage() {
 
           {!editingManager && (
             <div>
-              <label className="label">Password</label>
+              <label className="label">Password <span className="text-xs text-text-muted ml-1">(auto-generated if left blank)</span></label>
               <input
-                type="password"
+                type="text"
                 value={formData.password}
                 onChange={(e) =>
                   setFormData({ ...formData, password: e.target.value })
                 }
                 className="input"
-                placeholder="Enter password"
-                required
+                placeholder="Leave blank to auto-generate"
                 minLength={6}
+                autoComplete="new-password"
               />
             </div>
           )}
@@ -559,11 +555,12 @@ export default function ManagersPage() {
               <button
                 onClick={() => {
                   const msg = encodeURIComponent(`Your HostelHub manager account is ready.\n\nLogin: ${window.location.origin}/login\nEmail: ${createdCreds.email}\nPassword: ${createdCreds.password}\n\nPlease change your password after login.`);
-                  window.open(`https://wa.me/?text=${msg}`, "_blank");
+                  const phone = createdCreds.phone ? `92${createdCreds.phone.replace(/^0/, "")}` : "";
+                  window.open(`https://wa.me/${phone}?text=${msg}`, "_blank");
                 }}
                 className="btn-success flex-1"
               >WhatsApp</button>
-              <button onClick={() => { copyToClipboard(`Email: ${createdCreds.email}\nPassword: ${createdCreds.password}`); setCopied("all"); setTimeout(() => setCopied(""), 2000); }} className="btn-secondary flex-1">
+              <button onClick={() => { copyToClipboard(`HostelHub Login\nURL: ${window.location.origin}/login\nEmail: ${createdCreds.email}\nPassword: ${createdCreds.password}`); setCopied("all"); setTimeout(() => setCopied(""), 2000); }} className="btn-secondary flex-1">
                 {copied === "all" ? "Copied!" : "Copy All"}
               </button>
               <button onClick={() => setCreatedCreds(null)} className="btn-primary flex-1">Done</button>

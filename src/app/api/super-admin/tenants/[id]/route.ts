@@ -60,6 +60,12 @@ export async function DELETE(
   for (const hostel of hostels) {
     const hid = hostel.id;
     await prisma.$transaction(async (tx) => {
+      // New models first
+      await tx.settlement.deleteMany({ where: { hostelId: hid } }).catch(() => {});
+      await tx.leaveNotice.deleteMany({ where: { hostelId: hid } }).catch(() => {});
+      await tx.staffAttendance.deleteMany({ where: { hostelId: hid } }).catch(() => {});
+      await tx.message.deleteMany({ where: { conversation: { hostelId: hid } } }).catch(() => {});
+      // Original models
       await tx.billDispute.deleteMany({ where: { bill: { hostelId: hid } } });
       await tx.paymentProof.deleteMany({ where: { bill: { hostelId: hid } } });
       await tx.payment.deleteMany({ where: { hostelId: hid } });
@@ -75,7 +81,8 @@ export async function DELETE(
       await tx.roomTransfer.deleteMany({ where: { resident: { hostelId: hid } } });
       await tx.conversation.deleteMany({ where: { hostelId: hid } }).catch(() => {});
       await tx.expense.deleteMany({ where: { hostelId: hid } });
-      await tx.expenseCategory.deleteMany({ where: { hostelId: hid } });
+      await tx.expenseCategory.deleteMany({ where: { hostelId: hid } }).catch(() => {});
+      await tx.staffSalary.deleteMany({ where: { staff: { hostelId: hid } } }).catch(() => {});
       await tx.staff.deleteMany({ where: { hostelId: hid } });
       await tx.managerHostel.deleteMany({ where: { hostelId: hid } });
       await tx.hostelAmenity.deleteMany({ where: { hostelId: hid } });
@@ -84,6 +91,7 @@ export async function DELETE(
       for (const r of residents) {
         await tx.user.delete({ where: { id: r.userId } }).catch(() => {});
       }
+      await tx.roomInventory.deleteMany({ where: { room: { floor: { building: { hostelId: hid } } } } }).catch(() => {});
       await tx.bed.deleteMany({ where: { room: { floor: { building: { hostelId: hid } } } } });
       await tx.room.deleteMany({ where: { floor: { building: { hostelId: hid } } } });
       await tx.floor.deleteMany({ where: { building: { hostelId: hid } } });
@@ -92,7 +100,10 @@ export async function DELETE(
     });
   }
 
-  // Delete tenant users and tenant
+  // Delete tenant-level data
+  await prisma.auditLog.deleteMany({ where: { user: { tenantId: id } } }).catch(() => {});
+  await prisma.managerSalary.deleteMany({ where: { user: { tenantId: id } } }).catch(() => {});
+  await prisma.managerHostel.deleteMany({ where: { user: { tenantId: id } } }).catch(() => {});
   await prisma.user.deleteMany({ where: { tenantId: id } });
   await prisma.tenant.delete({ where: { id } });
 

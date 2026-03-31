@@ -123,7 +123,7 @@ export default function AddStaffPage() {
 
   const copyCredentials = () => {
     if (!credentials) return;
-    copyToClipboard(`Email: ${credentials.email}\nPassword: ${credentials.password}`);
+    copyToClipboard(`HostelHub Login\nURL: ${window.location.origin}/login\nEmail: ${credentials.email}\nPassword: ${credentials.password}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

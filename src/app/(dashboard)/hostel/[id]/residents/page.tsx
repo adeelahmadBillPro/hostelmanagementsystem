@@ -107,7 +107,7 @@ export default function ResidentsPage() {
   const [foodFilter, setFoodFilter] = useState<"ALL" | "FULL_MESS" | "NO_MESS" | "CUSTOM">("ALL");
   const [search, setSearch] = useState("");
   const [checkoutResident, setCheckoutResident] = useState<ResidentData | null>(null);
-  const [resetCreds, setResetCreds] = useState<{ name: string; email: string; password: string } | null>(null);
+  const [resetCreds, setResetCreds] = useState<{ name: string; email: string; password: string; phone?: string } | null>(null);
   const [resettingId, setResettingId] = useState<string | null>(null);
   const [copied, setCopied] = useState("");
 
@@ -120,7 +120,7 @@ export default function ResidentsPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setResetCreds(data.credentials);
+      setResetCreds({ ...data.credentials, phone: resident.user.phone || undefined });
     } catch (err: any) {
       addToast(err.message || "Failed to reset password", "error");
     } finally {
@@ -500,7 +500,8 @@ export default function ResidentsPage() {
                   const msg = encodeURIComponent(
                     `Assalam o Alaikum ${resetCreds.name}! Your HostelHub password has been reset.\n\nLogin: ${window.location.origin}/login\nEmail: ${resetCreds.email}\nNew Password: ${resetCreds.password}\n\nPlease change your password after login.`
                   );
-                  window.open(`https://wa.me/?text=${msg}`, "_blank");
+                  const phone = resetCreds.phone ? `92${resetCreds.phone.replace(/^0/, "")}` : "";
+                  window.open(`https://wa.me/${phone}?text=${msg}`, "_blank");
                 }}
                 className="btn-success flex-1 flex items-center justify-center gap-2"
               >

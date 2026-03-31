@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import Modal from "@/components/ui/modal";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
-import { Plus, Edit2, Trash2, Check, Building2, Users } from "lucide-react";
+import { Plus, Edit2, Trash2, Check, Building2, Users, Clock, CheckCircle2, XCircle, Loader2, Image as ImageIcon } from "lucide-react";
 import { useToast } from "@/components/providers";
 
 interface Plan {
@@ -39,6 +39,12 @@ export default function PlansPage() {
   const [formData, setFormData] = useState(defaultForm);
   const [formError, setFormError] = useState("");
 
+  // Upgrade requests
+  const [upgradeRequests, setUpgradeRequests] = useState<any[]>([]);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [reviewLoading, setReviewLoading] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+
   const fetchPlans = async () => {
     try {
       const res = await fetch("/api/super-admin/plans");
@@ -53,8 +59,43 @@ export default function PlansPage() {
     }
   };
 
+  const fetchUpgradeRequests = async () => {
+    try {
+      const res = await fetch("/api/plan-upgrade");
+      if (res.ok) {
+        const data = await res.json();
+        setUpgradeRequests(data.requests || []);
+        setPendingCount(data.stats?.pending || 0);
+      }
+    } catch { /* non-fatal */ }
+  };
+
+  const handleReview = async (requestId: string, action: "approve" | "reject") => {
+    setReviewLoading(requestId);
+    try {
+      const res = await fetch("/api/plan-upgrade", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requestId, action, rejectionReason: action === "reject" ? rejectReason : undefined }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        addToast(data.message, "success");
+        setRejectReason("");
+        fetchUpgradeRequests();
+      } else {
+        addToast(data.error || "Failed", "error");
+      }
+    } catch {
+      addToast("Something went wrong", "error");
+    } finally {
+      setReviewLoading(null);
+    }
+  };
+
   useEffect(() => {
     fetchPlans();
+    fetchUpgradeRequests();
   }, []);
 
   const openAddModal = () => {
@@ -409,6 +450,80 @@ export default function PlansPage() {
       </Modal>
 
       {/* Delete Confirm Dialog */}
+      {/* Upgrade Requests Section */}
+      {upgradeRequests.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-lg font-bold text-text-primary dark:text-white mb-4 flex items-center gap-2">
+            <Clock size={20} className="text-amber-500" />
+            Plan Upgrade Requests
+            {pendingCount > 0 && (
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500 text-white">{pendingCount} pending</span>
+            )}
+          </h2>
+          <div className="space-y-3">
+            {upgradeRequests.map((req: any) => (
+              <div key={req.id} className="card p-4 animate-fade-in">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <p className="text-sm font-bold text-text-primary dark:text-white">{req.tenant?.name}</p>
+                      <span className="text-xs text-text-muted">{req.tenant?.email}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-3 text-xs text-text-secondary dark:text-slate-400">
+                      <span>Requesting: <strong className="text-primary">{req.requestedPlan?.name}</strong> ({req.requestedPlan?.price ? `PKR ${req.requestedPlan.price.toLocaleString()}/mo` : ""})</span>
+                      <span>Paid: <strong>PKR {req.amount?.toLocaleString()}</strong> via {req.method}</span>
+                      {req.transactionId && <span>TxID: {req.transactionId}</span>}
+                      <span>{new Date(req.createdAt).toLocaleDateString("en-PK", { day: "numeric", month: "short", year: "numeric" })}</span>
+                    </div>
+                    {req.proofImageUrl && (
+                      <a href={req.proofImageUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-1">
+                        <ImageIcon size={12} /> View Payment Proof
+                      </a>
+                    )}
+                    {req.notes && <p className="text-xs text-text-muted mt-1 italic">&quot;{req.notes}&quot;</p>}
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    {req.status === "PENDING" ? (
+                      <>
+                        <button
+                          onClick={() => handleReview(req.id, "approve")}
+                          disabled={!!reviewLoading}
+                          className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1"
+                        >
+                          {reviewLoading === req.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => {
+                            const reason = prompt("Rejection reason (optional):");
+                            if (reason !== null) {
+                              setRejectReason(reason);
+                              handleReview(req.id, "reject");
+                            }
+                          }}
+                          disabled={!!reviewLoading}
+                          className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1 text-red-500 hover:text-red-600"
+                        >
+                          <XCircle size={14} /> Reject
+                        </button>
+                      </>
+                    ) : req.status === "APPROVED" ? (
+                      <span className="badge-success inline-flex items-center gap-1"><CheckCircle2 size={12} /> Approved</span>
+                    ) : (
+                      <div>
+                        <span className="badge-danger inline-flex items-center gap-1"><XCircle size={12} /> Rejected</span>
+                        {req.rejectionReason && <p className="text-xs text-red-400 mt-1">{req.rejectionReason}</p>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <ConfirmDialog
         isOpen={confirmOpen}
         onClose={() => {

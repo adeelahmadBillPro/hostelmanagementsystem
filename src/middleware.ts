@@ -58,5 +58,7 @@ export const config = {
     "/profile/:path*",
     "/settings",
     "/settings/:path*",
+    "/plans",
+    "/plans/:path*",
   ],
 };

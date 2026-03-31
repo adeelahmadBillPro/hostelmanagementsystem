@@ -35,6 +35,7 @@ import {
   CalendarDays,
   ArrowLeftRight,
   LogOut,
+  Crown,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -121,6 +122,12 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
       label: "Hostels",
       href: "/hostels",
       icon: <Building2 size={20} />,
+    },
+    {
+      label: "My Plan",
+      href: "/plans",
+      icon: <Crown size={20} />,
+      roles: ["TENANT_ADMIN"],
     },
     {
       label: "Managers",

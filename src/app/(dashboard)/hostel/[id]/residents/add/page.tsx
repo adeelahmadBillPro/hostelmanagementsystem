@@ -395,7 +395,8 @@ export default function AddResidentPage() {
                     `Password: ${createdCredentials.password}\n\n` +
                     `Please change your password after first login.`
                   );
-                  window.open(`https://wa.me/?text=${msg}`, "_blank");
+                  const waPhone = phone ? `92${phone.replace(/^0/, "")}` : "";
+                  window.open(`https://wa.me/${waPhone}?text=${msg}`, "_blank");
                 }}
                 className="btn-success w-full flex items-center justify-center gap-2"
               >

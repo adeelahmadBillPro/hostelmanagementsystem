@@ -46,7 +46,7 @@ export default function TenantsPage() {
     planId: "",
   });
   const [formError, setFormError] = useState("");
-  const [createdCreds, setCreatedCreds] = useState<{ email: string; password: string } | null>(null);
+  const [createdCreds, setCreatedCreds] = useState<{ email: string; password: string; phone?: string } | null>(null);
   const [copied, setCopied] = useState("");
 
   const fetchTenants = async () => {
@@ -109,7 +109,7 @@ export default function TenantsPage() {
 
       // Show credentials
       if (data.loginCredentials) {
-        setCreatedCreds(data.loginCredentials);
+        setCreatedCreds({ ...data.loginCredentials, phone: formData.phone || undefined });
       }
     } catch (error) {
       setFormError("An error occurred. Please try again.");
@@ -120,16 +120,13 @@ export default function TenantsPage() {
 
   const handleToggleStatus = (tenant: Tenant) => {
     const newStatus = tenant.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-    const actionLabel = newStatus === "ACTIVE" ? "Enable" : "Disable";
 
     setConfirmAction({
-      title: `${actionLabel} Tenant`,
-      message: `Are you sure you want to ${actionLabel.toLowerCase()} "${tenant.name}"? ${
-        newStatus === "INACTIVE"
-          ? "This will restrict their access to the platform."
-          : "This will restore their access to the platform."
-      }`,
-      confirmText: actionLabel,
+      title: newStatus === "INACTIVE" ? "⚠️ Disable Tenant Account" : "Enable Tenant Account",
+      message: newStatus === "INACTIVE"
+        ? `You are about to DISABLE "${tenant.name}" (${tenant.email}).\n\nWhat happens when disabled:\n• Tenant admin cannot login to the platform\n• All managers under this tenant cannot login\n• Residents and staff portals will stop working\n• No new bills can be generated\n• All data (hostels, residents, billing) is PRESERVED\n• Account can be re-enabled anytime\n\nThis is a safe, reversible action — no data is deleted.`
+        : `Re-enable "${tenant.name}" (${tenant.email})?\n\nThis will restore full access:\n• Tenant admin can login again\n• All managers, residents & staff portals will work\n• Billing and all features restored\n• All previous data is intact`,
+      confirmText: newStatus === "INACTIVE" ? "Yes, Disable Account" : "Yes, Enable Account",
       variant: newStatus === "ACTIVE" ? "success" : "primary",
       onConfirm: async () => {
         setActionLoading(true);
@@ -155,9 +152,9 @@ export default function TenantsPage() {
 
   const handleDelete = (tenant: Tenant) => {
     setConfirmAction({
-      title: "Delete Tenant",
-      message: `Are you sure you want to permanently delete "${tenant.name}"? This action cannot be undone and will remove all associated data including hostels, residents, and billing records.`,
-      confirmText: "Delete",
+      title: "⚠️ Delete Tenant — Permanent Action",
+      message: `You are about to PERMANENTLY DELETE "${tenant.name}" (${tenant.email}).\n\nThis will destroy ALL data including:\n• All hostels owned by this tenant\n• All rooms, beds, buildings & floors\n• All residents and their portal accounts\n• All managers and staff accounts\n• All monthly bills, payments & receipts\n• All food orders and menu items\n• All complaints, gate passes & notices\n• All visitors, meter readings & expenses\n• All leave notices & checkout settlements\n• All conversations & messages\n• All audit logs\n\nThis action CANNOT be undone. Are you absolutely sure?`,
+      confirmText: "Yes, Delete Everything",
       variant: "danger",
       onConfirm: async () => {
         setActionLoading(true);
@@ -435,14 +432,15 @@ export default function TenantsPage() {
               <button
                 onClick={() => {
                   const msg = encodeURIComponent(`Your HostelHub admin account is ready.\n\nLogin: ${window.location.origin}/login\nEmail: ${createdCreds.email}\nPassword: ${createdCreds.password}\n\nPlease change your password after login.`);
-                  window.open(`https://wa.me/?text=${msg}`, "_blank");
+                  const phone = createdCreds.phone ? `92${createdCreds.phone.replace(/^0/, "")}` : "";
+                  window.open(`https://wa.me/${phone}?text=${msg}`, "_blank");
                 }}
                 className="btn-success flex-1"
               >
                 WhatsApp
               </button>
               <button
-                onClick={() => { copyToClipboard(`Email: ${createdCreds.email}\nPassword: ${createdCreds.password}`); setCopied("all"); setTimeout(() => setCopied(""), 2000); }}
+                onClick={() => { copyToClipboard(`HostelHub Login\nURL: ${window.location.origin}/login\nEmail: ${createdCreds.email}\nPassword: ${createdCreds.password}`); setCopied("all"); setTimeout(() => setCopied(""), 2000); }}
                 className="btn-secondary flex-1"
               >
                 {copied === "all" ? "Copied!" : "Copy All"}

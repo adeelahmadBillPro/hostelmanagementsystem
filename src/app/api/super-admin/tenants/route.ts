@@ -60,6 +60,14 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  const existingName = await prisma.tenant.findFirst({ where: { name: { equals: name, mode: "insensitive" } } });
+  if (existingName) {
+    return NextResponse.json(
+      { error: `A tenant with the name "${existingName.name}" already exists. Please use a different name.` },
+      { status: 409 }
+    );
+  }
+
   const existing = await prisma.tenant.findUnique({ where: { email } });
   if (existing) {
     return NextResponse.json(

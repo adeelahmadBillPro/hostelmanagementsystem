@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "crypto";
 import { rateLimit } from "@/lib/rate-limit";
 import { validatePassword, validateName, validatePhone } from "@/lib/validate";
 
@@ -86,11 +87,13 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, email, phone, password, salary, hostelIds } = body;
+    const { name, email, phone, salary, hostelIds } = body;
+    // Auto-generate password if not provided
+    const password = body.password || randomBytes(4).toString("hex");
 
-    if (!name || !email || !password) {
+    if (!name || !email) {
       return NextResponse.json(
-        { error: "Name, email, and password are required" },
+        { error: "Name and email are required" },
         { status: 400 }
       );
     }
@@ -101,10 +104,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: nameCheck.error }, { status: 400 });
     }
 
-    // Validate password strength
-    const pwCheck = validatePassword(password);
-    if (!pwCheck.valid) {
-      return NextResponse.json({ error: pwCheck.error }, { status: 400 });
+    // Validate password strength (only if user provided one)
+    if (body.password) {
+      const pwCheck = validatePassword(password);
+      if (!pwCheck.valid) {
+        return NextResponse.json({ error: pwCheck.error }, { status: 400 });
+      }
     }
 
     // Validate phone if provided

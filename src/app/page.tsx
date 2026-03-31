@@ -36,6 +36,10 @@ import {
   ExternalLink,
   Eye,
   Bed,
+  LogOut,
+  Clock,
+  CalendarCheck,
+  Import,
 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
@@ -131,15 +135,19 @@ const howItWorksSteps = [
 const features = [
   { icon: Grid3X3, title: 'Room Grid View', desc: 'Visual room map with real-time bed status and color-coded availability.' },
   { icon: Landmark, title: 'Multi-Hostel', desc: 'Manage multiple hostels from a single dashboard with unified analytics.' },
-  { icon: UserCog, title: 'Staff Management', desc: 'Track security, cooking, cleaning staff with salary and attendance.' },
-  { icon: Cookie, title: 'Food System', desc: 'Daily menu setup, meal ordering, food cost tracking per resident.' },
-  { icon: Receipt, title: 'Billing', desc: 'Auto-generate monthly bills with rent, food, parking breakdowns.' },
-  { icon: CreditCard, title: 'Payments', desc: 'Cash, Bank, JazzCash, EasyPaisa -- track every payment with receipts.' },
+  { icon: UserCog, title: 'Staff Management', desc: 'Track security, cooking, cleaning staff with salary, attendance & portal login.' },
+  { icon: Cookie, title: 'Food System', desc: 'Daily menu, meal ordering with countdown timers, per-hostel custom ordering hours.' },
+  { icon: Receipt, title: 'Smart Billing', desc: 'Monthly, weekly, daily & per-night billing with auto-recalculate and pro-rating.' },
+  { icon: CreditCard, title: 'Payments', desc: 'Cash, Bank, JazzCash, EasyPaisa -- proof upload, duplicate blocking, reversal.' },
+  { icon: CalendarCheck, title: 'Checkout Settlement', desc: 'Hotel-style checkout with full financial breakdown, deposit refund & damage deductions.' },
+  { icon: LogOut, title: 'Leave Notices', desc: 'Residents submit departure notices, managers acknowledge & auto-checkout on completion.' },
   { icon: ClipboardList, title: 'Visitor Log', desc: 'Record visitors with check-in/out times, purpose, and photos.' },
   { icon: AlertCircle, title: 'Complaints', desc: 'Residents file complaints, managers resolve and track status.' },
   { icon: Ticket, title: 'Gate Pass', desc: 'Digital gate passes for move-out, luggage, or late-night entry.' },
   { icon: FileText, title: 'Reports', desc: 'Occupancy, revenue, expenses -- export to PDF and Excel.' },
-  { icon: UserCircle, title: 'Resident Portal', desc: 'Residents view bills, order food, file complaints from their phone.' },
+  { icon: UserCircle, title: 'Resident Portal', desc: 'View bills, order food, pay online, file complaints, chat with management.' },
+  { icon: Clock, title: 'Custom Meal Times', desc: 'Each hostel sets their own breakfast, lunch, dinner & snack ordering hours.' },
+  { icon: Import, title: 'Import / Export', desc: 'Bulk import residents, rooms, food menu from Excel. Export everything to spreadsheets.' },
   { icon: Moon, title: 'Dark Mode', desc: 'Full dark theme support for comfortable night-time management.' },
 ];
 
@@ -179,7 +187,7 @@ const pricingPlans = [
     price: 'Free',
     period: '14 days',
     desc: 'Try HostelHub risk-free. No credit card required.',
-    features: ['1 Hostel', '5 Residents', '10 Rooms', '2 Staff', 'Basic Billing', 'Food Menu', 'Complaints'],
+    features: ['1 Hostel', '5 Residents', '10 Rooms', '2 Staff', 'Basic Billing', 'Food Menu', 'Complaints', 'Leave Notices'],
     popular: false,
   },
   {
@@ -187,7 +195,7 @@ const pricingPlans = [
     price: 'PKR 2,000',
     period: '/month',
     desc: 'Perfect for small hostels getting started.',
-    features: ['1 Hostel', '50 Residents', '30 Rooms', '5 Staff', 'Billing & Payments', 'Food Orders', 'Gate Pass & Notices', 'Expenses & Reports'],
+    features: ['1 Hostel', '50 Residents', '30 Rooms', '5 Staff', 'Smart Billing', 'Food Orders', 'Gate Pass & Notices', 'Checkout Settlements', 'Custom Meal Times'],
     popular: false,
   },
   {
@@ -195,7 +203,7 @@ const pricingPlans = [
     price: 'PKR 5,000',
     period: '/month',
     desc: 'For growing hostels that need everything.',
-    features: ['3 Hostels', '200 Residents', '100 Rooms', '20 Staff', 'Everything in Starter', 'Multi-Hostel Management', 'Managers & Analytics', 'In-App Messaging', 'Visitor Tracking'],
+    features: ['3 Hostels', '200 Residents', '100 Rooms', '20 Staff', 'Everything in Starter', 'Multi-Hostel Management', 'Managers & Analytics', 'In-App Messaging', 'Leave Notices & Settlements', 'Excel Import/Export'],
     popular: true,
   },
   {
@@ -203,7 +211,7 @@ const pricingPlans = [
     price: 'PKR 10,000',
     period: '/month',
     desc: 'For hostel chains and large operations.',
-    features: ['Unlimited Hostels', 'Unlimited Residents', 'Unlimited Rooms', 'Unlimited Staff', 'Everything in Pro', 'API Access', 'Custom Branding', 'Priority Support 24/7'],
+    features: ['Unlimited Hostels', 'Unlimited Residents', 'Unlimited Rooms', 'Unlimited Staff', 'Everything in Pro', 'Per-Night & Daily Billing', 'Email Notifications', 'Priority Support 24/7'],
     popular: false,
   },
 ];
@@ -409,7 +417,7 @@ export default function LandingPage() {
                         <div className="w-4 h-4 rounded bg-white/20" />
                         Dashboard
                       </div>
-                      {['Rooms', 'Residents', 'Billing', 'Food', 'Staff', 'Reports'].map((item) => (
+                      {['Rooms', 'Residents', 'Billing', 'Food', 'Staff', 'Settlements', 'Reports'].map((item) => (
                         <div key={item} className="flex items-center gap-2 px-2 py-1.5 text-indigo-300/60 text-xs">
                           <div className="w-4 h-4 rounded bg-white/5" />
                           {item}
