@@ -277,8 +277,11 @@ export async function POST(
       }
       // NO_MESS = 0 fixed fee, only app orders charged
 
-      const totalAmount = roomRent + foodCharges + fixedFoodFee + parkingFee +
-        meterCharges + previousBalance - advanceDeduction;
+      const grossAmount = roomRent + foodCharges + fixedFoodFee + parkingFee +
+        meterCharges + previousBalance;
+      // Only deduct advance up to the gross amount (don't over-deduct)
+      const actualDeduction = Math.min(advanceDeduction, grossAmount);
+      const totalAmount = grossAmount - actualDeduction;
 
       billsToCreate.push({
         residentId: resident.id,
@@ -296,7 +299,7 @@ export async function POST(
         meterCharges,
         parkingFee,
         previousBalance,
-        advanceDeduction,
+        advanceDeduction: actualDeduction,
         totalAmount: Math.max(0, totalAmount),
         paidAmount: 0,
         balance: Math.max(0, totalAmount),

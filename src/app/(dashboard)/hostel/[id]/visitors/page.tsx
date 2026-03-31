@@ -223,21 +223,32 @@ export default function VisitorsPage() {
               <input
                 type="text"
                 value={form.cnic}
-                onChange={(e) => setForm((prev) => ({ ...prev, cnic: e.target.value }))}
+                onChange={(e) => {
+                  let val = e.target.value.replace(/\D/g, '').slice(0, 13);
+                  if (val.length > 5) val = val.slice(0, 5) + '-' + val.slice(5);
+                  if (val.length > 13) val = val.slice(0, 13) + '-' + val.slice(13);
+                  setForm((prev) => ({ ...prev, cnic: val }));
+                }}
                 className="input"
                 required
-                placeholder="XXXXX-XXXXXXX-X"
+                placeholder="35202-1234567-1"
+                maxLength={15}
               />
+              <p className="text-[10px] text-text-muted mt-1">13-digit CNIC number</p>
             </div>
             <div>
               <label className="label">Phone *</label>
               <input
                 type="text"
                 value={form.phone}
-                onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                  setForm((prev) => ({ ...prev, phone: val }));
+                }}
                 className="input"
                 required
-                placeholder="03XXXXXXXXX" maxLength={11}
+                placeholder="03001234567"
+                maxLength={11}
               />
             </div>
             <div>

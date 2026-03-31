@@ -65,9 +65,9 @@ export async function POST(request: NextRequest) {
     const leave = new Date(leaveDate);
     const ret = new Date(returnDate);
 
-    if (ret <= leave) {
+    if (ret < leave) {
       return NextResponse.json(
-        { error: 'Return date must be after leave date' },
+        { error: 'Return date cannot be before leave date' },
         { status: 400 }
       );
     }

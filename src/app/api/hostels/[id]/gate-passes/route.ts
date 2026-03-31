@@ -95,7 +95,7 @@ export async function PATCH(
 
     switch (action) {
       case 'APPROVE':
-        updateData = { status: 'APPROVED', approvedAt: new Date() };
+        updateData = { status: 'APPROVED', approvedById: session.user.id };
         break;
       case 'REJECT':
         updateData = { status: 'REJECTED' };

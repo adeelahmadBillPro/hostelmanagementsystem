@@ -87,8 +87,11 @@ export async function generateBillForResident(
   const dueDate = new Date();
   dueDate.setDate(dueDate.getDate() + dueDays);
 
-  const totalAmount = roomRent + foodCharges + fixedFoodFee + parkingFee +
-    meterCharges + previousBalance - advanceDeduction;
+  const grossAmount = roomRent + foodCharges + fixedFoodFee + parkingFee +
+    meterCharges + previousBalance;
+  // Only deduct advance up to the gross amount (unused advance carries to next month)
+  const actualDeduction = Math.min(advanceDeduction, grossAmount);
+  const totalAmount = grossAmount - actualDeduction;
   const balance = Math.max(0, totalAmount);
 
   const bill = await tx.monthlyBill.create({
@@ -105,7 +108,7 @@ export async function generateBillForResident(
       meterCharges,
       parkingFee,
       previousBalance,
-      advanceDeduction,
+      advanceDeduction: actualDeduction,
       totalAmount: balance,
       paidAmount: 0,
       balance,

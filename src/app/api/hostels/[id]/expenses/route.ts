@@ -94,6 +94,7 @@ export async function POST(
     const body = await request.json();
     const parsed = expenseSchema.safeParse({
       ...body,
+      categoryId: body.categoryId || body.category,
       amount: Number(body.amount) || 0,
     });
     if (!parsed.success) {

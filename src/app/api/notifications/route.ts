@@ -156,6 +156,25 @@ export async function GET() {
             icon: "notice",
           });
         }
+
+        // Leave notice updates (acknowledged or completed)
+        const leaveUpdates = await prisma.leaveNotice.count({
+          where: {
+            userId: userId,
+            status: { in: ["ACKNOWLEDGED", "COMPLETED"] },
+            updatedAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+          },
+        });
+        if (leaveUpdates > 0) {
+          notifications.push({
+            type: "leave",
+            text: `Leave notice ${leaveUpdates === 1 ? "has been" : "updates"} acknowledged`,
+            link: "/portal/leave-notice",
+            count: leaveUpdates,
+            icon: "leave",
+          });
+        }
+
       }
     } else if (
       role === "HOSTEL_MANAGER" ||
@@ -175,6 +194,16 @@ export async function GET() {
       });
       const additionalIds = managerHostels.map((mh) => mh.hostelId);
       hostelIds = [...new Set([...hostelIds, ...additionalIds])];
+
+      // For TENANT_ADMIN: get all hostels owned by tenant
+      if (role === "TENANT_ADMIN" && user.tenantId) {
+        const tenantHostels = await prisma.hostel.findMany({
+          where: { tenantId: user.tenantId },
+          select: { id: true },
+        });
+        const tenantHostelIds = tenantHostels.map((h) => h.id);
+        hostelIds = [...new Set([...hostelIds, ...tenantHostelIds])];
+      }
 
       if (hostelIds.length > 0) {
         const primaryHostelId = hostelIds[0];
@@ -284,6 +313,40 @@ export async function GET() {
             icon: "gatepass",
           });
         }
+
+        // Pending leave notices
+        const pendingLeaves = await prisma.leaveNotice.count({
+          where: {
+            hostelId: { in: hostelIds },
+            status: "PENDING",
+          },
+        });
+        if (pendingLeaves > 0) {
+          notifications.push({
+            type: "leave",
+            text: `${pendingLeaves} leave notice${pendingLeaves > 1 ? "s" : ""} pending`,
+            link: `/hostel/${primaryHostelId}/leave-notices`,
+            count: pendingLeaves,
+            icon: "leave",
+          });
+        }
+
+        // Active visitors (checked in, not checked out yet)
+        const activeVisitors = await prisma.visitor.count({
+          where: {
+            hostelId: { in: hostelIds },
+            timeOut: null,
+          },
+        });
+        if (activeVisitors > 0) {
+          notifications.push({
+            type: "visitor",
+            text: `${activeVisitors} visitor${activeVisitors > 1 ? "s" : ""} currently in hostel`,
+            link: `/hostel/${primaryHostelId}/visitors`,
+            count: activeVisitors,
+            icon: "visitor",
+          });
+        }
       }
     } else if (role === "SUPER_ADMIN") {
       // New tenants (last 7 days)
@@ -301,7 +364,24 @@ export async function GET() {
           icon: "tenant",
         });
       }
+
+      // Pending plan upgrade requests
+      const pendingUpgrades = await prisma.planUpgradeRequest.count({
+        where: { status: "PENDING" },
+      });
+      if (pendingUpgrades > 0) {
+        notifications.push({
+          type: "upgrade",
+          text: `${pendingUpgrades} plan upgrade request${pendingUpgrades > 1 ? "s" : ""}`,
+          link: "/super-admin/plans",
+          count: pendingUpgrades,
+          icon: "upgrade",
+        });
+      }
     }
+
+    // Sort: highest count first (most urgent on top)
+    notifications.sort((a, b) => b.count - a.count);
 
     const totalUnread = notifications.reduce((s, n) => s + n.count, 0);
 
