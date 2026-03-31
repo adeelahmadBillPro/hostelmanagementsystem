@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import { rateLimit } from "@/lib/rate-limit";
 import { staffSchema } from "@/lib/validations";
+import bcrypt from "bcryptjs";
+import { randomBytes } from "crypto";
 
 export async function GET(
   request: NextRequest,
@@ -62,7 +64,7 @@ export async function POST(
       salary,
       joiningDate,
     } = parsed.data;
-    const { emergencyContact, emergencyPhone, freeAccommodation, roomNumber, freeFood, foodAllowance } = parsed.data;
+    // Fields extracted below with email
 
     // Validate CNIC - reject dummy/repeated digits
     if (cnic) {
@@ -88,12 +90,15 @@ export async function POST(
       return NextResponse.json({ error: "Please enter a valid phone number" }, { status: 400 });
     }
 
+    const { email: staffEmail, emergencyContact, emergencyPhone, freeAccommodation, roomNumber, freeFood, foodAllowance } = parsed.data as any;
+
     const staff = await prisma.staff.create({
       data: {
         hostelId,
         name,
         cnic,
         phone,
+        email: staffEmail || null,
         address,
         staffType,
         shift,
@@ -109,7 +114,29 @@ export async function POST(
       },
     });
 
-    return NextResponse.json({ staff }, { status: 201 });
+    // Create a User account so staff can log into the portal
+    let credentials = null;
+    if (staffEmail) {
+      const existingUser = await prisma.user.findUnique({ where: { email: staffEmail } });
+      if (!existingUser) {
+        const defaultPassword = randomBytes(4).toString("hex");
+        const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+        await prisma.user.create({
+          data: {
+            name,
+            email: staffEmail,
+            phone: phone || null,
+            cnic: cnic || null,
+            password: hashedPassword,
+            role: "STAFF",
+            hostelId,
+          },
+        });
+        credentials = { email: staffEmail, password: defaultPassword };
+      }
+    }
+
+    return NextResponse.json({ staff, credentials }, { status: 201 });
   } catch (error) {
     console.error('Failed to create staff:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

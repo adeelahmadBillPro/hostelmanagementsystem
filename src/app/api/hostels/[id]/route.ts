@@ -113,6 +113,21 @@ export async function PATCH(
     if (body.fixedFoodCharge !== undefined) updateData.fixedFoodCharge = parseFloat(body.fixedFoodCharge) || 0;
     if (body.billingDueDays !== undefined) updateData.billingDueDays = parseInt(body.billingDueDays) || 7;
     if (body.lateFeePercent !== undefined) updateData.lateFeePercent = parseFloat(body.lateFeePercent) || 0;
+
+    // Meal ordering time windows (0-23 hour values)
+    const mealFields = [
+      "breakfastStart", "breakfastEnd", "lunchStart", "lunchEnd",
+      "dinnerStart", "dinnerEnd", "snackStart", "snackEnd",
+    ];
+    for (const field of mealFields) {
+      if (body[field] !== undefined) {
+        const val = parseInt(body[field]);
+        if (!isNaN(val) && val >= 0 && val <= 23) {
+          (updateData as any)[field] = val;
+        }
+      }
+    }
+
     if (status !== undefined) {
       if (!["ACTIVE", "INACTIVE"].includes(status)) {
         return NextResponse.json(

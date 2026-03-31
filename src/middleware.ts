@@ -54,5 +54,9 @@ export const config = {
     "/managers/:path*",
     "/hostel/:path*",
     "/portal/:path*",
+    "/profile",
+    "/profile/:path*",
+    "/settings",
+    "/settings/:path*",
   ],
 };

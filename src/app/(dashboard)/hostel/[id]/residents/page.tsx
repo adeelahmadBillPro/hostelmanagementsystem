@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import StatCard from "@/components/ui/stat-card";
 import DataTable from "@/components/ui/data-table";
-import ConfirmDialog from "@/components/ui/confirm-dialog";
+import CheckoutModal from "@/components/ui/checkout-modal";
 import { formatCurrency, formatCNIC, formatDate, getInitials } from "@/lib/utils";
 import Modal from "@/components/ui/modal";
 import {
@@ -129,11 +129,19 @@ export default function ResidentsPage() {
   };
 
   const copyText = (text: string, field: string) => {
-    navigator.clipboard.writeText(text);
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
     setCopied(field);
     setTimeout(() => setCopied(""), 2000);
   };
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const fetchResidents = useCallback(async () => {
     try {
@@ -159,28 +167,6 @@ export default function ResidentsPage() {
   useEffect(() => {
     fetchResidents();
   }, [fetchResidents]);
-
-  const handleCheckout = async () => {
-    if (!checkoutResident) return;
-    try {
-      setCheckoutLoading(true);
-      const res = await fetch(
-        `/api/hostels/${hostelId}/residents/${checkoutResident.id}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "checkout" }),
-        }
-      );
-      if (!res.ok) throw new Error("Failed to checkout");
-      setCheckoutResident(null);
-      fetchResidents();
-    } catch (error) {
-      console.error("Checkout error:", error);
-    } finally {
-      setCheckoutLoading(false);
-    }
-  };
 
   const tabs = [
     { key: "ALL" as const, label: "All", count: stats.totalResidents },
@@ -464,16 +450,14 @@ export default function ResidentsPage() {
         )}
       </div>
 
-      {/* Checkout Confirm Dialog */}
-      <ConfirmDialog
+      {/* Checkout Settlement Modal */}
+      <CheckoutModal
         isOpen={!!checkoutResident}
         onClose={() => setCheckoutResident(null)}
-        onConfirm={handleCheckout}
-        title="Checkout Resident"
-        message={`Are you sure you want to checkout ${checkoutResident?.user.name}? This will mark the resident as checked out, set the move-out date to today, and make their bed available.`}
-        confirmText="Checkout"
-        confirmVariant="danger"
-        loading={checkoutLoading}
+        hostelId={hostelId}
+        residentId={checkoutResident?.id || ""}
+        residentName={checkoutResident?.user.name || ""}
+        onCheckoutComplete={fetchResidents}
       />
 
       {/* Reset Password Credentials Modal */}

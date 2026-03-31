@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { copyToClipboard } from "@/lib/clipboard";
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import DataTable from "@/components/ui/data-table";
 import Modal from "@/components/ui/modal";
@@ -128,6 +129,43 @@ export default function ManagersPage() {
     setFormError("");
     setActionLoading(true);
 
+    // —— Front-end validation ————————————————————————————————————————————
+    if (!formData.name.trim() || formData.name.trim().length < 2) {
+      setFormError("Name must be at least 2 characters");
+      setActionLoading(false);
+      return;
+    }
+    if (!editingManager) {
+      if (!formData.email.trim()) {
+        setFormError("Email is required");
+        setActionLoading(false);
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+        setFormError("Please enter a valid email address");
+        setActionLoading(false);
+        return;
+      }
+    }
+    if (formData.phone) {
+      const cleanPhone = formData.phone.replace(/\D/g, "");
+      if (cleanPhone.length > 0 && (cleanPhone.length !== 11 || !cleanPhone.startsWith("03"))) {
+        setFormError("Phone must be 11 digits starting with 03 (e.g. 03001234567)");
+        setActionLoading(false);
+        return;
+      }
+    }
+    if (!editingManager && !formData.password) {
+      setFormError("Password is required for new managers");
+      setActionLoading(false);
+      return;
+    }
+    if (!editingManager && formData.password && formData.password.length < 8) {
+      setFormError("Password must be at least 8 characters");
+      setActionLoading(false);
+      return;
+    }
+
     try {
       if (editingManager) {
         // Update manager
@@ -148,11 +186,6 @@ export default function ManagersPage() {
         }
       } else {
         // Create manager
-        if (!formData.password) {
-          setFormError("Password is required for new managers");
-          return;
-        }
-
         const res = await fetch("/api/managers", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -508,7 +541,7 @@ export default function ManagersPage() {
                   <p className="text-[10px] text-text-muted font-semibold uppercase tracking-wider">Email</p>
                   <p className="text-sm font-medium text-text-primary dark:text-white">{createdCreds.email}</p>
                 </div>
-                <button onClick={() => { navigator.clipboard.writeText(createdCreds.email); setCopied("email"); setTimeout(() => setCopied(""), 2000); }} className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800">
+                <button onClick={() => { copyToClipboard(createdCreds.email); setCopied("email"); setTimeout(() => setCopied(""), 2000); }} className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800">
                   {copied === "email" ? <Check size={15} className="text-emerald-500" /> : <Copy size={15} className="text-text-muted" />}
                 </button>
               </div>
@@ -517,7 +550,7 @@ export default function ManagersPage() {
                   <p className="text-[10px] text-text-muted font-semibold uppercase tracking-wider">Password</p>
                   <p className="text-sm font-mono font-bold text-primary">{createdCreds.password}</p>
                 </div>
-                <button onClick={() => { navigator.clipboard.writeText(createdCreds.password); setCopied("pass"); setTimeout(() => setCopied(""), 2000); }} className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800">
+                <button onClick={() => { copyToClipboard(createdCreds.password); setCopied("pass"); setTimeout(() => setCopied(""), 2000); }} className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800">
                   {copied === "pass" ? <Check size={15} className="text-emerald-500" /> : <Copy size={15} className="text-text-muted" />}
                 </button>
               </div>
@@ -530,7 +563,7 @@ export default function ManagersPage() {
                 }}
                 className="btn-success flex-1"
               >WhatsApp</button>
-              <button onClick={() => { navigator.clipboard.writeText(`Email: ${createdCreds.email}\nPassword: ${createdCreds.password}`); setCopied("all"); setTimeout(() => setCopied(""), 2000); }} className="btn-secondary flex-1">
+              <button onClick={() => { copyToClipboard(`Email: ${createdCreds.email}\nPassword: ${createdCreds.password}`); setCopied("all"); setTimeout(() => setCopied(""), 2000); }} className="btn-secondary flex-1">
                 {copied === "all" ? "Copied!" : "Copy All"}
               </button>
               <button onClick={() => setCreatedCreds(null)} className="btn-primary flex-1">Done</button>

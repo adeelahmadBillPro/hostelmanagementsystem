@@ -92,6 +92,7 @@ export default function AddResidentPage() {
   const [foodPlan, setFoodPlan] = useState("FULL_MESS");
   const [customFoodFee, setCustomFoodFee] = useState("");
   const [residentType, setResidentType] = useState("SELF_PAYING");
+  const [billingType, setBillingType] = useState("MONTHLY");
   const [freeRoom, setFreeRoom] = useState(false);
   const [rentOverride, setRentOverride] = useState("");
   const [sponsorName, setSponsorName] = useState("");
@@ -289,6 +290,7 @@ export default function AddResidentPage() {
           foodPlan,
           customFoodFee: parseFloat(customFoodFee) || 0,
           residentType,
+          billingType,
           freeRoom,
           rentOverride: rentOverride ? parseFloat(rentOverride) : null,
           sponsorName: sponsorName.trim() || null,
@@ -315,8 +317,17 @@ export default function AddResidentPage() {
     }
   };
 
-  const copyToClipboard = (text: string, field: string) => {
-    navigator.clipboard.writeText(text);
+  const copyToClip = (text: string, field: string) => {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
     setCopied(field);
     setTimeout(() => setCopied(""), 2000);
   };
@@ -349,7 +360,7 @@ export default function AddResidentPage() {
                     <p className="text-sm font-semibold text-text-primary dark:text-white">{createdCredentials.email}</p>
                   </div>
                   <button
-                    onClick={() => copyToClipboard(createdCredentials.email, "email")}
+                    onClick={() => copyToClip(createdCredentials.email, "email")}
                     className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   >
                     {copied === "email" ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} className="text-text-muted" />}
@@ -361,7 +372,7 @@ export default function AddResidentPage() {
                     <p className="text-sm font-mono font-bold text-primary">{createdCredentials.password}</p>
                   </div>
                   <button
-                    onClick={() => copyToClipboard(createdCredentials.password, "password")}
+                    onClick={() => copyToClip(createdCredentials.password, "password")}
                     className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   >
                     {copied === "password" ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} className="text-text-muted" />}
@@ -397,7 +408,7 @@ export default function AddResidentPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => {
-                    copyToClipboard(
+                    copyToClip(
                       `HostelHub Login\nURL: ${window.location.origin}/login\nEmail: ${createdCredentials.email}\nPassword: ${createdCredentials.password}`,
                       "all"
                     );
@@ -834,7 +845,39 @@ export default function AddResidentPage() {
             </div>
           </div>
 
-          {/* Food Plan */}
+          {/* Billing Type */}
+          <div className="mt-4">
+            <label className="label">Billing Type</label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                { value: "MONTHLY", label: "Monthly", desc: "Long-term" },
+                { value: "WEEKLY", label: "Weekly", desc: "Medium-term" },
+                { value: "DAILY", label: "Daily", desc: "Short-stay" },
+                { value: "PER_NIGHT", label: "Per Night", desc: "Guest" },
+              ].map((bt) => (
+                <button
+                  key={bt.value}
+                  type="button"
+                  onClick={() => setBillingType(bt.value)}
+                  className={`p-3 rounded-xl border-2 text-center transition-all ${
+                    billingType === bt.value
+                      ? "border-primary bg-primary/5 dark:bg-primary/10"
+                      : "border-border dark:border-[#1E2D42] hover:border-primary/40"
+                  }`}
+                >
+                  <p className={`text-sm font-semibold ${billingType === bt.value ? "text-primary" : "text-text-primary dark:text-white"}`}>{bt.label}</p>
+                  <p className="text-[10px] text-text-muted">{bt.desc}</p>
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] text-text-muted mt-1">
+              {billingType === "MONTHLY" && "Standard monthly billing cycle with pro-rated checkout"}
+              {billingType === "WEEKLY" && "Weekly billing — rent charged every 7 days"}
+              {billingType === "DAILY" && "Daily rate — all charges calculated at checkout"}
+              {billingType === "PER_NIGHT" && "Hotel-style per-night rate — pay at checkout"}
+            </p>
+          </div>
+
           {/* Resident Type & Rent */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
             <div>

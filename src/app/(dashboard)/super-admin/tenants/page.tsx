@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { copyToClipboard } from "@/lib/clipboard";
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import DataTable from "@/components/ui/data-table";
 import Modal from "@/components/ui/modal";
@@ -416,7 +417,7 @@ export default function TenantsPage() {
                   <p className="text-[10px] text-text-muted font-semibold uppercase tracking-wider">Email</p>
                   <p className="text-sm font-medium text-text-primary dark:text-white">{createdCreds.email}</p>
                 </div>
-                <button onClick={() => { navigator.clipboard.writeText(createdCreds.email); setCopied("email"); setTimeout(() => setCopied(""), 2000); }} className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-colors">
+                <button onClick={() => { copyToClipboard(createdCreds.email); setCopied("email"); setTimeout(() => setCopied(""), 2000); }} className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-colors">
                   {copied === "email" ? <Check size={15} className="text-emerald-500" /> : <Copy size={15} className="text-text-muted" />}
                 </button>
               </div>
@@ -425,7 +426,7 @@ export default function TenantsPage() {
                   <p className="text-[10px] text-text-muted font-semibold uppercase tracking-wider">Password</p>
                   <p className="text-sm font-mono font-bold text-primary">{createdCreds.password}</p>
                 </div>
-                <button onClick={() => { navigator.clipboard.writeText(createdCreds.password); setCopied("pass"); setTimeout(() => setCopied(""), 2000); }} className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-colors">
+                <button onClick={() => { copyToClipboard(createdCreds.password); setCopied("pass"); setTimeout(() => setCopied(""), 2000); }} className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-800 transition-colors">
                   {copied === "pass" ? <Check size={15} className="text-emerald-500" /> : <Copy size={15} className="text-text-muted" />}
                 </button>
               </div>
@@ -441,7 +442,7 @@ export default function TenantsPage() {
                 WhatsApp
               </button>
               <button
-                onClick={() => { navigator.clipboard.writeText(`Email: ${createdCreds.email}\nPassword: ${createdCreds.password}`); setCopied("all"); setTimeout(() => setCopied(""), 2000); }}
+                onClick={() => { copyToClipboard(`Email: ${createdCreds.email}\nPassword: ${createdCreds.password}`); setCopied("all"); setTimeout(() => setCopied(""), 2000); }}
                 className="btn-secondary flex-1"
               >
                 {copied === "all" ? "Copied!" : "Copy All"}

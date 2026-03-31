@@ -24,6 +24,7 @@ export async function GET(
     const floorId = searchParams.get("floorId");
     const type = searchParams.get("type");
     const status = searchParams.get("status");
+    const includeMeterReadings = searchParams.get("include") === "meterReadings";
 
     const where: Prisma.RoomWhereInput = {
       floor: {
@@ -53,6 +54,12 @@ export async function GET(
             building: { select: { id: true, name: true } },
           },
         },
+        ...(includeMeterReadings && {
+          meterReadings: {
+            orderBy: { readingDate: "desc" as const },
+            take: 1,
+          },
+        }),
       },
       orderBy: [
         { floor: { building: { name: "asc" } } },
@@ -109,6 +116,7 @@ export async function GET(
         occupiedBeds: occupied,
         vacantBeds: vacant,
         occupancyStatus,
+        meterReadings: includeMeterReadings ? ((room as any).meterReadings || []) : undefined,
       };
     });
 
@@ -182,6 +190,7 @@ export async function POST(
     }
 
     const { floorId, roomNumber, type, totalBeds, rentPerBed, rentPerRoom } = parsed.data;
+    const { dailyRate, nightlyRate, weeklyRate } = body;
 
     // Verify floor belongs to this hostel
     const floor = await prisma.floor.findFirst({
@@ -212,6 +221,9 @@ export async function POST(
         totalBeds,
         rentPerBed,
         rentPerRoom: rentPerRoom ?? null,
+        dailyRate: dailyRate ? parseFloat(dailyRate) : null,
+        nightlyRate: nightlyRate ? parseFloat(nightlyRate) : null,
+        weeklyRate: weeklyRate ? parseFloat(weeklyRate) : null,
         floorId,
       },
     });

@@ -5,7 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import StatCard from "@/components/ui/stat-card";
 import Modal from "@/components/ui/modal";
-import ConfirmDialog from "@/components/ui/confirm-dialog";
+import CheckoutModal from "@/components/ui/checkout-modal";
 import {
   formatCurrency,
   formatCNIC,
@@ -182,7 +182,6 @@ export default function ResidentProfilePage() {
   >("payments");
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
 
@@ -289,24 +288,8 @@ export default function ResidentProfilePage() {
   };
 
   const handleCheckout = async () => {
-    try {
-      setCheckoutLoading(true);
-      const res = await fetch(
-        `/api/hostels/${hostelId}/residents/${residentId}`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "checkout" }),
-        }
-      );
-      if (!res.ok) throw new Error("Failed to checkout");
-      setShowCheckoutDialog(false);
-      fetchResident();
-    } catch (error) {
-      console.error("Checkout error:", error);
-    } finally {
-      setCheckoutLoading(false);
-    }
+    // Checkout is now handled by CheckoutModal with full settlement
+    setShowCheckoutDialog(true);
   };
 
   if (loading) {
@@ -1205,16 +1188,14 @@ export default function ResidentProfilePage() {
         </div>
       </Modal>
 
-      {/* Checkout Confirm Dialog */}
-      <ConfirmDialog
+      {/* Checkout Settlement Modal */}
+      <CheckoutModal
         isOpen={showCheckoutDialog}
         onClose={() => setShowCheckoutDialog(false)}
-        onConfirm={handleCheckout}
-        title="Checkout Resident"
-        message={`Are you sure you want to checkout ${resident.user.name}? This will mark the resident as checked out, set the move-out date to today, and make their bed available.`}
-        confirmText="Checkout"
-        confirmVariant="danger"
-        loading={checkoutLoading}
+        hostelId={hostelId}
+        residentId={residentId}
+        residentName={resident.user.name}
+        onCheckoutComplete={fetchResident}
       />
       </div>
     </DashboardLayout>

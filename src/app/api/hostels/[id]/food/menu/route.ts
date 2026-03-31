@@ -46,12 +46,14 @@ export async function GET(
         ? Math.round(menuItems.reduce((sum, m) => sum + m.rate, 0) / totalItems)
         : 0;
 
-    // Ordering time windows
+    // Ordering time windows (from hostel settings)
+    const fmtHr = (h: number) => h === 0 || h === 24 ? "12 AM" : h === 12 ? "12 PM" : h < 12 ? `${h} AM` : `${h - 12} PM`;
+    const h = hostel as any;
     const orderingWindows = {
-      BREAKFAST: { start: "6 AM", end: "9 AM" },
-      LUNCH: { start: "11 AM", end: "2 PM" },
-      DINNER: { start: "6 PM", end: "9 PM" },
-      SNACK: { start: "10 AM", end: "10 PM" },
+      BREAKFAST: { start: fmtHr(h.breakfastStart ?? 6), end: fmtHr(h.breakfastEnd ?? 9) },
+      LUNCH:     { start: fmtHr(h.lunchStart ?? 11),    end: fmtHr(h.lunchEnd ?? 14) },
+      DINNER:    { start: fmtHr(h.dinnerStart ?? 18),   end: fmtHr(h.dinnerEnd ?? 21) },
+      SNACK:     { start: fmtHr(h.snackStart ?? 10),    end: fmtHr(h.snackEnd ?? 22) },
     };
 
     return NextResponse.json({

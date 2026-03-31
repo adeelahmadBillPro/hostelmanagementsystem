@@ -5,15 +5,52 @@ import { getSession } from '@/lib/session';
 export async function GET() {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== 'RESIDENT') {
+    if (!session || (session.user.role !== 'RESIDENT' && session.user.role !== 'STAFF')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // ——— STAFF PORTAL DASHBOARD ——————————————————————————————————————————
+    if (session.user.role === 'STAFF') {
+      const hostelId = session.user.hostelId;
+      if (!hostelId) {
+        return NextResponse.json({ error: 'Staff not assigned to a hostel' }, { status: 404 });
+      }
+
+      const hostel = await prisma.hostel.findUnique({
+        where: { id: hostelId },
+        select: { id: true, name: true, address: true, contact: true },
+      });
+
+      const recentNotices = await prisma.notice.findMany({
+        where: { hostelId },
+        include: { createdBy: { select: { name: true } } },
+        orderBy: { createdAt: 'desc' },
+        take: 3,
+      });
+
+      return NextResponse.json({
+        role: 'STAFF',
+        staff: {
+          name: session.user.name || 'Staff',
+          hostelName: hostel?.name || 'N/A',
+        },
+        hostel,
+        recentNotices: recentNotices.map((n: any) => ({
+          id: n.id,
+          title: n.title,
+          content: n.content,
+          createdAt: n.createdAt.toISOString(),
+        })),
+      });
+    }
+
+    // ——— RESIDENT PORTAL DASHBOARD ———————————————————————————————————————
     const resident = await prisma.resident.findUnique({
       where: { userId: session.user.id },
       include: {
         user: { select: { name: true } },
         hostel: true,
+        room: { select: { roomNumber: true, rentPerBed: true, type: true } },
         bed: {
           include: {
             room: { select: { roomNumber: true } },
@@ -75,16 +112,18 @@ export async function GET() {
       createdAt: n.createdAt.toISOString(),
     }));
 
-    // Get room rent
-    const room = resident.bed?.room ? await prisma.room.findUnique({
-      where: { id: (resident as any).roomId },
+    // Get room rent - safely handle missing bed/room
+    const roomId = (resident as any).roomId;
+    const room = roomId ? await prisma.room.findUnique({
+      where: { id: roomId },
       select: { rentPerBed: true, type: true },
     }) : null;
 
     return NextResponse.json({
+      role: 'RESIDENT',
       resident: {
         name: (resident as any).user?.name || 'Unknown',
-        roomNumber: resident.bed?.room?.roomNumber || 'N/A',
+        roomNumber: resident.bed?.room?.roomNumber || (resident as any).room?.roomNumber || 'N/A',
         bedNumber: resident.bed?.bedNumber || 'N/A',
         hostelName: resident.hostel?.name || 'N/A',
       },
@@ -93,8 +132,8 @@ export async function GET() {
         moveOutDate: (resident as any).moveOutDate?.toISOString() || null,
         advancePaid: (resident as any).advancePaid || 0,
         securityDeposit: (resident as any).securityDeposit || 0,
-        monthlyRent: room?.rentPerBed || 0,
-        roomType: room?.type || 'N/A',
+        monthlyRent: room?.rentPerBed || (resident as any).room?.rentPerBed || 0,
+        roomType: room?.type || (resident as any).room?.type || 'N/A',
         status: (resident as any).status || 'ACTIVE',
         foodPlan: (resident as any).foodPlan || 'FULL_MESS',
         customFoodFee: (resident as any).customFoodFee || 0,

@@ -188,6 +188,9 @@ export default function RoomsPage() {
     totalBeds: "1",
     rentPerBed: "",
     rentPerRoom: "",
+    dailyRate: "",
+    nightlyRate: "",
+    weeklyRate: "",
   });
 
   const fetchRooms = useCallback(async () => {
@@ -282,6 +285,9 @@ export default function RoomsPage() {
           totalBeds: formData.totalBeds,
           rentPerBed: formData.rentPerBed,
           rentPerRoom: formData.rentPerRoom || null,
+          dailyRate: formData.dailyRate ? parseFloat(formData.dailyRate) : null,
+          nightlyRate: formData.nightlyRate ? parseFloat(formData.nightlyRate) : null,
+          weeklyRate: formData.weeklyRate ? parseFloat(formData.weeklyRate) : null,
         }),
       });
       if (!res.ok) {
@@ -299,6 +305,9 @@ export default function RoomsPage() {
         totalBeds: "1",
         rentPerBed: "",
         rentPerRoom: "",
+        dailyRate: "",
+        nightlyRate: "",
+        weeklyRate: "",
       });
       fetchRooms();
     } catch (error) {
@@ -419,7 +428,7 @@ export default function RoomsPage() {
             <button
               className="btn-primary flex items-center gap-2 whitespace-nowrap !py-2 !text-xs"
               onClick={() => {
-                setFormData({ buildingId: "", floorId: "", roomNumber: "", roomCount: "1", type: "SINGLE", totalBeds: "1", rentPerBed: "", rentPerRoom: "" });
+                setFormData({ buildingId: "", floorId: "", roomNumber: "", roomCount: "1", type: "SINGLE", totalBeds: "1", rentPerBed: "", rentPerRoom: "", dailyRate: "", nightlyRate: "", weeklyRate: "" });
                 setShowAddModal(true);
               }}
             >
@@ -692,7 +701,7 @@ export default function RoomsPage() {
               </select>
             </div>
             <div>
-              <label className="label">Rent per Bed (PKR) *</label>
+              <label className="label">Rent per Bed (PKR/month) *</label>
               <input
                 type="number"
                 className="input"
@@ -703,6 +712,44 @@ export default function RoomsPage() {
               />
             </div>
           </div>
+
+          {/* Optional: Daily/Nightly/Weekly rates */}
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="label text-xs">Daily Rate (PKR)</label>
+              <input
+                type="number"
+                className="input"
+                placeholder="Optional"
+                min="0"
+                value={formData.dailyRate}
+                onChange={(e) => setFormData({ ...formData, dailyRate: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="label text-xs">Nightly Rate (PKR)</label>
+              <input
+                type="number"
+                className="input"
+                placeholder="Optional"
+                min="0"
+                value={formData.nightlyRate}
+                onChange={(e) => setFormData({ ...formData, nightlyRate: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="label text-xs">Weekly Rate (PKR)</label>
+              <input
+                type="number"
+                className="input"
+                placeholder="Optional"
+                min="0"
+                value={formData.weeklyRate}
+                onChange={(e) => setFormData({ ...formData, weeklyRate: e.target.value })}
+              />
+            </div>
+          </div>
+          <p className="text-[10px] text-text-muted -mt-2">Leave blank if only monthly billing. Used for daily/nightly/weekly residents.</p>
 
           {/* Preview */}
           {formData.roomNumber && formData.rentPerBed && (

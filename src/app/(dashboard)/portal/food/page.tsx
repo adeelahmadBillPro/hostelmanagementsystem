@@ -698,27 +698,67 @@ export default function FoodOrderingPage() {
                 </div>
               )}
 
-              {/* Ordering Hours */}
+              {/* Ordering Hours with Timer */}
               {orderingWindows.length > 0 && (
                 <div className="card animate-fade-in-up">
                   <div className="flex items-center gap-2 mb-3">
                     <Clock size={16} className="text-text-muted" />
                     <h3 className="text-sm font-bold text-text-primary dark:text-white">Ordering Hours</h3>
                   </div>
-                  <div className="space-y-1.5">
-                    {orderingWindows.map((w: any) => (
-                      <div key={w.mealType} className="flex items-center justify-between text-xs">
-                        <span className="text-text-muted">{w.mealType.charAt(0) + w.mealType.slice(1).toLowerCase()}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-text-secondary dark:text-slate-400 font-medium">{w.start} - {w.end}</span>
-                          {w.isOpen ? (
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Open now" />
-                          ) : (
-                            <span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600" title="Closed" />
-                          )}
+                  <div className="space-y-2.5">
+                    {orderingWindows.map((w: any) => {
+                      const now = new Date();
+                      const currentHour = now.getHours();
+                      const currentMin = now.getMinutes();
+                      const isOpen = w.isOpen;
+
+                      let timerText = "";
+                      let timerColor = "text-text-muted dark:text-slate-500";
+
+                      if (isOpen) {
+                        // Show time remaining until closing
+                        const minsLeft = (w.endHour - currentHour - 1) * 60 + (60 - currentMin);
+                        if (minsLeft <= 60) {
+                          timerText = `Closes in ${minsLeft}m`;
+                          timerColor = "text-amber-500";
+                        } else {
+                          const hrs = Math.floor(minsLeft / 60);
+                          timerText = `Closes in ${hrs}h ${minsLeft % 60}m`;
+                          timerColor = "text-emerald-500";
+                        }
+                      } else {
+                        // Show when it opens next
+                        let hrsUntil = w.startHour - currentHour;
+                        if (hrsUntil <= 0) hrsUntil += 24; // next day
+                        if (hrsUntil === 1 && currentMin > 0) {
+                          timerText = `Opens in ${60 - currentMin}m`;
+                        } else if (hrsUntil <= 12) {
+                          timerText = `Opens in ${hrsUntil}h`;
+                        } else {
+                          timerText = `Opens at ${w.start}`;
+                        }
+                        timerColor = "text-text-muted dark:text-slate-500";
+                      }
+
+                      return (
+                        <div key={w.mealType} className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            {isOpen ? (
+                              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                            ) : (
+                              <span className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600 shrink-0" />
+                            )}
+                            <span className={isOpen ? "text-text-primary dark:text-white font-semibold" : "text-text-muted"}>
+                              {w.mealType.charAt(0) + w.mealType.slice(1).toLowerCase()}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-text-secondary dark:text-slate-400 font-medium">{w.start} - {w.end}</span>
+                            <span className={`text-[10px] font-semibold ${timerColor}`}>{timerText}</span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}

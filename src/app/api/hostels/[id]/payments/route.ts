@@ -214,3 +214,58 @@ export async function POST(
     );
   }
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
+    }
+
+    const allowedRoles = ["TENANT_ADMIN", "HOSTEL_MANAGER", "SUPER_ADMIN"];
+    if (!allowedRoles.includes(session.user.role)) {
+      return NextResponse.json({ error: "You don't have permission to reverse payments" }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const paymentId = searchParams.get("paymentId");
+    if (!paymentId) {
+      return NextResponse.json({ error: "paymentId query param required" }, { status: 400 });
+    }
+
+    const payment = await prisma.payment.findFirst({
+      where: { id: paymentId, hostelId: params.id },
+      include: { bill: true },
+    });
+
+    if (!payment) {
+      return NextResponse.json({ error: "Payment not found" }, { status: 404 });
+    }
+
+    // Reverse the bill amounts in a transaction
+    await prisma.$transaction(async (tx) => {
+      const bill = payment.bill;
+      const newPaidAmount = Math.max(0, bill.paidAmount - payment.amount);
+      const newBalance = bill.totalAmount - newPaidAmount;
+      let newStatus: "PAID" | "PARTIAL" | "UNPAID" | "OVERDUE" = "UNPAID";
+      if (newBalance <= 0) newStatus = "PAID";
+      else if (newPaidAmount > 0) newStatus = "PARTIAL";
+      else if (bill.dueDate && new Date(bill.dueDate) < new Date()) newStatus = "OVERDUE";
+
+      await tx.monthlyBill.update({
+        where: { id: bill.id },
+        data: { paidAmount: newPaidAmount, balance: Math.max(0, newBalance), status: newStatus },
+      });
+
+      await tx.payment.delete({ where: { id: paymentId } });
+    });
+
+    return NextResponse.json({ message: "Payment reversed and deleted successfully" });
+  } catch (error) {
+    console.error("Delete payment error:", error);
+    return NextResponse.json({ error: "Failed to reverse payment" }, { status: 500 });
+  }
+}

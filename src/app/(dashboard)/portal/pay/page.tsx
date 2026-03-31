@@ -17,6 +17,8 @@ import {
   Send,
   FileText,
   Loader2,
+  AlertTriangle,
+  Image as ImageIcon,
 } from "lucide-react";
 
 interface Bill {
@@ -41,6 +43,14 @@ interface PaymentProof {
   bill: Bill;
 }
 
+interface FormErrors {
+  billId?: string;
+  amount?: string;
+  method?: string;
+  transactionId?: string;
+  proofImageUrl?: string;
+}
+
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
@@ -50,7 +60,7 @@ const METHODS = [
   { value: "CASH", label: "Cash", icon: Banknote, color: "#22C55E" },
   { value: "BANK", label: "Bank Transfer", icon: Building, color: "#3B82F6" },
   { value: "JAZZCASH", label: "JazzCash", icon: Smartphone, color: "#EF4444" },
-  { value: "EASYPAISA", label: "EasyPaisa", icon: CreditCard, color: "#22C55E" },
+  { value: "EASYPAISA", label: "EasyPaisa", icon: CreditCard, color: "#10B981" },
 ];
 
 export default function PayBillPage() {
@@ -60,6 +70,7 @@ export default function PayBillPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
 
   const [selectedBillId, setSelectedBillId] = useState("");
   const [amount, setAmount] = useState("");
@@ -69,6 +80,12 @@ export default function PayBillPage() {
   const [note, setNote] = useState("");
 
   const selectedBill = bills.find((b) => b.id === selectedBillId);
+
+  const pendingForSelected = selectedBillId
+    ? proofs.find(
+        (p) => p.bill.id === selectedBillId && p.status === "PENDING"
+      )
+    : undefined;
 
   useEffect(() => {
     fetchData();
@@ -102,25 +119,54 @@ export default function PayBillPage() {
     }
   };
 
+  const validate = (): boolean => {
+    const newErrors: FormErrors = {};
+
+    if (!selectedBillId) {
+      newErrors.billId = "Please select a bill";
+    }
+
+    const parsedAmount = parseFloat(amount);
+    if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) {
+      newErrors.amount = "Amount must be greater than 0";
+    } else if (selectedBill && parsedAmount > selectedBill.balance) {
+      newErrors.amount = `Amount cannot exceed balance of ${formatCurrency(selectedBill.balance)}`;
+    }
+
+    if (!method) {
+      newErrors.method = "Please select a payment method";
+    }
+
+    if (method && method !== "CASH") {
+      if (!transactionId.trim()) {
+        newErrors.transactionId = "Transaction ID is required for non-cash payments";
+      }
+      if (!proofImageUrl) {
+        newErrors.proofImageUrl = "Payment proof is required for non-cash payments";
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleBillSelect = (billId: string) => {
     setSelectedBillId(billId);
     const bill = bills.find((b) => b.id === billId);
     if (bill) {
       setAmount(bill.balance.toString());
     }
+    setErrors({});
     setSubmitted(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedBillId || !amount || !method) {
-      addToast("Please fill all required fields", "error");
-      return;
-    }
+    if (!validate()) return;
 
-    if (method !== "CASH" && !transactionId) {
-      addToast("Transaction ID is required for non-cash payments", "error");
+    if (pendingForSelected) {
+      addToast("You already have a pending proof for this bill. Please wait for it to be reviewed.", "error");
       return;
     }
 
@@ -135,6 +181,7 @@ export default function PayBillPage() {
           method,
           transactionId: transactionId || undefined,
           proofImageUrl: proofImageUrl || undefined,
+          note: note || undefined,
         }),
       });
 
@@ -147,6 +194,7 @@ export default function PayBillPage() {
         setTransactionId("");
         setProofImageUrl("");
         setNote("");
+        setErrors({});
       } else {
         const err = await res.json();
         addToast(err.error || "Failed to submit payment proof", "error");
@@ -220,6 +268,7 @@ export default function PayBillPage() {
                   setSelectedBillId("");
                   setAmount("");
                   setMethod("");
+                  setErrors({});
                 }}
                 className="btn-primary"
               >
@@ -233,7 +282,7 @@ export default function PayBillPage() {
                 Submit Payment Proof
               </h2>
 
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit} noValidate className="space-y-5">
                 {/* Select Bill */}
                 <div>
                   <label className="label">Select Bill *</label>
@@ -241,7 +290,6 @@ export default function PayBillPage() {
                     value={selectedBillId}
                     onChange={(e) => handleBillSelect(e.target.value)}
                     className="select w-full"
-                    required
                   >
                     <option value="">Choose an unpaid bill...</option>
                     {bills.map((bill) => (
@@ -250,6 +298,9 @@ export default function PayBillPage() {
                       </option>
                     ))}
                   </select>
+                  {errors.billId && (
+                    <p className="text-xs text-red-500 mt-1">{errors.billId}</p>
+                  )}
                 </div>
 
                 {/* Bill Summary */}
@@ -278,6 +329,15 @@ export default function PayBillPage() {
                         </p>
                       </div>
                     </div>
+
+                    {pendingForSelected && (
+                      <div className="mt-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-start gap-2">
+                        <AlertTriangle size={16} className="text-amber-500 mt-0.5 shrink-0" />
+                        <p className="text-xs text-amber-500">
+                          You submitted a payment proof on {formatDate(pendingForSelected.submittedAt)} that is still pending review. Please wait for it to be approved or rejected before submitting another.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -287,13 +347,18 @@ export default function PayBillPage() {
                   <input
                     type="number"
                     value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
+                    onChange={(e) => {
+                      setAmount(e.target.value);
+                      setErrors((prev) => ({ ...prev, amount: undefined }));
+                    }}
                     className="input w-full"
                     placeholder="Enter amount"
                     min="1"
                     max={selectedBill?.balance}
-                    required
                   />
+                  {errors.amount && (
+                    <p className="text-xs text-red-500 mt-1">{errors.amount}</p>
+                  )}
                   {selectedBill && parseFloat(amount) < selectedBill.balance && parseFloat(amount) > 0 && (
                     <p className="text-xs text-amber-500 mt-1">
                       Partial payment: {formatCurrency(selectedBill.balance - parseFloat(amount))} will remain
@@ -312,7 +377,17 @@ export default function PayBillPage() {
                         <button
                           key={m.value}
                           type="button"
-                          onClick={() => setMethod(m.value)}
+                          onClick={() => {
+                            setMethod(m.value);
+                            setErrors((prev) => ({ ...prev, method: undefined }));
+                            if (m.value === "CASH") {
+                              setErrors((prev) => ({
+                                ...prev,
+                                transactionId: undefined,
+                                proofImageUrl: undefined,
+                              }));
+                            }
+                          }}
                           className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all duration-200 ${
                             isSelected
                               ? "border-primary bg-primary/5 dark:bg-primary/10 shadow-lg shadow-primary/10"
@@ -338,6 +413,9 @@ export default function PayBillPage() {
                       );
                     })}
                   </div>
+                  {errors.method && (
+                    <p className="text-xs text-red-500 mt-1">{errors.method}</p>
+                  )}
                 </div>
 
                 {/* Transaction ID (for non-cash) */}
@@ -347,23 +425,44 @@ export default function PayBillPage() {
                     <input
                       type="text"
                       value={transactionId}
-                      onChange={(e) => setTransactionId(e.target.value)}
+                      onChange={(e) => {
+                        setTransactionId(e.target.value);
+                        setErrors((prev) => ({ ...prev, transactionId: undefined }));
+                      }}
                       className="input w-full"
                       placeholder="Enter transaction/reference ID"
-                      required
                     />
+                    {errors.transactionId && (
+                      <p className="text-xs text-red-500 mt-1">{errors.transactionId}</p>
+                    )}
                   </div>
                 )}
 
                 {/* Payment Proof Upload */}
                 <div>
-                  <label className="label">Payment Proof (Screenshot/Photo)</label>
+                  <label className="label">
+                    Payment Proof (Screenshot/Photo){" "}
+                    {method && method !== "CASH" ? (
+                      <span className="text-red-500">*</span>
+                    ) : (
+                      <span className="text-text-muted dark:text-slate-500 text-xs font-normal">(optional for cash)</span>
+                    )}
+                  </label>
                   <FileUpload
-                    onUpload={(url) => setProofImageUrl(url)}
+                    onUpload={(url) => {
+                      setProofImageUrl(url);
+                      setErrors((prev) => ({ ...prev, proofImageUrl: undefined }));
+                    }}
                     accept="image/*,.pdf"
                     label="Upload payment screenshot or receipt"
                     currentUrl={proofImageUrl}
                   />
+                  {errors.proofImageUrl && (
+                    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                      <ImageIcon size={12} />
+                      {errors.proofImageUrl}
+                    </p>
+                  )}
                 </div>
 
                 {/* Note */}
@@ -374,22 +473,36 @@ export default function PayBillPage() {
                     onChange={(e) => setNote(e.target.value)}
                     className="input w-full min-h-[80px] resize-none"
                     placeholder="Any additional notes..."
+                    maxLength={300}
                   />
+                  {note.length > 0 && (
+                    <p className="text-xs text-text-muted dark:text-slate-400 mt-1 text-right">
+                      {note.length}/300
+                    </p>
+                  )}
                 </div>
 
                 {/* Submit */}
-                <button
-                  type="submit"
-                  disabled={submitting || !selectedBillId || !amount || !method}
-                  className="btn-primary w-full flex items-center justify-center gap-2"
-                >
-                  {submitting ? (
-                    <Loader2 size={18} className="animate-spin" />
-                  ) : (
-                    <Send size={18} />
+                <div>
+                  <button
+                    type="submit"
+                    disabled={submitting || !!pendingForSelected}
+                    className="btn-primary w-full flex items-center justify-center gap-2"
+                  >
+                    {submitting ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <Send size={18} />
+                    )}
+                    {submitting ? "Submitting..." : "Submit Payment Proof"}
+                  </button>
+                  {pendingForSelected && (
+                    <p className="text-xs text-amber-500 mt-2 text-center flex items-center justify-center gap-1">
+                      <AlertTriangle size={12} />
+                      Cannot submit while a previous proof is pending review
+                    </p>
                   )}
-                  {submitting ? "Submitting..." : "Submit Payment Proof"}
-                </button>
+                </div>
               </form>
             </div>
           )}
@@ -433,11 +546,25 @@ export default function PayBillPage() {
                         <p>TxID: {proof.transactionId}</p>
                       )}
                       <p>{formatDate(proof.submittedAt)}</p>
+                      {proof.proofImageUrl && (
+                        <a
+                          href={proof.proofImageUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-primary hover:underline"
+                        >
+                          <ImageIcon size={12} />
+                          View Receipt
+                        </a>
+                      )}
                     </div>
                     {proof.status === "REJECTED" && proof.rejectionReason && (
                       <div className="mt-2 p-2 rounded-lg bg-red-500/10 border border-red-500/20">
+                        <p className="text-xs font-medium text-red-400 mb-0.5">
+                          Rejection reason:
+                        </p>
                         <p className="text-xs text-red-400">
-                          Reason: {proof.rejectionReason}
+                          {proof.rejectionReason}
                         </p>
                       </div>
                     )}

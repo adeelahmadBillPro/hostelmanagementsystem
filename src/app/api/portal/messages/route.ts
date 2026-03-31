@@ -5,7 +5,7 @@ import { getSession } from "@/lib/session";
 export async function GET(_request: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "RESIDENT") {
+    if (!session || session.user.role !== "RESIDENT" && session.user.role !== "STAFF") {
       return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
     }
 
@@ -68,7 +68,7 @@ export async function GET(_request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "RESIDENT") {
+    if (!session || session.user.role !== "RESIDENT" && session.user.role !== "STAFF") {
       return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
     }
 

@@ -39,10 +39,10 @@ export async function generateBillForResident(
   const monthEnd = new Date(year, month, 1);
 
   const foodAgg = await tx.foodOrder.aggregate({
-    where: { residentId, hostelId, orderDate: { gte: monthStart, lt: monthEnd } },
+    where: { residentId, hostelId, orderDate: { gte: monthStart, lt: monthEnd }, status: { not: "CANCELLED" } },
     _sum: { totalAmount: true },
   });
-  const foodCharges = foodAgg._sum.totalAmount || 0;
+  const foodCharges = foodAgg._sum?.totalAmount || 0;
 
   // Fixed food fee based on food plan
   const hostelFoodCharge = (resident.hostel as any).fixedFoodCharge || 0;

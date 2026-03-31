@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import path from "path";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import PdfPrinter from "pdfmake";
 import { TDocumentDefinitions } from "pdfmake/interfaces";
 
+// Resolve font paths from project root — relative strings break in Next.js serverless
+const FONTS_DIR = path.join(process.cwd(), "node_modules/pdfmake/build/");
+
 const fonts = {
   Roboto: {
-    normal: "node_modules/pdfmake/build/vfs_fonts.js",
-    bold: "node_modules/pdfmake/build/vfs_fonts.js",
-    italics: "node_modules/pdfmake/build/vfs_fonts.js",
-    bolditalics: "node_modules/pdfmake/build/vfs_fonts.js",
+    normal: path.join(FONTS_DIR, "vfs_fonts.js"),
+    bold: path.join(FONTS_DIR, "vfs_fonts.js"),
+    italics: path.join(FONTS_DIR, "vfs_fonts.js"),
+    bolditalics: path.join(FONTS_DIR, "vfs_fonts.js"),
   },
 };
 

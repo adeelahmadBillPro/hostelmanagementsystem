@@ -159,6 +159,9 @@ model User {
   proofsReviewed   PaymentProof[]  @relation("ProofReviewer")
   disputesResolved BillDispute[]   @relation("DisputeResolver")
   messagesSent     Message[]       @relation("MessageSender")
+  leaveNotices     LeaveNotice[]   @relation("LeaveNotices")
+  acknowledgedNotices LeaveNotice[] @relation("LeaveNoticeAck")
+  settlementsCompleted Settlement[] @relation("SettlementCompleter")
 
   @@index([tenantId])
   @@index([role])
@@ -223,6 +226,16 @@ model Hostel {
   billingDueDays    Int     @default(7) // Days after generation for payment due
   lateFeePercent    Float   @default(0) // Late fee percentage on overdue
 
+  // Meal ordering time windows (24-hour format, e.g. 6 = 6AM, 18 = 6PM)
+  breakfastStart    Int     @default(6)
+  breakfastEnd      Int     @default(9)
+  lunchStart        Int     @default(11)
+  lunchEnd          Int     @default(14)
+  dinnerStart       Int     @default(18)
+  dinnerEnd         Int     @default(21)
+  snackStart        Int     @default(10)
+  snackEnd          Int     @default(22)
+
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -248,6 +261,8 @@ model Hostel {
   meterReadings     MeterReading[]
   managerHostels    ManagerHostel[]
   conversations     Conversation[]
+  leaveNotices     LeaveNotice[]
+  settlements      Settlement[]
   amenities         HostelAmenity[]
   staffAttendance   StaffAttendance[]
 
@@ -321,9 +336,12 @@ model Room {
   roomNumber String
   type       RoomType
   totalBeds  Int
-  rentPerBed Float
+  rentPerBed  Float
   rentPerRoom Float?
-  features   String[]   @default([]) // AC, Fan, Attached Washroom, Geyser, etc.
+  dailyRate   Float?      // Per-day rate (for daily/short-stay billing)
+  nightlyRate Float?      // Per-night rate (hotel-style billing)
+  weeklyRate  Float?      // Per-week rate
+  features    String[]   @default([]) // AC, Fan, Attached Washroom, Geyser, etc.
   status     RoomStatus @default(ACTIVE)
 
   floorId String
@@ -379,6 +397,9 @@ model Resident {
   residentType     String         @default("SELF_PAYING") // SELF_PAYING, SCHOLARSHIP, GOVERNMENT, SPONSORED
   sponsorName      String?        // Sponsor/organization name if sponsored
   notes            String?        // Additional notes about the resident
+  billingType      String         @default("MONTHLY") // MONTHLY, WEEKLY, DAILY, PER_NIGHT
+  checkInTime      DateTime?      // Exact check-in time (for per-night billing)
+  expectedCheckout DateTime?      // Expected checkout date
   status           ResidentStatus @default(ACTIVE)
 
   userId   String  @unique
@@ -408,10 +429,60 @@ model Resident {
   paymentProofs PaymentProof[]
   billDisputes  BillDispute[]
   conversations Conversation[]
+  leaveNotices  LeaveNotice[]
+  settlements   Settlement[]
 
   @@index([hostelId])
   @@index([userId])
   @@index([status])
+}
+
+model Settlement {
+  id              String   @id @default(cuid())
+
+  residentId      String
+  resident        Resident @relation(fields: [residentId], references: [id])
+
+  hostelId        String
+  hostel          Hostel   @relation(fields: [hostelId], references: [id])
+
+  checkoutDate    DateTime
+  daysStayed      Int
+  billingType     String   // MONTHLY, WEEKLY, DAILY, PER_NIGHT
+
+  // Charges
+  unpaidBills     Float    @default(0) // Sum of all unpaid bill balances
+  proRatedRent    Float    @default(0) // Current period partial rent
+  proRatedFood    Float    @default(0) // Current period partial food fee
+  unbilledOrders  Float    @default(0) // Food orders not yet in any bill
+  unbilledMeter   Float    @default(0) // Meter charges not yet billed
+  unbilledParking Float    @default(0) // Parking not yet billed
+  damageCharges   Float    @default(0) // Room damage, furniture, etc.
+  otherCharges    Float    @default(0)
+  lateCheckoutFee Float    @default(0) // Per-night late checkout
+  totalCharges    Float
+
+  // Credits
+  securityDeposit Float    @default(0)
+  advanceBalance  Float    @default(0) // Unused advance
+  overpayments    Float    @default(0) // If paid more than billed
+  totalCredits    Float
+
+  // Result
+  netAmount       Float    // + means resident owes, - means refund
+  settlementType  String   // DUES or REFUND
+
+  // Deduction details
+  deductions      Json?    // [{label: "Room damage", amount: 500}]
+  notes           String?
+
+  completedById   String
+  completedBy     User     @relation("SettlementCompleter", fields: [completedById], references: [id])
+
+  createdAt       DateTime @default(now())
+
+  @@index([hostelId])
+  @@index([residentId])
 }
 
 model ExpenseCategory {
@@ -614,6 +685,7 @@ model Staff {
   name             String
   cnic             String?
   phone            String?
+  email            String?
   photo            String?
   address          String?
   staffType        StaffType
@@ -861,6 +933,7 @@ model PaymentProof {
   transactionId   String?
   proofImageUrl   String?
   status          ProofStatus @default(PENDING)
+  notes           String?
   rejectionReason String?
   submittedAt     DateTime    @default(now())
   reviewedAt      DateTime?
@@ -973,4 +1046,37 @@ model StaffAttendance {
 
   @@unique([staffId, date])
   @@index([hostelId])
+}
+
+// ==================== LEAVE NOTICES ====================
+
+model LeaveNotice {
+  id          String   @id @default(cuid())
+  type        String   // RESIDENT, STAFF, MANAGER
+  reason      String   // DEGREE_COMPLETION, JOB_CHANGE, FAMILY_RELOCATION, OTHER
+  description String?
+  lastDay     DateTime
+  status      String   @default("PENDING") // PENDING, ACKNOWLEDGED, COMPLETED
+
+  // Who is leaving
+  userId   String
+  user     User   @relation("LeaveNotices", fields: [userId], references: [id], onDelete: Cascade)
+
+  hostelId String
+  hostel   Hostel @relation(fields: [hostelId], references: [id])
+
+  // Linked to resident if applicable
+  residentId String?
+  resident   Resident? @relation(fields: [residentId], references: [id])
+
+  acknowledgedAt   DateTime?
+  acknowledgedById String?
+  acknowledgedBy   User?     @relation("LeaveNoticeAck", fields: [acknowledgedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([hostelId])
+  @@index([userId])
+  @@index([status])
 }

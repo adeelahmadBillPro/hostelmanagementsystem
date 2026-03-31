@@ -87,6 +87,14 @@ export async function GET(
         billingCycle: (hostel as any).billingCycle || "MONTHLY",
         fixedFoodCharge: (hostel as any).fixedFoodCharge || 0,
         billingDueDays: (hostel as any).billingDueDays || 7,
+        breakfastStart: (hostel as any).breakfastStart ?? 6,
+        breakfastEnd: (hostel as any).breakfastEnd ?? 9,
+        lunchStart: (hostel as any).lunchStart ?? 11,
+        lunchEnd: (hostel as any).lunchEnd ?? 14,
+        dinnerStart: (hostel as any).dinnerStart ?? 18,
+        dinnerEnd: (hostel as any).dinnerEnd ?? 21,
+        snackStart: (hostel as any).snackStart ?? 10,
+        snackEnd: (hostel as any).snackEnd ?? 22,
       },
       stats: { totalBilled, totalCollected, totalPending, totalOverdue },
     });
@@ -211,12 +219,13 @@ export async function POST(
       const baseRent = (resident as any).freeRoom ? 0 : ((resident as any).rentOverride ?? resident.room.rentPerBed);
       const roomRent = Math.round(baseRent * rentMultiplier);
 
-      // Food order charges for this period
+      // Food order charges for this period (exclude cancelled orders)
       const foodOrders = await prisma.foodOrder.findMany({
         where: {
           residentId: resident.id,
           hostelId: params.id,
           orderDate: { gte: periodStart, lte: periodEnd },
+          status: { not: "CANCELLED" },
         },
       });
       const foodCharges = foodOrders.reduce((sum, o) => sum + o.totalAmount, 0);
@@ -305,6 +314,101 @@ export async function POST(
   } catch (error) {
     console.error("Generate bills error:", error);
     return NextResponse.json({ error: "Failed to generate bills" }, { status: 500 });
+  }
+}
+
+// PATCH: Recalculate food charges on existing bills (picks up new orders placed after generation)
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const limited = rateLimit(request, "sensitive");
+  if (limited) return limited;
+
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
+  }
+  const tenantId = session.user.tenantId;
+  if (!tenantId) {
+    return NextResponse.json({ error: "Your account is not linked to any organization." }, { status: 403 });
+  }
+
+  try {
+    const hostel = await prisma.hostel.findFirst({
+      where: { id: params.id, tenantId },
+    });
+    if (!hostel) {
+      return NextResponse.json({ error: "Hostel not found" }, { status: 404 });
+    }
+
+    const body = await request.json();
+    const { month, year } = body;
+
+    if (!month || !year) {
+      return NextResponse.json({ error: "Month and year are required" }, { status: 400 });
+    }
+
+    const periodStart = new Date(year, month - 1, 1);
+    const periodEnd = new Date(year, month, 0, 23, 59, 59);
+
+    // Find all existing bills for this period
+    const existingBills = await prisma.monthlyBill.findMany({
+      where: { hostelId: params.id, month, year },
+      include: { resident: true },
+    });
+
+    if (existingBills.length === 0) {
+      return NextResponse.json({ message: "No bills found for this period to recalculate", count: 0 });
+    }
+
+    let updatedCount = 0;
+
+    for (const bill of existingBills) {
+      // Recalculate food order charges (exclude cancelled)
+      const foodOrders = await prisma.foodOrder.findMany({
+        where: {
+          residentId: bill.residentId,
+          hostelId: params.id,
+          orderDate: { gte: periodStart, lte: periodEnd },
+          status: { not: "CANCELLED" },
+        },
+      });
+      const newFoodCharges = foodOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+
+      // Only update if food charges changed
+      if (newFoodCharges !== bill.foodCharges) {
+        const diff = newFoodCharges - bill.foodCharges;
+        const newTotal = Math.max(0, bill.totalAmount + diff);
+        const newBalance = Math.max(0, newTotal - bill.paidAmount);
+        let newStatus = bill.status;
+        if (newBalance <= 0) newStatus = "PAID";
+        else if (bill.paidAmount > 0) newStatus = "PARTIAL";
+        else if (bill.dueDate && new Date(bill.dueDate) < new Date()) newStatus = "OVERDUE";
+        else newStatus = "UNPAID";
+
+        await prisma.monthlyBill.update({
+          where: { id: bill.id },
+          data: {
+            foodCharges: newFoodCharges,
+            totalAmount: newTotal,
+            balance: newBalance,
+            status: newStatus,
+          },
+        });
+        updatedCount++;
+      }
+    }
+
+    return NextResponse.json({
+      message: updatedCount > 0
+        ? `Recalculated ${updatedCount} bill(s) with updated food charges`
+        : "All bills already up to date — no changes needed",
+      count: updatedCount,
+    });
+  } catch (error) {
+    console.error("Recalculate bills error:", error);
+    return NextResponse.json({ error: "Failed to recalculate bills" }, { status: 500 });
   }
 }
 

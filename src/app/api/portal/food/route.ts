@@ -3,13 +3,23 @@ import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import { rateLimit } from "@/lib/rate-limit";
 
-// Define ordering windows
-const timeWindows: Record<string, { start: number; end: number }> = {
+// Default ordering windows (used when hostel hasn't set custom times)
+const DEFAULT_WINDOWS: Record<string, { start: number; end: number }> = {
   BREAKFAST: { start: 6, end: 9 },
   LUNCH: { start: 11, end: 14 },
   DINNER: { start: 18, end: 21 },
   SNACK: { start: 10, end: 22 },
 };
+
+// Build per-hostel time windows from hostel settings
+function getHostelTimeWindows(hostel: any): Record<string, { start: number; end: number }> {
+  return {
+    BREAKFAST: { start: hostel.breakfastStart ?? 6,  end: hostel.breakfastEnd ?? 9 },
+    LUNCH:     { start: hostel.lunchStart ?? 11,     end: hostel.lunchEnd ?? 14 },
+    DINNER:    { start: hostel.dinnerStart ?? 18,    end: hostel.dinnerEnd ?? 21 },
+    SNACK:     { start: hostel.snackStart ?? 10,     end: hostel.snackEnd ?? 22 },
+  };
+}
 
 function formatHour(hour: number): string {
   if (hour === 0 || hour === 24) return '12 AM';
@@ -18,16 +28,16 @@ function formatHour(hour: number): string {
   return `${hour - 12} PM`;
 }
 
-function isOrderable(mealType: string): boolean {
-  const window = timeWindows[mealType];
+function isOrderable(mealType: string, windows: Record<string, { start: number; end: number }>): boolean {
+  const window = windows[mealType];
   if (!window) return false;
   const now = new Date();
   const hour = now.getHours();
   return hour >= window.start && hour < window.end;
 }
 
-function getOrderingHours(mealType: string): string {
-  const window = timeWindows[mealType];
+function getOrderingHours(mealType: string, windows: Record<string, { start: number; end: number }>): string {
+  const window = windows[mealType];
   if (!window) return '';
   return `${formatHour(window.start)} - ${formatHour(window.end)}`;
 }
@@ -47,6 +57,8 @@ export async function GET(_request: NextRequest) {
     if (!resident) {
       return NextResponse.json({ error: 'Resident not found' }, { status: 404 });
     }
+
+    const hostelWindows = getHostelTimeWindows(resident.hostel);
 
     // Get today's menu
     const today = new Date();
@@ -80,8 +92,8 @@ export async function GET(_request: NextRequest) {
       freeQtyLimit: item.freeQtyLimit || 0,
       extraRate: item.extraRate || 0,
       maxQtyPerOrder: item.maxQtyPerOrder || 10,
-      isOrderable: isOrderable(item.mealType),
-      orderingHours: getOrderingHours(item.mealType),
+      isOrderable: isOrderable(item.mealType, hostelWindows),
+      orderingHours: getOrderingHours(item.mealType, hostelWindows),
     }));
 
     // Monthly food expense summary
@@ -102,11 +114,13 @@ export async function GET(_request: NextRequest) {
     };
 
     // Add ordering windows info to response
-    const orderingWindows = Object.entries(timeWindows).map(([meal, window]) => ({
+    const orderingWindows = Object.entries(hostelWindows).map(([meal, w]) => ({
       mealType: meal,
-      start: formatHour(window.start),
-      end: formatHour(window.end),
-      isOpen: isOrderable(meal),
+      start: formatHour(w.start),
+      end: formatHour(w.end),
+      startHour: w.start,
+      endHour: w.end,
+      isOpen: isOrderable(meal, hostelWindows),
     }));
 
     // Today's orders
@@ -187,6 +201,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Resident not found' }, { status: 404 });
     }
 
+    const postWindows = getHostelTimeWindows(resident.hostel);
     const body = await request.json();
 
     // Support both old single-item format and new multi-item format
@@ -224,8 +239,8 @@ export async function POST(request: NextRequest) {
 
       // Time lock check - reject orders outside time window
       const mealType = menuItem.mealType as string;
-      if (!isOrderable(mealType)) {
-        const hours = getOrderingHours(mealType);
+      if (!isOrderable(mealType, postWindows)) {
+        const hours = getOrderingHours(mealType, postWindows);
         return NextResponse.json(
           {
             error: `Ordering for ${mealType.toLowerCase()} is closed. Available ${hours}`,

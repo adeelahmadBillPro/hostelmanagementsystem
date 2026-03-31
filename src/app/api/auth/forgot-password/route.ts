@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 import { createResetToken } from "@/lib/reset-tokens";
-import { sendEmail, passwordResetEmail } from "@/lib/email";
+import { sendEmail, newPasswordEmail } from "@/lib/email";
 import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
 
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     });
 
     // Send email with new password
-    const emailData = passwordResetEmail(user.name, user.email, newPassword);
+    const emailData = newPasswordEmail(user.name, user.email, newPassword);
     await sendEmail(emailData);
 
     return NextResponse.json({

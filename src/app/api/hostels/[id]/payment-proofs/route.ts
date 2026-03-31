@@ -187,6 +187,25 @@ export async function PATCH(
 
     await auditLog({ action: "APPROVE", entityType: "payment_proof", entityId: proofId, userId: session.user.id, details: `Approved payment proof, amount: ${proof.amount}` });
 
+    // Fire-and-forget email notification to resident
+    try {
+      const { sendEmail, paymentApprovedEmail } = await import("@/lib/email");
+      const resident = await prisma.resident.findUnique({
+        where: { id: proof.residentId },
+        include: { user: { select: { name: true, email: true } } },
+      });
+      if (resident?.user?.email) {
+        const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+        const monthLabel = `${monthNames[(proof.bill.month as number) - 1] || ""} ${proof.bill.year}`;
+        const loginUrl = process.env.NEXTAUTH_URL || "https://hostelhub.pk/portal/pay";
+        await sendEmail(
+          paymentApprovedEmail(resident.user.name, resident.user.email, proof.amount, monthLabel, loginUrl)
+        );
+      }
+    } catch (emailErr) {
+      console.error("Failed to send approval email (non-fatal):", emailErr);
+    }
+
     return NextResponse.json(result);
   } catch (error) {
     console.error("Error reviewing payment proof:", error);

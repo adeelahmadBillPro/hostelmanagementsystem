@@ -5,21 +5,30 @@ import { getSession } from "@/lib/session";
 export async function GET() {
   try {
     const session = await getSession();
-    if (!session || session.user.role !== "RESIDENT") {
+    if (!session || (session.user.role !== "RESIDENT" && session.user.role !== "STAFF")) {
       return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
     }
 
-    const resident = await prisma.resident.findUnique({
-      where: { userId: session.user.id },
-      include: { hostel: true },
-    });
+    let hostelId: string | null = null;
 
-    if (!resident) {
-      return NextResponse.json({ error: "Resident not found" }, { status: 404 });
+    if (session.user.role === "STAFF") {
+      hostelId = session.user.hostelId || null;
+    } else {
+      const resident = await prisma.resident.findUnique({
+        where: { userId: session.user.id },
+      });
+      if (!resident) {
+        return NextResponse.json({ error: "Resident not found" }, { status: 404 });
+      }
+      hostelId = resident.hostelId;
+    }
+
+    if (!hostelId) {
+      return NextResponse.json({ error: "Not assigned to a hostel" }, { status: 404 });
     }
 
     const hostel = await prisma.hostel.findUnique({
-      where: { id: resident.hostelId },
+      where: { id: hostelId },
       include: {
         _count: {
           select: { buildings: true, residents: true, staff: true },
@@ -27,8 +36,12 @@ export async function GET() {
       },
     });
 
+    if (!hostel) {
+      return NextResponse.json({ error: "Hostel not found" }, { status: 404 });
+    }
+
     const amenities = await prisma.hostelAmenity.findMany({
-      where: { hostelId: resident.hostelId },
+      where: { hostelId },
       orderBy: [{ category: "asc" }, { name: "asc" }],
     });
 
@@ -39,12 +52,12 @@ export async function GET() {
       grouped[a.category].push(a);
     }
 
-    // Room counts
+    // Room/bed counts
     const rooms = await prisma.room.count({
-      where: { floor: { building: { hostelId: resident.hostelId } } },
+      where: { floor: { building: { hostelId } } },
     });
     const beds = await prisma.bed.count({
-      where: { room: { floor: { building: { hostelId: resident.hostelId } } } },
+      where: { room: { floor: { building: { hostelId } } } },
     });
 
     const totalAmenities = amenities.length;
@@ -52,25 +65,25 @@ export async function GET() {
 
     return NextResponse.json({
       hostel: {
-        id: hostel?.id,
-        name: hostel?.name,
-        type: hostel?.type,
-        address: hostel?.address,
-        city: hostel?.city,
-        contact: hostel?.contact,
-        description: hostel?.description,
-        coverImage: hostel?.coverImage,
-        buildings: hostel?._count.buildings || 0,
-        residents: hostel?._count.residents || 0,
-        staff: hostel?._count.staff || 0,
+        id: hostel.id,
+        name: hostel.name,
+        type: hostel.type,
+        address: hostel.address,
+        city: hostel.city,
+        contact: hostel.contact,
+        description: hostel.description,
+        coverImage: hostel.coverImage,
+        buildings: hostel._count.buildings || 0,
+        residents: hostel._count.residents || 0,
+        staff: hostel._count.staff || 0,
         rooms,
         beds,
       },
       amenities: grouped,
       stats: { total: totalAmenities, available: availableCount },
     });
-  } catch (error: any) {
-    console.error(error);
-    return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
+  } catch (error) {
+    console.error("Failed to fetch hostel info:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

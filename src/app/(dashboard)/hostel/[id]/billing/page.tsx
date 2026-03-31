@@ -20,6 +20,7 @@ import {
   Settings,
   Save,
   Zap,
+  RefreshCw,
 } from "lucide-react";
 import { useToast } from "@/components/providers";
 
@@ -85,6 +86,7 @@ export default function BillingPage() {
   const [stats, setStats] = useState<Stats>({ totalBilled: 0, totalCollected: 0, totalPending: 0, totalOverdue: 0 });
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [recalculating, setRecalculating] = useState(false);
 
   // Hostel billing settings
   const [billingCycle, setBillingCycle] = useState("MONTHLY");
@@ -92,6 +94,14 @@ export default function BillingPage() {
   const [billingDueDays, setBillingDueDays] = useState("7");
   const [showSettings, setShowSettings] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
+
+  // Meal time settings
+  const [mealTimes, setMealTimes] = useState({
+    breakfastStart: 6, breakfastEnd: 9,
+    lunchStart: 11, lunchEnd: 14,
+    dinnerStart: 18, dinnerEnd: 21,
+    snackStart: 10, snackEnd: 22,
+  });
 
   const fetchBills = useCallback(async () => {
     try {
@@ -109,6 +119,16 @@ export default function BillingPage() {
         setBillingCycle(data.hostelSettings.billingCycle);
         setFixedFoodCharge(String(data.hostelSettings.fixedFoodCharge));
         setBillingDueDays(String(data.hostelSettings.billingDueDays));
+        setMealTimes({
+          breakfastStart: data.hostelSettings.breakfastStart ?? 6,
+          breakfastEnd: data.hostelSettings.breakfastEnd ?? 9,
+          lunchStart: data.hostelSettings.lunchStart ?? 11,
+          lunchEnd: data.hostelSettings.lunchEnd ?? 14,
+          dinnerStart: data.hostelSettings.dinnerStart ?? 18,
+          dinnerEnd: data.hostelSettings.dinnerEnd ?? 21,
+          snackStart: data.hostelSettings.snackStart ?? 10,
+          snackEnd: data.hostelSettings.snackEnd ?? 22,
+        });
       }
     } catch (error) {
       console.error("Error fetching bills:", error);
@@ -144,6 +164,25 @@ export default function BillingPage() {
     }
   };
 
+  const handleRecalculate = async () => {
+    try {
+      setRecalculating(true);
+      const res = await fetch(`/api/hostels/${hostelId}/billing`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ month, year }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to recalculate");
+      addToast(data.message, data.count > 0 ? "success" : "info");
+      if (data.count > 0) fetchBills();
+    } catch (error: any) {
+      addToast(error.message || "Failed to recalculate bills", "error");
+    } finally {
+      setRecalculating(false);
+    }
+  };
+
   const handleSaveSettings = async () => {
     setSavingSettings(true);
     try {
@@ -154,6 +193,7 @@ export default function BillingPage() {
           billingCycle,
           fixedFoodCharge: parseFloat(fixedFoodCharge) || 0,
           billingDueDays: parseInt(billingDueDays) || 7,
+          ...mealTimes,
         }),
       });
       if (!res.ok) throw new Error("Failed to save");
@@ -303,6 +343,20 @@ export default function BillingPage() {
             <Settings size={16} />
             <span className="hidden sm:inline">Settings</span>
           </button>
+          {bills.length > 0 && (
+            <button
+              onClick={handleRecalculate}
+              disabled={recalculating}
+              className="btn-secondary flex items-center gap-2"
+              title="Recalculate food charges for existing bills (picks up new orders)"
+            >
+              {recalculating ? (
+                <><RefreshCw size={16} className="animate-spin" /> Recalculating...</>
+              ) : (
+                <><RefreshCw size={16} /> Recalculate</>
+              )}
+            </button>
+          )}
           <button
             onClick={handleGenerateBills}
             disabled={generating}
@@ -326,6 +380,7 @@ export default function BillingPage() {
           <li>• Scholarship/Govt residents get Rs 0 rent automatically</li>
           <li>• Food fee based on each resident&apos;s plan (Full Mess / No Mess / Custom)</li>
           <li>• Advance is deducted on first bill only</li>
+          <li>• If residents order food after bills are generated, click &quot;Recalculate&quot; to update food charges</li>
         </ul>
       </div>
 
@@ -377,7 +432,7 @@ export default function BillingPage() {
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
         title="Billing Settings"
-        maxWidth="max-w-[480px]"
+        maxWidth="max-w-[560px]"
       >
         <div className="space-y-5">
           <div>
@@ -429,6 +484,49 @@ export default function BillingPage() {
             />
             <p className="text-xs text-text-muted mt-1">
               Bills become overdue after this many days
+            </p>
+          </div>
+
+          {/* Meal Ordering Time Windows */}
+          <div>
+            <label className="label mb-2">Meal Ordering Hours (24h format)</label>
+            <div className="space-y-3">
+              {([
+                { label: "Breakfast", startKey: "breakfastStart", endKey: "breakfastEnd" },
+                { label: "Lunch", startKey: "lunchStart", endKey: "lunchEnd" },
+                { label: "Dinner", startKey: "dinnerStart", endKey: "dinnerEnd" },
+                { label: "Snack", startKey: "snackStart", endKey: "snackEnd" },
+              ] as const).map(({ label, startKey, endKey }) => (
+                <div key={label} className="flex items-center gap-3">
+                  <span className="text-sm text-text-secondary dark:text-slate-400 w-20 shrink-0">{label}</span>
+                  <select
+                    value={mealTimes[startKey]}
+                    onChange={(e) => setMealTimes((p) => ({ ...p, [startKey]: parseInt(e.target.value) }))}
+                    className="select !h-9 text-sm flex-1"
+                  >
+                    {Array.from({ length: 24 }, (_, i) => (
+                      <option key={i} value={i}>
+                        {i === 0 ? "12 AM" : i === 12 ? "12 PM" : i < 12 ? `${i} AM` : `${i - 12} PM`}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-xs text-text-muted">to</span>
+                  <select
+                    value={mealTimes[endKey]}
+                    onChange={(e) => setMealTimes((p) => ({ ...p, [endKey]: parseInt(e.target.value) }))}
+                    className="select !h-9 text-sm flex-1"
+                  >
+                    {Array.from({ length: 24 }, (_, i) => (
+                      <option key={i} value={i}>
+                        {i === 0 ? "12 AM" : i === 12 ? "12 PM" : i < 12 ? `${i} AM` : `${i - 12} PM`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-text-muted mt-2">
+              Residents can only order food during these hours. Each hostel can set their own times.
             </p>
           </div>
 

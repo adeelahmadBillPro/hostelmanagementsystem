@@ -64,65 +64,72 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { billId, amount, method, transactionId, proofImageUrl } = body;
+    const { billId, amount, method, transactionId, proofImageUrl, note } = body;
 
-    if (!billId || !amount || !method) {
-      return NextResponse.json(
-        { error: "billId, amount, and method are required" },
-        { status: 400 }
-      );
+    // —— Required field validation ————————————————————————————————————————
+    if (!billId) return NextResponse.json({ error: "Please select a bill" }, { status: 400 });
+    if (!amount) return NextResponse.json({ error: "Amount is required" }, { status: 400 });
+    if (!method) return NextResponse.json({ error: "Payment method is required" }, { status: 400 });
+
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      return NextResponse.json({ error: "Amount must be greater than 0" }, { status: 400 });
     }
 
-    // Validate bill belongs to resident
-    const bill = await prisma.monthlyBill.findFirst({
-      where: { id: billId, residentId: resident.id },
-    });
-
-    if (!bill) {
-      return NextResponse.json(
-        { error: "Bill not found or does not belong to you" },
-        { status: 404 }
-      );
-    }
-
-    // Validate amount
-    if (amount <= 0) {
-      return NextResponse.json(
-        { error: "Amount must be greater than 0" },
-        { status: 400 }
-      );
-    }
-
-    if (amount > bill.balance) {
-      return NextResponse.json(
-        { error: `Amount cannot exceed bill balance of ${bill.balance}` },
-        { status: 400 }
-      );
-    }
-
-    // Validate method
+    // —— Validate method ——————————————————————————————————————————————————
     const validMethods = ["CASH", "BANK", "JAZZCASH", "EASYPAISA"];
     if (!validMethods.includes(method)) {
-      return NextResponse.json(
-        { error: "Invalid payment method" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid payment method" }, { status: 400 });
     }
 
-    // Require transactionId for non-cash methods
-    if (method !== "CASH" && !transactionId) {
+    // —— Require transaction ID for non-cash ———————————————————————————————
+    if (method !== "CASH" && !transactionId?.trim()) {
       return NextResponse.json(
         { error: "Transaction ID is required for non-cash payments" },
         { status: 400 }
       );
     }
 
+    // —— Validate bill belongs to resident ————————————————————————————————
+    const bill = await prisma.monthlyBill.findFirst({
+      where: { id: billId, residentId: resident.id },
+    });
+
+    if (!bill) {
+      return NextResponse.json({ error: "Bill not found or does not belong to you" }, { status: 404 });
+    }
+
+    if (bill.status === "PAID") {
+      return NextResponse.json({ error: "This bill is already fully paid" }, { status: 400 });
+    }
+
+    if (parsedAmount > bill.balance) {
+      return NextResponse.json(
+        { error: `Amount (PKR ${parsedAmount.toLocaleString()}) cannot exceed remaining balance of PKR ${bill.balance.toLocaleString()}` },
+        { status: 400 }
+      );
+    }
+
+    // —— Block duplicate pending proof for same bill ——————————————————————
+    const existingPending = await prisma.paymentProof.findFirst({
+      where: { billId, residentId: resident.id, status: "PENDING" },
+    });
+
+    if (existingPending) {
+      return NextResponse.json(
+        { error: "You already have a pending payment proof for this bill. Please wait for it to be reviewed before submitting another." },
+        { status: 409 }
+      );
+    }
+
+    // —— Create proof —————————————————————————————————————————————————————
     const proof = await prisma.paymentProof.create({
       data: {
-        amount: parseFloat(amount),
+        amount: parsedAmount,
         method,
-        transactionId: transactionId || null,
+        transactionId: transactionId?.trim() || null,
         proofImageUrl: proofImageUrl || null,
+        notes: note?.trim() || null,
         status: "PENDING",
         residentId: resident.id,
         billId,

@@ -34,6 +34,7 @@ import {
   Activity,
   CalendarDays,
   ArrowLeftRight,
+  LogOut,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -43,6 +44,7 @@ interface NavItem {
   icon: React.ReactNode;
   children?: NavItem[];
   roles?: string[];
+  badge?: number;
 }
 
 interface SidebarProps {
@@ -59,6 +61,24 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
   const role = session?.user?.role;
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [initialized, setInitialized] = useState(false);
+  const [pendingLeaveCount, setPendingLeaveCount] = useState(0);
+
+  // Fetch pending leave notice count for managers
+  useEffect(() => {
+    if (!hostelId || role === "RESIDENT" || role === "STAFF" || role === "SUPER_ADMIN") return;
+    const fetchPendingLeaves = async () => {
+      try {
+        const res = await fetch(`/api/hostels/${hostelId}/leave-notices?status=PENDING`);
+        if (res.ok) {
+          const data = await res.json();
+          setPendingLeaveCount(data.stats?.pending || 0);
+        }
+      } catch { /* non-fatal */ }
+    };
+    fetchPendingLeaves();
+    const interval = setInterval(fetchPendingLeaves, 60000);
+    return () => clearInterval(interval);
+  }, [hostelId, role]);
 
   const toggleExpand = (label: string) => {
     setExpandedItems((prev) =>
@@ -291,6 +311,17 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
           icon: <Truck size={20} />,
         },
         {
+          label: "Leave Notices",
+          href: `/hostel/${hostelId}/leave-notices`,
+          icon: <LogOut size={20} />,
+          badge: pendingLeaveCount > 0 ? pendingLeaveCount : undefined,
+        },
+        {
+          label: "Settlements",
+          href: `/hostel/${hostelId}/settlements`,
+          icon: <Receipt size={20} />,
+        },
+        {
           label: "Notices",
           href: `/hostel/${hostelId}/notices`,
           icon: <Bell size={20} />,
@@ -364,6 +395,11 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
       label: "Messages",
       href: "/portal/messages",
       icon: <MessageCircle size={20} />,
+    },
+    {
+      label: "Leave Notice",
+      href: "/portal/leave-notice",
+      icon: <LogOut size={20} />,
     },
   ];
 
@@ -450,7 +486,12 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
         className={active ? "nav-item-active" : "nav-item-inactive"}
       >
         {item.icon}
-        <span>{item.label}</span>
+        <span className="flex-1">{item.label}</span>
+        {item.badge !== undefined && item.badge > 0 && (
+          <span className="ml-auto min-w-[20px] h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+            {item.badge > 99 ? "99+" : item.badge}
+          </span>
+        )}
       </Link>
     );
   };
