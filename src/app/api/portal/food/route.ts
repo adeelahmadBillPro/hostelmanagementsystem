@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getSession } from '@/lib/session';
+import { getPortalSession } from '@/lib/session';
 import { rateLimit } from "@/lib/rate-limit";
 
 // Default ordering windows (used when hostel hasn't set custom times)
@@ -44,7 +44,7 @@ function getOrderingHours(mealType: string, windows: Record<string, { start: num
 
 export async function GET(_request: NextRequest) {
   try {
-    const session = await getSession();
+    const session = await getPortalSession();
     if (!session || session.user.role !== 'RESIDENT') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
   if (limited) return limited;
 
   try {
-    const session = await getSession();
+    const session = await getPortalSession();
     if (!session || session.user.role !== 'RESIDENT') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

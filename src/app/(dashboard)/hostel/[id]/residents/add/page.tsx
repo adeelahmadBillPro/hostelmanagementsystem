@@ -44,9 +44,9 @@ interface BedData {
 }
 
 const STEPS = [
-  { number: 1, label: "Personal Info", icon: User },
-  { number: 2, label: "Room Assignment", icon: BedDouble },
-  { number: 3, label: "Financial", icon: DollarSign },
+  { number: 1, label: "Personal Info", shortLabel: "Info", icon: User },
+  { number: 2, label: "Room Assignment", shortLabel: "Room", icon: BedDouble },
+  { number: 3, label: "Financial", shortLabel: "Finance", icon: DollarSign },
 ];
 
 export default function AddResidentPage() {
@@ -85,6 +85,9 @@ export default function AddResidentPage() {
   const [loadingFloors, setLoadingFloors] = useState(false);
   const [loadingRooms, setLoadingRooms] = useState(false);
 
+  // Hostel type (for contextual hints)
+  const [hostelType, setHostelType] = useState<string>("PRIVATE");
+
   // Step 3: Financial
   const [rentPerBed, setRentPerBed] = useState(0);
   const [advancePaid, setAdvancePaid] = useState("");
@@ -101,7 +104,7 @@ export default function AddResidentPage() {
     new Date().toISOString().split("T")[0]
   );
 
-  // Fetch buildings
+  // Fetch buildings + hostel type
   useEffect(() => {
     const fetchBuildings = async () => {
       try {
@@ -117,6 +120,11 @@ export default function AddResidentPage() {
       }
     };
     fetchBuildings();
+    // Fetch hostel type for contextual hints
+    fetch(`/api/hostels/${hostelId}`)
+      .then((r) => r.json())
+      .then((d) => { if (d && d.type) setHostelType(d.type); })
+      .catch(() => {});
   }, [hostelId]);
 
   // Fetch floors when building selected
@@ -477,7 +485,8 @@ export default function AddResidentPage() {
                         : "text-text-muted"
                     }`}
                   >
-                    {step.label}
+                    <span className="hidden sm:inline">{step.label}</span>
+                    <span className="inline sm:hidden">{step.shortLabel}</span>
                   </span>
                 </div>
                 {index < STEPS.length - 1 && (
@@ -879,6 +888,18 @@ export default function AddResidentPage() {
             </p>
           </div>
 
+          {/* Hostel type contextual info */}
+          {hostelType === "GOVERNMENT" && (
+            <div className="mt-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-700 dark:text-emerald-300">
+              <strong>Government Hostel:</strong> Residents typically get subsidized or free accommodation. Enable "Free Room" below if applicable. Mess fee is usually fixed by the institution.
+            </div>
+          )}
+          {hostelType === "UNIVERSITY" && (
+            <div className="mt-4 p-3 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 text-xs text-indigo-700 dark:text-indigo-300">
+              <strong>University Hostel:</strong> Billing is typically per-semester or monthly. Security deposit is standard. Set advance payment for first month if required.
+            </div>
+          )}
+
           {/* Resident Type & Rent */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
             <div>
@@ -928,27 +949,56 @@ export default function AddResidentPage() {
             <textarea value={residentNotes} onChange={(e) => setResidentNotes(e.target.value)} className="textarea" rows={2} placeholder="Any special notes about this resident (optional)" />
           </div>
 
-          {/* Food Plan */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-            <div>
-              <label className="label">Food Plan</label>
-              <select
-                value={foodPlan}
-                onChange={(e) => setFoodPlan(e.target.value)}
-                className="select"
-              >
-                <option value="FULL_MESS">Full Mess - Fixed monthly fee</option>
-                <option value="NO_MESS">No Mess - Only app food orders (Rs 0 fixed)</option>
-                <option value="CUSTOM">Custom Fee - Set your own amount</option>
-              </select>
-              <p className="text-[11px] text-text-muted mt-1">
-                {foodPlan === "FULL_MESS" && "Hostel's fixed food fee will be charged every billing cycle. Set the amount in Billing → Settings."}
-                {foodPlan === "NO_MESS" && "No fixed food charge. Only charged if resident orders food through the app."}
-                {foodPlan === "CUSTOM" && "Set a custom monthly food fee for this resident (different from hostel default)."}
-              </p>
+          {/* Food / Mess Plan */}
+          <div className="mt-4">
+            <label className="label mb-2">Mess / Food Plan</label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {[
+                {
+                  value: "FULL_MESS",
+                  label: "Full Mess",
+                  desc: "Fixed monthly mess fee charged every billing cycle",
+                  emoji: "🍽️",
+                  color: "border-success text-success bg-success/5",
+                  activeColor: "border-success bg-success/10",
+                },
+                {
+                  value: "NO_MESS",
+                  label: "No Mess",
+                  desc: "No fixed fee — only charged if they order food via app",
+                  emoji: "🚫",
+                  color: "border-danger text-danger bg-danger/5",
+                  activeColor: "border-danger bg-danger/10",
+                },
+                {
+                  value: "CUSTOM",
+                  label: "Custom Fee",
+                  desc: "Set a custom food fee different from hostel default",
+                  emoji: "✏️",
+                  color: "border-warning text-warning bg-warning/5",
+                  activeColor: "border-warning bg-warning/10",
+                },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setFoodPlan(opt.value)}
+                  className={`p-3 rounded-xl border-2 text-left transition-all ${
+                    foodPlan === opt.value
+                      ? opt.activeColor + " shadow-sm"
+                      : "border-border dark:border-[#1E2D42] hover:border-primary/30"
+                  }`}
+                >
+                  <div className="text-xl mb-1">{opt.emoji}</div>
+                  <p className={`font-semibold text-sm ${foodPlan === opt.value ? "" : "text-text-primary dark:text-white"}`}>
+                    {opt.label}
+                  </p>
+                  <p className="text-[11px] text-text-muted mt-0.5">{opt.desc}</p>
+                </button>
+              ))}
             </div>
             {foodPlan === "CUSTOM" && (
-              <div>
+              <div className="mt-3">
                 <label className="label">Custom Food Fee (PKR/month)</label>
                 <input
                   type="number"

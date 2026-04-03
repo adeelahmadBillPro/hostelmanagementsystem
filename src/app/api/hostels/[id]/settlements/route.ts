@@ -147,24 +147,28 @@ export async function POST(
         },
       });
 
-      // Checkout: update resident status + free bed
+      // Checkout: update resident status + free bed + revoke portal access
       const resident = await tx.resident.findUnique({
         where: { id: residentId },
-        select: { bedId: true },
+        select: { bedId: true, userId: true },
       });
 
       await tx.resident.update({
         where: { id: residentId },
-        data: {
-          status: "CHECKED_OUT",
-          moveOutDate: new Date(),
-        },
+        data: { status: "CHECKED_OUT", moveOutDate: new Date() },
       });
 
       if (resident?.bedId) {
         await tx.bed.update({
           where: { id: resident.bedId },
           data: { status: "VACANT" },
+        });
+      }
+
+      if (resident?.userId) {
+        await tx.user.update({
+          where: { id: resident.userId },
+          data: { isActive: false },
         });
       }
 

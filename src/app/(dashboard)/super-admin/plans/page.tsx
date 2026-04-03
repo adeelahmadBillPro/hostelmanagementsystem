@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import Modal from "@/components/ui/modal";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
-import { Plus, Edit2, Trash2, Check, Building2, Users, Clock, CheckCircle2, XCircle, Loader2, Image as ImageIcon } from "lucide-react";
+import FileUpload from "@/components/ui/file-upload";
+import { Plus, Edit2, Trash2, Check, Building2, Users, Clock, CheckCircle2, XCircle, Loader2, Image as ImageIcon, Settings, Save, Smartphone, CreditCard, Banknote, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/components/providers";
 
 interface Plan {
@@ -44,6 +45,11 @@ export default function PlansPage() {
   const [pendingCount, setPendingCount] = useState(0);
   const [reviewLoading, setReviewLoading] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+
+  // Payment settings
+  const [showPaymentSettings, setShowPaymentSettings] = useState(false);
+  const [paySettings, setPaySettings] = useState<any>({});
+  const [savingPaySettings, setSavingPaySettings] = useState(false);
 
   const fetchPlans = async () => {
     try {
@@ -93,9 +99,31 @@ export default function PlansPage() {
     }
   };
 
+  const fetchPaymentSettings = async () => {
+    try {
+      const res = await fetch("/api/super-admin/payment-settings");
+      if (res.ok) setPaySettings(await res.json());
+    } catch { /* non-fatal */ }
+  };
+
+  const savePaymentSettings = async () => {
+    setSavingPaySettings(true);
+    try {
+      const res = await fetch("/api/super-admin/payment-settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(paySettings),
+      });
+      if (res.ok) addToast("Payment settings saved!", "success");
+      else addToast("Failed to save", "error");
+    } catch { addToast("Something went wrong", "error"); }
+    finally { setSavingPaySettings(false); }
+  };
+
   useEffect(() => {
     fetchPlans();
     fetchUpgradeRequests();
+    fetchPaymentSettings();
   }, []);
 
   const openAddModal = () => {
@@ -523,6 +551,117 @@ export default function PlansPage() {
           </div>
         </div>
       )}
+
+      {/* Payment Settings Section */}
+      <div className="mt-8 card overflow-hidden">
+        <button
+          onClick={() => setShowPaymentSettings(!showPaymentSettings)}
+          className="w-full flex items-center justify-between p-5 hover:bg-bg-main dark:hover:bg-[#0B1222] transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Settings size={18} className="text-primary" />
+            </div>
+            <div className="text-left">
+              <p className="font-semibold text-text-primary dark:text-white">Payment Account Settings</p>
+              <p className="text-xs text-text-muted">Configure payment accounts shown to tenants during plan upgrade</p>
+            </div>
+          </div>
+          {showPaymentSettings ? <ChevronUp size={18} className="text-text-muted" /> : <ChevronDown size={18} className="text-text-muted" />}
+        </button>
+
+        {showPaymentSettings && (
+          <div className="border-t border-border dark:border-[#1E2D42] p-5 space-y-6">
+            {/* Bank Transfer */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Building2 size={16} className="text-primary" />
+                <h4 className="font-semibold text-text-primary dark:text-white text-sm">Bank Transfer</h4>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="label">Bank Name</label>
+                  <input className="input w-full" placeholder="e.g., HBL, Meezan, Allied" value={paySettings.bankName || ""} onChange={e => setPaySettings({...paySettings, bankName: e.target.value})} />
+                </div>
+                <div>
+                  <label className="label">Account Title</label>
+                  <input className="input w-full" placeholder="Account holder name" value={paySettings.bankTitle || ""} onChange={e => setPaySettings({...paySettings, bankTitle: e.target.value})} />
+                </div>
+                <div>
+                  <label className="label">Account Number</label>
+                  <input className="input w-full" placeholder="Account number" value={paySettings.bankAccount || ""} onChange={e => setPaySettings({...paySettings, bankAccount: e.target.value})} />
+                </div>
+                <div>
+                  <label className="label">IBAN (optional)</label>
+                  <input className="input w-full" placeholder="PK00XXXX..." value={paySettings.bankIban || ""} onChange={e => setPaySettings({...paySettings, bankIban: e.target.value})} />
+                </div>
+              </div>
+              <div className="mt-3">
+                <label className="label">QR Code Image (optional)</label>
+                <FileUpload onUpload={url => setPaySettings({...paySettings, bankQrImage: url})} accept="image/*" label="Upload bank QR" currentUrl={paySettings.bankQrImage} />
+              </div>
+            </div>
+
+            {/* JazzCash */}
+            <div className="pt-4 border-t border-border dark:border-[#1E2D42]">
+              <div className="flex items-center gap-2 mb-3">
+                <Smartphone size={16} className="text-emerald-500" />
+                <h4 className="font-semibold text-text-primary dark:text-white text-sm">JazzCash</h4>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="label">JazzCash Number</label>
+                  <input className="input w-full" placeholder="03XX-XXXXXXX" value={paySettings.jazzcashNumber || ""} onChange={e => setPaySettings({...paySettings, jazzcashNumber: e.target.value})} />
+                </div>
+                <div>
+                  <label className="label">Account Name</label>
+                  <input className="input w-full" placeholder="Name on account" value={paySettings.jazzcashName || ""} onChange={e => setPaySettings({...paySettings, jazzcashName: e.target.value})} />
+                </div>
+              </div>
+              <div className="mt-3">
+                <label className="label">QR Code Image (optional)</label>
+                <FileUpload onUpload={url => setPaySettings({...paySettings, jazzcashQrImage: url})} accept="image/*" label="Upload JazzCash QR" currentUrl={paySettings.jazzcashQrImage} />
+              </div>
+            </div>
+
+            {/* EasyPaisa */}
+            <div className="pt-4 border-t border-border dark:border-[#1E2D42]">
+              <div className="flex items-center gap-2 mb-3">
+                <CreditCard size={16} className="text-amber-500" />
+                <h4 className="font-semibold text-text-primary dark:text-white text-sm">EasyPaisa</h4>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="label">EasyPaisa Number</label>
+                  <input className="input w-full" placeholder="03XX-XXXXXXX" value={paySettings.easypaisaNumber || ""} onChange={e => setPaySettings({...paySettings, easypaisaNumber: e.target.value})} />
+                </div>
+                <div>
+                  <label className="label">Account Name</label>
+                  <input className="input w-full" placeholder="Name on account" value={paySettings.easypaisaName || ""} onChange={e => setPaySettings({...paySettings, easypaisaName: e.target.value})} />
+                </div>
+              </div>
+              <div className="mt-3">
+                <label className="label">QR Code Image (optional)</label>
+                <FileUpload onUpload={url => setPaySettings({...paySettings, easypaisaQrImage: url})} accept="image/*" label="Upload EasyPaisa QR" currentUrl={paySettings.easypaisaQrImage} />
+              </div>
+            </div>
+
+            {/* Cash */}
+            <div className="pt-4 border-t border-border dark:border-[#1E2D42]">
+              <div className="flex items-center gap-2 mb-3">
+                <Banknote size={16} className="text-blue-500" />
+                <h4 className="font-semibold text-text-primary dark:text-white text-sm">Cash Payment Instructions</h4>
+              </div>
+              <textarea className="input w-full min-h-[70px] resize-none" placeholder="e.g., Visit our office at XYZ address. Contact: 03XX-XXXXXXX" value={paySettings.cashInstructions || ""} onChange={e => setPaySettings({...paySettings, cashInstructions: e.target.value})} />
+            </div>
+
+            <button onClick={savePaymentSettings} disabled={savingPaySettings} className="btn-primary flex items-center gap-2">
+              {savingPaySettings ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+              {savingPaySettings ? "Saving..." : "Save Payment Settings"}
+            </button>
+          </div>
+        )}
+      </div>
 
       <ConfirmDialog
         isOpen={confirmOpen}

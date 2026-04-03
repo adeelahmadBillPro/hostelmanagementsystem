@@ -189,6 +189,16 @@ export default function MeterReadingsPage() {
   return (
     <DashboardLayout title="Meter Readings" hostelId={hostelId}>
       <div className="space-y-6">
+        {/* Explanation Banner */}
+        <div className="bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4">
+          <p className="font-semibold text-yellow-800 dark:text-yellow-300 text-sm mb-1">⚡ How Electricity Billing Works</p>
+          <ul className="text-yellow-700 dark:text-yellow-400 text-xs space-y-0.5">
+            <li>• Add meter reading for a room (units consumed × rate per unit)</li>
+            <li>• These charges appear automatically when generating bills for that month</li>
+            <li>• Each room gets its own meter reading — shared rooms split the cost</li>
+          </ul>
+        </div>
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>

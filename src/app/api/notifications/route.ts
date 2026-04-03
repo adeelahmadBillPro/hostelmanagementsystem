@@ -205,6 +205,35 @@ export async function GET() {
         hostelIds = [...new Set([...hostelIds, ...tenantHostelIds])];
       }
 
+      // Admin messages (for managers: unread from admin; for admin: unread from managers)
+      if (role === "HOSTEL_MANAGER") {
+        const unreadAdminMsgs = await prisma.adminMessageRecipient.count({
+          where: { userId, isRead: false },
+        });
+        if (unreadAdminMsgs > 0) {
+          notifications.push({
+            type: "adminMessage",
+            text: `${unreadAdminMsgs} message${unreadAdminMsgs > 1 ? "s" : ""} from admin`,
+            link: "/managers/messages",
+            count: unreadAdminMsgs,
+            icon: "message",
+          });
+        }
+      } else if (role === "TENANT_ADMIN") {
+        const unreadFromManagers = await prisma.adminMessageRecipient.count({
+          where: { userId, isRead: false },
+        });
+        if (unreadFromManagers > 0) {
+          notifications.push({
+            type: "adminMessage",
+            text: `${unreadFromManagers} repl${unreadFromManagers > 1 ? "ies" : "y"} from managers`,
+            link: "/managers/messages",
+            count: unreadFromManagers,
+            icon: "message",
+          });
+        }
+      }
+
       if (hostelIds.length > 0) {
         const primaryHostelId = hostelIds[0];
 

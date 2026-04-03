@@ -21,6 +21,8 @@ import {
   KeyRound,
   Copy,
   Check,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import { useToast } from "@/components/providers";
 
@@ -41,6 +43,7 @@ interface ResidentData {
     phone: string | null;
     cnic: string | null;
     image: string | null;
+    isActive: boolean;
   };
   room: {
     id: string;
@@ -110,6 +113,7 @@ export default function ResidentsPage() {
   const [resetCreds, setResetCreds] = useState<{ name: string; email: string; password: string; phone?: string } | null>(null);
   const [resettingId, setResettingId] = useState<string | null>(null);
   const [copied, setCopied] = useState("");
+  const [togglingAccessId, setTogglingAccessId] = useState<string | null>(null);
 
   const handleResetPassword = async (resident: ResidentData) => {
     if (!confirm(`Reset password for ${resident.user.name}?`)) return;
@@ -125,6 +129,28 @@ export default function ResidentsPage() {
       addToast(err.message || "Failed to reset password", "error");
     } finally {
       setResettingId(null);
+    }
+  };
+
+  const handleToggleAccess = async (resident: ResidentData) => {
+    const grant = !resident.user.isActive;
+    const label = grant ? "Allow" : "Revoke";
+    if (!confirm(`${label} portal access for ${resident.user.name}?`)) return;
+    setTogglingAccessId(resident.id);
+    try {
+      const res = await fetch(`/api/hostels/${hostelId}/residents/${resident.id}/toggle-access`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: grant }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      addToast(data.message, "success");
+      fetchResidents();
+    } catch (err: any) {
+      addToast(err.message || "Failed to update access", "error");
+    } finally {
+      setTogglingAccessId(null);
     }
   };
 
@@ -392,6 +418,7 @@ export default function ResidentsPage() {
             <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
           </div>
         ) : (
+          <div className="overflow-x-auto">
           <DataTable
             columns={columns}
             data={foodFilter === "ALL" ? residents : residents.filter((r: any) => (r.foodPlan || "FULL_MESS") === foodFilter)}
@@ -444,9 +471,30 @@ export default function ResidentsPage() {
                     </button>
                   </>
                 )}
+                {row.status === "CHECKED_OUT" && (
+                  <button
+                    onClick={() => handleToggleAccess(row)}
+                    disabled={togglingAccessId === row.id}
+                    className={`p-1.5 rounded-lg transition-colors ${
+                      row.user.isActive
+                        ? "hover:bg-red-50 dark:hover:bg-red-900/20"
+                        : "hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                    }`}
+                    title={row.user.isActive ? "Revoke Portal Access" : "Grant Portal Access"}
+                  >
+                    {togglingAccessId === row.id ? (
+                      <span className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin block" />
+                    ) : row.user.isActive ? (
+                      <Unlock size={16} className="text-emerald-600" />
+                    ) : (
+                      <Lock size={16} className="text-red-400" />
+                    )}
+                  </button>
+                )}
               </div>
             )}
           />
+          </div>
         )}
       </div>
 

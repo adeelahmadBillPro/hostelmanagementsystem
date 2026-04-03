@@ -149,15 +149,18 @@ export async function PATCH(
       const result = await prisma.$transaction(async (tx) => {
         const updated = await tx.resident.update({
           where: { id: residentId },
-          data: {
-            status: "CHECKED_OUT",
-            moveOutDate: new Date(),
-          },
+          data: { status: "CHECKED_OUT", moveOutDate: new Date() },
         });
 
         await tx.bed.update({
           where: { id: resident.bedId },
           data: { status: "VACANT" },
+        });
+
+        // Revoke portal access on checkout
+        await tx.user.update({
+          where: { id: resident.userId },
+          data: { isActive: false },
         });
 
         return updated;
@@ -178,6 +181,8 @@ export async function PATCH(
       medicalCondition,
       emergencyContact,
       emergencyPhone,
+      foodPlan,
+      customFoodFee,
     } = body;
 
     const result = await prisma.$transaction(async (tx) => {
@@ -204,6 +209,10 @@ export async function PATCH(
         residentData.emergencyContact = emergencyContact || null;
       if (emergencyPhone !== undefined)
         residentData.emergencyPhone = emergencyPhone || null;
+      if (foodPlan !== undefined && ["FULL_MESS", "NO_MESS", "CUSTOM"].includes(foodPlan))
+        residentData.foodPlan = foodPlan;
+      if (customFoodFee !== undefined)
+        residentData.customFoodFee = parseFloat(customFoodFee) || 0;
 
       const updated = await tx.resident.update({
         where: { id: residentId },
@@ -266,15 +275,18 @@ export async function DELETE(
     const result = await prisma.$transaction(async (tx) => {
       const updated = await tx.resident.update({
         where: { id: residentId },
-        data: {
-          status: "CHECKED_OUT",
-          moveOutDate: new Date(),
-        },
+        data: { status: "CHECKED_OUT", moveOutDate: new Date() },
       });
 
       await tx.bed.update({
         where: { id: resident.bedId },
         data: { status: "VACANT" },
+      });
+
+      // Revoke portal access on checkout
+      await tx.user.update({
+        where: { id: resident.userId },
+        data: { isActive: false },
       });
 
       return updated;

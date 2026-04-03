@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "@/lib/session";
+import { getPortalSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { rateLimit } from "@/lib/rate-limit";
 
 // GET: Return all payment proofs for logged-in resident
 export async function GET() {
   try {
-    const session = await getSession();
+    const session = await getPortalSession();
     if (!session) {
       return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
     }
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
   if (limited) return limited;
 
   try {
-    const session = await getSession();
+    const session = await getPortalSession();
     if (!session) {
       return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
     }

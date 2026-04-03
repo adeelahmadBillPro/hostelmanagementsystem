@@ -42,6 +42,11 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Your account has been suspended. Contact support.");
         }
 
+        // Check if user portal access is active
+        if (!user.isActive) {
+          throw new Error("Portal access has been revoked. Contact hostel management to restore access.");
+        }
+
         return {
           id: user.id,
           name: user.name,

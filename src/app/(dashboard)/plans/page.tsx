@@ -8,8 +8,8 @@ import { useToast } from "@/components/providers";
 import { formatCurrency } from "@/lib/utils";
 import {
   Crown, Check, Zap, Clock, CheckCircle2, XCircle,
-  Send, Loader2, Star, AlertTriangle, CreditCard,
-  Building, Smartphone, Banknote,
+  Send, Loader2, AlertTriangle, CreditCard,
+  Building, Smartphone, Banknote, QrCode, Copy, Info,
 } from "lucide-react";
 
 interface Plan {
@@ -58,10 +58,14 @@ export default function PlansPage() {
   const [proofImageUrl, setProofImageUrl] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [paySettings, setPaySettings] = useState<any>(null);
 
   const hasPending = requests.some((r) => r.status === "PENDING");
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+    fetch("/api/payment-settings").then(r => r.ok ? r.json() : null).then(d => { if (d) setPaySettings(d); });
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -314,6 +318,63 @@ export default function PlansPage() {
                 })}
               </div>
             </div>
+
+            {/* Payment account details */}
+            {method && paySettings && (
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                  <Info size={15} />
+                  Send payment to this account
+                </div>
+                {method === "BANK" && (paySettings.bankAccount || paySettings.bankName) && (
+                  <div className="space-y-1.5 text-sm">
+                    {paySettings.bankName && <p><span className="text-text-muted">Bank:</span> <strong className="text-text-primary dark:text-white">{paySettings.bankName}</strong></p>}
+                    {paySettings.bankTitle && <p><span className="text-text-muted">Title:</span> <strong className="text-text-primary dark:text-white">{paySettings.bankTitle}</strong></p>}
+                    {paySettings.bankAccount && (
+                      <p className="flex items-center gap-2">
+                        <span className="text-text-muted">Account:</span>
+                        <strong className="text-text-primary dark:text-white font-mono">{paySettings.bankAccount}</strong>
+                        <button onClick={() => { navigator.clipboard.writeText(paySettings.bankAccount); addToast("Copied!", "success"); }} className="p-1 rounded hover:bg-primary/10"><Copy size={13} className="text-primary" /></button>
+                      </p>
+                    )}
+                    {paySettings.bankIban && <p><span className="text-text-muted">IBAN:</span> <span className="font-mono text-xs text-text-primary dark:text-white">{paySettings.bankIban}</span></p>}
+                    {paySettings.bankQrImage && <img src={paySettings.bankQrImage} alt="Bank QR" className="w-32 h-32 object-contain rounded-lg border border-border mt-2" />}
+                  </div>
+                )}
+                {method === "JAZZCASH" && (paySettings.jazzcashNumber || paySettings.jazzcashName) && (
+                  <div className="space-y-1.5 text-sm">
+                    {paySettings.jazzcashName && <p><span className="text-text-muted">Name:</span> <strong className="text-text-primary dark:text-white">{paySettings.jazzcashName}</strong></p>}
+                    {paySettings.jazzcashNumber && (
+                      <p className="flex items-center gap-2">
+                        <span className="text-text-muted">Number:</span>
+                        <strong className="text-text-primary dark:text-white font-mono">{paySettings.jazzcashNumber}</strong>
+                        <button onClick={() => { navigator.clipboard.writeText(paySettings.jazzcashNumber); addToast("Copied!", "success"); }} className="p-1 rounded hover:bg-primary/10"><Copy size={13} className="text-primary" /></button>
+                      </p>
+                    )}
+                    {paySettings.jazzcashQrImage && <img src={paySettings.jazzcashQrImage} alt="JazzCash QR" className="w-32 h-32 object-contain rounded-lg border border-border mt-2" />}
+                  </div>
+                )}
+                {method === "EASYPAISA" && (paySettings.easypaisaNumber || paySettings.easypaisaName) && (
+                  <div className="space-y-1.5 text-sm">
+                    {paySettings.easypaisaName && <p><span className="text-text-muted">Name:</span> <strong className="text-text-primary dark:text-white">{paySettings.easypaisaName}</strong></p>}
+                    {paySettings.easypaisaNumber && (
+                      <p className="flex items-center gap-2">
+                        <span className="text-text-muted">Number:</span>
+                        <strong className="text-text-primary dark:text-white font-mono">{paySettings.easypaisaNumber}</strong>
+                        <button onClick={() => { navigator.clipboard.writeText(paySettings.easypaisaNumber); addToast("Copied!", "success"); }} className="p-1 rounded hover:bg-primary/10"><Copy size={13} className="text-primary" /></button>
+                      </p>
+                    )}
+                    {paySettings.easypaisaQrImage && <img src={paySettings.easypaisaQrImage} alt="EasyPaisa QR" className="w-32 h-32 object-contain rounded-lg border border-border mt-2" />}
+                  </div>
+                )}
+                {method === "CASH" && paySettings.cashInstructions && (
+                  <p className="text-sm text-text-secondary dark:text-slate-400">{paySettings.cashInstructions}</p>
+                )}
+                {!paySettings.bankAccount && !paySettings.jazzcashNumber && !paySettings.easypaisaNumber && !paySettings.cashInstructions && (
+                  <p className="text-xs text-text-muted italic">Payment details not configured yet. Contact admin for account information.</p>
+                )}
+              </div>
+            )}
 
             {method && method !== "CASH" && (
               <div>

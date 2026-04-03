@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import DashboardLayout from "@/components/layout/dashboard-layout";
 import Modal from "@/components/ui/modal";
 import ConfirmDialog from "@/components/ui/confirm-dialog";
@@ -36,6 +37,8 @@ const HOSTEL_TYPES = ["GOVERNMENT", "UNIVERSITY", "PRIVATE"] as const;
 
 export default function HostelsPage() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "TENANT_ADMIN" || session?.user?.role === "SUPER_ADMIN";
   const [hostels, setHostels] = useState<Hostel[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
@@ -284,17 +287,13 @@ export default function HostelsPage() {
             {hostels.map((hostel, index) => (
               <div
                 key={hostel.id}
-                className={`card ${getCardBorderColor(hostel.type)} opacity-0 animate-fade-in-up`}
+                className={`card ${getCardBorderColor(hostel.type)} opacity-0 animate-fade-in-up hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200`}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div
-                    className="flex-1 min-w-0 cursor-pointer"
-                    onClick={() =>
-                      router.push(`/hostel/${hostel.id}/buildings`)
-                    }
-                  >
-                    <h3 className="font-semibold text-text-primary dark:text-white truncate">
+                {/* Card Header */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-base text-text-primary dark:text-white truncate">
                       {hostel.name}
                     </h3>
                     <div className="flex items-center gap-1 text-xs text-text-muted mt-1">
@@ -305,76 +304,75 @@ export default function HostelsPage() {
                       </span>
                     </div>
                   </div>
-                  <span className={getTypeBadgeClass(hostel.type)}>
-                    {hostel.type}
-                  </span>
+                  <div className="flex items-center gap-2 ml-2 shrink-0">
+                    <span className={`${getTypeBadgeClass(hostel.type)} text-[10px]`}>
+                      {hostel.type}
+                    </span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); openEditModal(hostel); }}
+                      className="p-1.5 rounded-lg hover:bg-bg-main dark:hover:bg-[#111C2E] transition-colors"
+                      title="Edit Hostel"
+                    >
+                      <Edit2 size={14} className="text-text-muted" />
+                    </button>
+                    {isAdmin && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleDelete(hostel); }}
+                        className="p-1.5 rounded-lg hover:bg-danger/10 transition-colors"
+                        title="Delete Hostel"
+                      >
+                        <Trash2 size={14} className="text-danger" />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3 mb-3">
-                  <div className="text-center p-2 rounded-lg bg-bg-main dark:bg-[#0B1222]">
-                    <p className="text-lg font-bold text-text-primary dark:text-white">
+                {/* Stats Grid */}
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  <div className="text-center p-2.5 rounded-xl bg-bg-main dark:bg-[#0B1222] border border-border/50 dark:border-[#1E2D42]">
+                    <p className="text-xl font-bold text-text-primary dark:text-white">
                       {hostel.totalRooms}
                     </p>
-                    <p className="text-[10px] text-text-muted uppercase tracking-wider">
+                    <p className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
                       Rooms
                     </p>
                   </div>
-                  <div className="text-center p-2 rounded-lg bg-bg-main dark:bg-[#0B1222]">
-                    <p className="text-lg font-bold text-success">
+                  <div className="text-center p-2.5 rounded-xl bg-success/5 border border-success/20">
+                    <p className="text-xl font-bold text-success">
                       {hostel.occupiedBeds}
                     </p>
-                    <p className="text-[10px] text-text-muted uppercase tracking-wider">
+                    <p className="text-[10px] text-success/70 uppercase tracking-wide mt-0.5">
                       Occupied
                     </p>
                   </div>
-                  <div className="text-center p-2 rounded-lg bg-bg-main dark:bg-[#0B1222]">
-                    <p className="text-lg font-bold text-warning">
+                  <div className="text-center p-2.5 rounded-xl bg-warning/5 border border-warning/20">
+                    <p className="text-xl font-bold text-warning">
                       {hostel.vacantBeds}
                     </p>
-                    <p className="text-[10px] text-text-muted uppercase tracking-wider">
+                    <p className="text-[10px] text-warning/70 uppercase tracking-wide mt-0.5">
                       Vacant
                     </p>
                   </div>
                 </div>
 
+                {/* Revenue + Manage Button */}
                 <div className="flex items-center justify-between pt-3 border-t border-border dark:border-[#1E2D42]">
                   <div>
-                    <p className="text-xs text-text-muted">Monthly Revenue</p>
-                    <p className="text-sm font-semibold text-text-primary dark:text-white">
+                    <p className="text-[10px] text-text-muted uppercase tracking-wide">Monthly Revenue</p>
+                    <p className="text-sm font-bold text-text-primary dark:text-white mt-0.5">
                       {formatCurrency(hostel.monthlyRevenue)}
                     </p>
+                    <p className="text-[10px] text-text-muted mt-0.5">
+                      {hostel.activeResidents} active residents
+                    </p>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openEditModal(hostel);
-                      }}
-                      className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#111C2E] transition-colors"
-                      title="Edit"
-                    >
-                      <Edit2 size={16} className="text-text-muted" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(hostel);
-                      }}
-                      className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#111C2E] transition-colors"
-                      title="Delete"
-                    >
-                      <Trash2 size={16} className="text-danger" />
-                    </button>
-                    <button
-                      onClick={() =>
-                        router.push(`/hostel/${hostel.id}/buildings`)
-                      }
-                      className="p-2 rounded-lg hover:bg-bg-main dark:hover:bg-[#111C2E] transition-colors"
-                      title="View Details"
-                    >
-                      <ArrowRight size={16} className="text-primary" />
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => router.push(`/hostel/${hostel.id}/buildings`)}
+                    className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary/90 transition-all shadow-sm hover:shadow-md"
+                  >
+                    Manage
+                    <ArrowRight size={15} />
+                  </button>
                 </div>
               </div>
             ))}

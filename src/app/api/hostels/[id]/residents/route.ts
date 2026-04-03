@@ -54,6 +54,7 @@ export async function GET(
             phone: true,
             cnic: true,
             image: true,
+            isActive: true,
           },
         },
         room: {

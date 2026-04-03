@@ -11,16 +11,16 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#4F46E5",
-          dark: "#3730A3",
-          light: "#EEF2FF",
-          50: "#EDEFFF",
-          100: "#DEE1FF",
-          200: "#C4C7FF",
-          400: "#8B85FF",
-          500: "#4F46E5",
-          600: "#3730A3",
-          700: "#2D2780",
+          DEFAULT: "#0D9488",
+          dark: "#0F766E",
+          light: "#F0FDFA",
+          50: "#F0FDFA",
+          100: "#CCFBF1",
+          200: "#99F6E4",
+          400: "#2DD4BF",
+          500: "#14B8A6",
+          600: "#0D9488",
+          700: "#0F766E",
         },
         secondary: {
           DEFAULT: "#0EA5E9",
@@ -37,9 +37,9 @@ const config: Config = {
           dark: "#92400E",
         },
         danger: {
-          DEFAULT: "#EF4444",
-          light: "#FEF2F2",
-          dark: "#991B1B",
+          DEFAULT: "#DB3F3E",
+          light: "#FEF1F1",
+          dark: "#8B1A1A",
         },
         sidebar: {
           DEFAULT: "#0B1929",
@@ -58,7 +58,7 @@ const config: Config = {
         },
         border: {
           DEFAULT: "#E2E8F0",
-          focus: "#4F46E5",
+          focus: "#0D9488",
         },
       },
       fontFamily: {
@@ -69,10 +69,10 @@ const config: Config = {
         "card-hover": "0 10px 25px -5px rgba(0,0,0,0.08), 0 4px 10px -2px rgba(0,0,0,0.04)",
         modal: "0 25px 65px -15px rgba(0,0,0,0.25), 0 8px 20px -8px rgba(0,0,0,0.1)",
         header: "0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.04)",
-        glow: "0 0 20px rgba(79,70,229,0.15)",
+        glow: "0 0 20px rgba(13,148,136,0.15)",
         "glow-success": "0 0 20px rgba(16,185,129,0.15)",
         "glow-warning": "0 0 20px rgba(245,158,11,0.15)",
-        "glow-danger": "0 0 20px rgba(239,68,68,0.15)",
+        "glow-danger": "0 0 20px rgba(219,63,62,0.15)",
         dropdown: "0 12px 36px -8px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05)",
         "inner-glow": "inset 0 1px 0 0 rgba(255,255,255,0.05)",
       },

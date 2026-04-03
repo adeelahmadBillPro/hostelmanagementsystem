@@ -129,6 +129,10 @@ export default function FoodOrderingPage() {
   const [orderingWindows, setOrderingWindows] = useState<any[]>([]);
   const [foodPlanInfo, setFoodPlanInfo] = useState<{ plan: string; customFee: number; hostelFee: number } | null>(null);
   const [now, setNow] = useState(new Date());
+  const [showPlanModal, setShowPlanModal] = useState(false);
+  const [editPlan, setEditPlan] = useState("FULL_MESS");
+  const [editCustomFee, setEditCustomFee] = useState("");
+  const [savingPlan, setSavingPlan] = useState(false);
 
   // Live clock for countdown timers (updates every second)
   useEffect(() => {
@@ -319,6 +323,35 @@ export default function FoodOrderingPage() {
     }
   };
 
+  const openPlanModal = () => {
+    setEditPlan(foodPlanInfo?.plan || "FULL_MESS");
+    setEditCustomFee(String(foodPlanInfo?.customFee || ""));
+    setShowPlanModal(true);
+  };
+
+  const saveFoodPlan = async () => {
+    setSavingPlan(true);
+    try {
+      const res = await fetch("/api/portal/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ foodPlan: editPlan, customFoodFee: parseFloat(editCustomFee) || 0 }),
+      });
+      if (res.ok) {
+        setFoodPlanInfo((prev) => prev ? { ...prev, plan: editPlan, customFee: parseFloat(editCustomFee) || 0 } : prev);
+        setShowPlanModal(false);
+        addToast("Mess plan updated successfully!", "success");
+      } else {
+        const err = await res.json().catch(() => null);
+        addToast(err?.error || "Failed to update plan", "error");
+      }
+    } catch {
+      addToast("Network error. Please try again.", "error");
+    } finally {
+      setSavingPlan(false);
+    }
+  };
+
   // Tab counts
   const tabCounts = useMemo(() => {
     const counts: Record<MealType, number> = { BREAKFAST: 0, LUNCH: 0, DINNER: 0, SNACK: 0 };
@@ -373,30 +406,42 @@ export default function FoodOrderingPage() {
 
         {/* Food Plan Banner */}
         {foodPlanInfo && (
-          <div className={`rounded-xl p-3.5 flex items-start gap-3 text-sm ${
+          <div className={`rounded-xl p-3.5 flex items-start justify-between gap-3 text-sm ${
             foodPlanInfo.plan === "FULL_MESS" ? "bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800" :
             foodPlanInfo.plan === "NO_MESS" ? "bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800" :
             "bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800"
           }`}>
-            <UtensilsCrossed size={18} className={
-              foodPlanInfo.plan === "FULL_MESS" ? "text-emerald-600 mt-0.5" :
-              foodPlanInfo.plan === "NO_MESS" ? "text-amber-600 mt-0.5" : "text-indigo-600 mt-0.5"
-            } />
-            <div>
-              <p className={`font-semibold ${
-                foodPlanInfo.plan === "FULL_MESS" ? "text-emerald-800 dark:text-emerald-300" :
-                foodPlanInfo.plan === "NO_MESS" ? "text-amber-800 dark:text-amber-300" : "text-indigo-800 dark:text-indigo-300"
-              }`}>
-                {foodPlanInfo.plan === "FULL_MESS" && `Full Mess Plan (${formatCurrency(foodPlanInfo.hostelFee)}/month)`}
-                {foodPlanInfo.plan === "NO_MESS" && "No Mess Plan"}
-                {foodPlanInfo.plan === "CUSTOM" && `Custom Plan (${formatCurrency(foodPlanInfo.customFee)}/month)`}
-              </p>
-              <p className="text-xs text-text-muted mt-0.5">
-                {foodPlanInfo.plan === "FULL_MESS" && "Your mess fee is fixed. Extra orders below will be charged separately on your bill."}
-                {foodPlanInfo.plan === "NO_MESS" && "You don't have a mess plan. All orders below will be charged to your monthly bill."}
-                {foodPlanInfo.plan === "CUSTOM" && "Extra orders below will be charged separately on top of your custom food fee."}
-              </p>
+            <div className="flex items-start gap-3">
+              <UtensilsCrossed size={18} className={
+                foodPlanInfo.plan === "FULL_MESS" ? "text-emerald-600 mt-0.5" :
+                foodPlanInfo.plan === "NO_MESS" ? "text-amber-600 mt-0.5" : "text-indigo-600 mt-0.5"
+              } />
+              <div>
+                <p className={`font-semibold ${
+                  foodPlanInfo.plan === "FULL_MESS" ? "text-emerald-800 dark:text-emerald-300" :
+                  foodPlanInfo.plan === "NO_MESS" ? "text-amber-800 dark:text-amber-300" : "text-indigo-800 dark:text-indigo-300"
+                }`}>
+                  {foodPlanInfo.plan === "FULL_MESS" && `Full Mess Plan (${formatCurrency(foodPlanInfo.hostelFee)}/month)`}
+                  {foodPlanInfo.plan === "NO_MESS" && "No Mess Plan"}
+                  {foodPlanInfo.plan === "CUSTOM" && `Custom Plan (${formatCurrency(foodPlanInfo.customFee)}/month)`}
+                </p>
+                <p className="text-xs text-text-muted mt-0.5">
+                  {foodPlanInfo.plan === "FULL_MESS" && "Your mess fee is fixed. Extra orders will be charged separately."}
+                  {foodPlanInfo.plan === "NO_MESS" && "No mess plan. All orders will be added to your monthly bill."}
+                  {foodPlanInfo.plan === "CUSTOM" && "Extra orders charged on top of your custom food fee."}
+                </p>
+              </div>
             </div>
+            <button
+              onClick={openPlanModal}
+              className={`shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                foodPlanInfo.plan === "FULL_MESS" ? "bg-emerald-100 dark:bg-emerald-800/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-800/60" :
+                foodPlanInfo.plan === "NO_MESS" ? "bg-amber-100 dark:bg-amber-800/40 text-amber-700 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-800/60" :
+                "bg-indigo-100 dark:bg-indigo-800/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-200 dark:hover:bg-indigo-800/60"
+              }`}
+            >
+              Change Plan
+            </button>
           </div>
         )}
 
@@ -982,6 +1027,98 @@ export default function FoodOrderingPage() {
                   Confirm & Place Order
                 </>
               )}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ── Change Mess Plan Modal ─────────────────────────────────────── */}
+      <Modal
+        isOpen={showPlanModal}
+        onClose={() => setShowPlanModal(false)}
+        title="Change Mess Plan"
+        maxWidth="max-w-[460px]"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-text-muted">Choose your preferred mess plan. Changes take effect from the next billing cycle.</p>
+
+          <div className="space-y-3">
+            {[
+              {
+                key: "FULL_MESS",
+                icon: "🍽️",
+                title: "Full Mess",
+                desc: "Fixed monthly mess fee included in your bill. Extra orders charged separately.",
+                color: "border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-900/20",
+                activeRing: "ring-2 ring-emerald-500",
+              },
+              {
+                key: "NO_MESS",
+                icon: "🚫",
+                title: "No Mess",
+                desc: "No fixed mess fee. Pay only for what you order from the menu.",
+                color: "border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/20",
+                activeRing: "ring-2 ring-amber-500",
+              },
+              {
+                key: "CUSTOM",
+                icon: "✏️",
+                title: "Custom Fee",
+                desc: "Agree a custom monthly food fee with hostel management.",
+                color: "border-indigo-300 bg-indigo-50 dark:border-indigo-700 dark:bg-indigo-900/20",
+                activeRing: "ring-2 ring-indigo-500",
+              },
+            ].map((option) => (
+              <button
+                key={option.key}
+                type="button"
+                onClick={() => setEditPlan(option.key)}
+                className={`w-full flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all ${
+                  editPlan === option.key
+                    ? `${option.color} ${option.activeRing}`
+                    : "border-border dark:border-[#1E2D42] hover:border-gray-300 dark:hover:border-[#2E3D52]"
+                }`}
+              >
+                <span className="text-2xl leading-none mt-0.5">{option.icon}</span>
+                <div>
+                  <p className="font-semibold text-text-primary dark:text-white">{option.title}</p>
+                  <p className="text-xs text-text-muted mt-0.5">{option.desc}</p>
+                </div>
+                {editPlan === option.key && (
+                  <CheckCircle size={18} className="ml-auto shrink-0 text-emerald-500 mt-0.5" />
+                )}
+              </button>
+            ))}
+          </div>
+
+          {editPlan === "CUSTOM" && (
+            <div>
+              <label className="label">Custom Monthly Fee (PKR)</label>
+              <input
+                type="number"
+                value={editCustomFee}
+                onChange={(e) => setEditCustomFee(e.target.value)}
+                className="input"
+                placeholder="Enter agreed amount"
+                min="0"
+              />
+              <p className="text-[11px] text-text-muted mt-1">Enter the fee agreed with hostel management.</p>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-2">
+            <button onClick={() => setShowPlanModal(false)} className="btn-secondary">Cancel</button>
+            <button
+              onClick={saveFoodPlan}
+              disabled={savingPlan}
+              className="btn-primary"
+            >
+              {savingPlan ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Saving...
+                </span>
+              ) : "Save Plan"}
             </button>
           </div>
         </div>

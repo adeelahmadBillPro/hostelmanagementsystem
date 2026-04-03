@@ -196,6 +196,8 @@ export default function ResidentProfilePage() {
   const [editMedicalCondition, setEditMedicalCondition] = useState("");
   const [editEmergencyContact, setEditEmergencyContact] = useState("");
   const [editEmergencyPhone, setEditEmergencyPhone] = useState("");
+  const [editFoodPlan, setEditFoodPlan] = useState("FULL_MESS");
+  const [editCustomFoodFee, setEditCustomFoodFee] = useState("");
 
   const fetchResident = useCallback(async () => {
     try {
@@ -236,6 +238,8 @@ export default function ResidentProfilePage() {
     setEditMedicalCondition(resident.medicalCondition || "");
     setEditEmergencyContact(resident.emergencyContact || "");
     setEditEmergencyPhone(resident.emergencyPhone || "");
+    setEditFoodPlan(resident.foodPlan || "FULL_MESS");
+    setEditCustomFoodFee(resident.customFoodFee ? String(resident.customFoodFee) : "");
     setEditError("");
     setShowEditModal(true);
   };
@@ -269,6 +273,8 @@ export default function ResidentProfilePage() {
             medicalCondition: editMedicalCondition.trim() || null,
             emergencyContact: editEmergencyContact.trim() || null,
             emergencyPhone: editEmergencyPhone.trim() || null,
+            foodPlan: editFoodPlan,
+            customFoodFee: editFoodPlan === "CUSTOM" ? (parseFloat(editCustomFoodFee) || 0) : undefined,
           }),
         }
       );
@@ -1163,6 +1169,39 @@ export default function ResidentProfilePage() {
             />
           </div>
         </div>
+
+        {/* Food / Mess Plan */}
+        <div className="mt-4 pt-4 border-t border-border dark:border-[#1E2D42]">
+          <label className="label mb-2">Mess / Food Plan</label>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { value: "FULL_MESS", label: "Full Mess", emoji: "🍽️", color: "border-success", activeBg: "bg-success/10" },
+              { value: "NO_MESS", label: "No Mess", emoji: "🚫", color: "border-danger", activeBg: "bg-danger/10" },
+              { value: "CUSTOM", label: "Custom Fee", emoji: "✏️", color: "border-warning", activeBg: "bg-warning/10" },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setEditFoodPlan(opt.value)}
+                className={`p-2.5 rounded-xl border-2 text-center transition-all ${
+                  editFoodPlan === opt.value ? `${opt.color} ${opt.activeBg}` : "border-border dark:border-[#1E2D42] hover:border-primary/30"
+                }`}
+              >
+                <div className="text-lg">{opt.emoji}</div>
+                <p className="text-xs font-semibold mt-0.5 text-text-primary dark:text-white">{opt.label}</p>
+              </button>
+            ))}
+          </div>
+          {editFoodPlan === "CUSTOM" && (
+            <div className="mt-2">
+              <label className="label text-xs">Custom Food Fee (PKR/month)</label>
+              <input type="number" value={editCustomFoodFee}
+                onChange={e => setEditCustomFoodFee(e.target.value)}
+                className="input" placeholder="e.g., 3000" min="0" />
+            </div>
+          )}
+        </div>
+
         <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border dark:border-[#1E2D42]">
           <button
             onClick={() => setShowEditModal(false)}

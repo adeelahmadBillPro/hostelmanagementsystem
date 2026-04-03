@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hostelhub-v1';
+const CACHE_NAME = 'hostelhub-v5';
 const urlsToCache = ['/', '/login'];
 
 self.addEventListener('install', (event) => {

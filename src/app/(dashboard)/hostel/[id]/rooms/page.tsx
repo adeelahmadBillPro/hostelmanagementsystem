@@ -17,13 +17,26 @@ import {
   Filter,
   Building2,
   Layers,
+  Map as MapIcon,
+  LayoutGrid,
+  Search,
+  X,
+  User,
 } from "lucide-react";
 import { useToast } from "@/components/providers";
+
+interface ResidentInfo {
+  id: string;
+  name: string;
+  photo?: string | null;
+  cnic?: string | null;
+}
 
 interface BedData {
   id: string;
   bedNumber: string;
   status: "VACANT" | "OCCUPIED" | "RESERVED" | "MAINTENANCE";
+  residents?: ResidentInfo[];
 }
 
 interface RoomData {
@@ -60,6 +73,14 @@ interface Stats {
 interface BuildingOption {
   id: string;
   name: string;
+}
+
+interface RoomGroup {
+  key: string;
+  buildingName: string;
+  floorName: string;
+  floorNumber: number;
+  rooms: RoomData[];
 }
 
 interface FloorOption {
@@ -170,6 +191,10 @@ export default function RoomsPage() {
   });
   const [loading, setLoading] = useState(true);
 
+  // View mode
+  const [viewMode, setViewMode] = useState<"grid" | "map">("grid");
+  const [mapSearch, setMapSearch] = useState("");
+
   // Filters
   const [filterBuilding, setFilterBuilding] = useState("");
   const [filterFloor, setFilterFloor] = useState("");
@@ -240,7 +265,7 @@ export default function RoomsPage() {
       map.get(key)!.rooms.push(room);
     }
     // Sort groups by building name then floor number
-    const groups = Array.from(map.values());
+    const groups: RoomGroup[] = Array.from(map.values());
     groups.sort((a, b) => {
       if (a.buildingName !== b.buildingName)
         return a.buildingName.localeCompare(b.buildingName);
@@ -324,6 +349,12 @@ export default function RoomsPage() {
       DOUBLE: "2",
       TRIPLE: "3",
       QUAD: "4",
+      PENTA: "5",
+      HEXA: "6",
+      HEPTA: "7",
+      OCTA: "8",
+      NONA: "9",
+      DECA: "10",
     };
     setFormData({
       ...formData,
@@ -422,6 +453,21 @@ export default function RoomsPage() {
             )}
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
+            {/* View mode toggle */}
+            <div className="flex items-center bg-bg-main dark:bg-[#0B1222] rounded-xl p-0.5 border border-border dark:border-[#1E2D42]">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${viewMode === "grid" ? "bg-white dark:bg-[#111C2E] text-primary shadow-sm" : "text-text-muted hover:text-text-secondary"}`}
+              >
+                <LayoutGrid size={13} /> Grid
+              </button>
+              <button
+                onClick={() => setViewMode("map")}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${viewMode === "map" ? "bg-white dark:bg-[#111C2E] text-primary shadow-sm" : "text-text-muted hover:text-text-secondary"}`}
+              >
+                <MapIcon size={13} /> Bed Map
+              </button>
+            </div>
             <button onClick={() => router.push(`/hostel/${hostelId}/buildings`)} className="btn-secondary flex items-center gap-2 !py-2 !text-xs">
               <Building2 size={14} /> Buildings
             </button>
@@ -468,6 +514,25 @@ export default function RoomsPage() {
         ))}
       </div>
 
+      {/* Bed Map Search Bar (only in map mode) */}
+      {viewMode === "map" && (
+        <div className="mb-4 relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
+          <input
+            type="text"
+            value={mapSearch}
+            onChange={(e) => setMapSearch(e.target.value)}
+            placeholder="Search resident name or room number..."
+            className="input w-full pl-9 pr-9"
+          />
+          {mapSearch && (
+            <button onClick={() => setMapSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary">
+              <X size={15} />
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Room Grid */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -482,6 +547,104 @@ export default function RoomsPage() {
               ? "No rooms match your filters. Try adjusting the filter criteria."
               : "Add buildings and floors first, then create rooms."}
           </p>
+        </div>
+      ) : viewMode === "map" ? (
+        /* ── BED MAP VIEW ── */
+        <div className="space-y-6">
+          {groupedRooms.map((group) => {
+            const searchLower = mapSearch.toLowerCase();
+            const filteredGroupRooms = group.rooms.filter(room => {
+              if (!mapSearch) return true;
+              if (room.roomNumber.toLowerCase().includes(searchLower)) return true;
+              return room.beds.some(bed =>
+                bed.residents?.some(r => r.name.toLowerCase().includes(searchLower))
+              );
+            });
+            if (filteredGroupRooms.length === 0) return null;
+            return (
+              <div key={group.key}>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20">
+                    <Building2 size={14} className="text-primary" />
+                    <span className="text-xs font-bold text-primary uppercase tracking-wide">{group.buildingName} — {group.floorName}</span>
+                  </div>
+                  <div className="flex-1 h-px bg-border dark:bg-[#1E2D42]" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {filteredGroupRooms.map((room) => {
+                    const occupiedCount = room.beds.filter(b => b.status === "OCCUPIED").length;
+                    const roomHighlighted = mapSearch && room.roomNumber.toLowerCase().includes(mapSearch.toLowerCase());
+                    return (
+                      <div
+                        key={room.id}
+                        className={`card !p-3 cursor-pointer hover:shadow-md transition-all ${roomHighlighted ? "ring-2 ring-primary" : ""}`}
+                        onClick={() => router.push(`/hostel/${hostelId}/rooms/${room.id}`)}
+                      >
+                        <div className="flex items-center justify-between mb-2.5">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sm text-text-primary dark:text-white">Room {room.roomNumber}</span>
+                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-primary/10 text-primary">{room.type}</span>
+                          </div>
+                          <span className="text-[10px] text-text-muted">{occupiedCount}/{room.beds.length}</span>
+                        </div>
+                        <div className="grid gap-1.5" style={{ gridTemplateColumns: `repeat(${Math.min(room.beds.length, 2)}, 1fr)` }}>
+                          {room.beds.map((bed) => {
+                            const resident = bed.residents?.[0];
+                            const isHighlighted = mapSearch && resident?.name.toLowerCase().includes(mapSearch.toLowerCase());
+                            const isOccupied = bed.status === "OCCUPIED";
+                            return (
+                              <div
+                                key={bed.id}
+                                className={`rounded-lg p-2 border transition-all ${
+                                  isHighlighted
+                                    ? "bg-primary/10 border-primary ring-1 ring-primary"
+                                    : isOccupied
+                                    ? "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800/30"
+                                    : bed.status === "RESERVED"
+                                    ? "bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800/30"
+                                    : bed.status === "MAINTENANCE"
+                                    ? "bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800/30"
+                                    : "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/30"
+                                }`}
+                              >
+                                <div className="flex items-center gap-1.5">
+                                  <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${
+                                    isOccupied ? "bg-red-500" : bed.status === "RESERVED" ? "bg-blue-500" : bed.status === "MAINTENANCE" ? "bg-purple-500" : "bg-emerald-500"
+                                  }`}>
+                                    {resident?.photo ? (
+                                      <img src={resident.photo} alt="" className="w-5 h-5 rounded-md object-cover" />
+                                    ) : (
+                                      <User size={11} className="text-white" />
+                                    )}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="text-[10px] font-semibold text-text-muted dark:text-slate-400 leading-none">Bed {bed.bedNumber}</p>
+                                    <p className={`text-xs font-medium leading-tight truncate ${isHighlighted ? "text-primary" : "text-text-primary dark:text-white"}`}>
+                                      {resident ? resident.name : <span className="text-text-muted italic font-normal">{bed.status === "MAINTENANCE" ? "Maintenance" : bed.status === "RESERVED" ? "Reserved" : "Vacant"}</span>}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+          {mapSearch && groupedRooms.every(g => g.rooms.every(room => {
+            const s = mapSearch.toLowerCase();
+            if (room.roomNumber.toLowerCase().includes(s)) return false;
+            return !room.beds.some(b => b.residents?.some(r => r.name.toLowerCase().includes(s)));
+          })) && (
+            <div className="card text-center py-12">
+              <Search size={40} className="mx-auto text-text-muted mb-3" />
+              <p className="text-text-secondary">No resident or room found for &quot;{mapSearch}&quot;</p>
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-8">
@@ -701,6 +864,12 @@ export default function RoomsPage() {
                 <option value="DOUBLE">Double (2 beds)</option>
                 <option value="TRIPLE">Triple (3 beds)</option>
                 <option value="QUAD">Quad (4 beds)</option>
+                <option value="PENTA">Penta (5 beds)</option>
+                <option value="HEXA">Hexa (6 beds)</option>
+                <option value="HEPTA">Hepta (7 beds)</option>
+                <option value="OCTA">Octa (8 beds)</option>
+                <option value="NONA">Nona (9 beds)</option>
+                <option value="DECA">Deca (10 beds)</option>
               </select>
             </div>
             <div>

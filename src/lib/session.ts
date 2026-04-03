@@ -63,6 +63,25 @@ export async function requireHostelAccess(
   return null;
 }
 
+/**
+ * For portal routes (RESIDENT/STAFF): validates session AND checks that the
+ * user's account is still active (isActive=true). Returns null if revoked.
+ */
+export async function getPortalSession() {
+  const session = await getSession();
+  if (!session) return null;
+  if (session.user.role !== "RESIDENT" && session.user.role !== "STAFF") return null;
+
+  // Check DB to confirm isActive — JWT won't reflect post-checkout revocation
+  const user = await prisma.user.findUnique({
+    where: { id: (session.user as any).id },
+    select: { isActive: true },
+  });
+
+  if (!user || !user.isActive) return null;
+  return session;
+}
+
 export function getRoleBasedRedirect(role: UserRole): string {
   switch (role) {
     case "SUPER_ADMIN":

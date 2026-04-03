@@ -46,6 +46,7 @@ interface NavItem {
   children?: NavItem[];
   roles?: string[];
   badge?: number;
+  permRequired?: string; // permission key required for HOSTEL_MANAGER to see this
 }
 
 interface SidebarProps {
@@ -63,6 +64,19 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [initialized, setInitialized] = useState(false);
   const [pendingLeaveCount, setPendingLeaveCount] = useState(0);
+  const [managerPerms, setManagerPerms] = useState<string[] | null>(null); // null = admin (all access)
+
+  // Fetch manager's permissions for this hostel
+  useEffect(() => {
+    if (role !== "HOSTEL_MANAGER" || !hostelId) return;
+    fetch(`/api/my-permissions?hostelId=${hostelId}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.isAdmin) setManagerPerms(null);
+        else setManagerPerms(d.permissions || []);
+      })
+      .catch(() => {});
+  }, [hostelId, role]);
 
   // Fetch pending leave notice count for managers
   useEffect(() => {
@@ -145,6 +159,11 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
           href: "/managers/salary",
           icon: <Banknote size={20} />,
         },
+        {
+          label: "Messages",
+          href: "/managers/messages",
+          icon: <MessageSquare size={20} />,
+        },
       ],
     },
   ];
@@ -171,6 +190,7 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
           label: "Infrastructure",
           href: "#",
           icon: <Building2 size={20} />,
+          permRequired: "rooms_view",
           children: [
             {
               label: "Buildings",
@@ -193,6 +213,7 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
           label: "Residents",
           href: `/hostel/${hostelId}/residents`,
           icon: <Users size={20} />,
+          permRequired: "residents_view",
           children: [
             {
               label: "All Residents",
@@ -215,6 +236,7 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
           label: "Food Menu",
           href: `/hostel/${hostelId}/food/menu`,
           icon: <UtensilsCrossed size={20} />,
+          permRequired: "food_view",
           children: [
             {
               label: "Menu Items",
@@ -237,21 +259,25 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
           label: "Billing",
           href: `/hostel/${hostelId}/billing`,
           icon: <Receipt size={20} />,
+          permRequired: "billing_view",
         },
         {
           label: "Payments",
           href: `/hostel/${hostelId}/payments`,
           icon: <CreditCard size={20} />,
+          permRequired: "billing_payments",
         },
         {
           label: "Payment Proofs",
           href: `/hostel/${hostelId}/payment-proofs`,
           icon: <CreditCard size={20} />,
+          permRequired: "billing_payments",
         },
         {
           label: "Expenses",
           href: `/hostel/${hostelId}/expenses`,
           icon: <Wallet size={20} />,
+          permRequired: "expenses_view",
           children: [
             {
               label: "All Expenses",
@@ -269,11 +295,13 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
           label: "Meter Readings",
           href: `/hostel/${hostelId}/meter-readings`,
           icon: <Activity size={20} />,
+          permRequired: "meter_readings_view",
         },
         {
           label: "Staff",
           href: `/hostel/${hostelId}/staff`,
           icon: <ShieldCheck size={20} />,
+          permRequired: "staff_view",
           children: [
             {
               label: "All Staff",
@@ -301,37 +329,44 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
           label: "Visitors",
           href: `/hostel/${hostelId}/visitors`,
           icon: <Eye size={20} />,
+          permRequired: "visitors_view",
         },
         {
           label: "Complaints",
           href: `/hostel/${hostelId}/complaints`,
           icon: <MessageSquare size={20} />,
+          permRequired: "complaints_view",
         },
         {
           label: "Bill Disputes",
           href: `/hostel/${hostelId}/disputes`,
           icon: <Scale size={20} />,
+          permRequired: "billing_view",
         },
         {
           label: "Gate Passes",
           href: `/hostel/${hostelId}/gate-passes`,
           icon: <Truck size={20} />,
+          permRequired: "gate_passes_view",
         },
         {
           label: "Leave Notices",
           href: `/hostel/${hostelId}/leave-notices`,
           icon: <LogOut size={20} />,
           badge: pendingLeaveCount > 0 ? pendingLeaveCount : undefined,
+          permRequired: "residents_view",
         },
         {
           label: "Settlements",
           href: `/hostel/${hostelId}/settlements`,
           icon: <Receipt size={20} />,
+          permRequired: "billing_view",
         },
         {
           label: "Notices",
           href: `/hostel/${hostelId}/notices`,
           icon: <Bell size={20} />,
+          permRequired: "notices_view",
         },
         {
           label: "Messages",
@@ -339,14 +374,22 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
           icon: <MessageCircle size={20} />,
         },
         {
+          label: "Admin Messages",
+          href: "/managers/messages",
+          icon: <MessageSquare size={20} />,
+          roles: ["HOSTEL_MANAGER"],
+        },
+        {
           label: "Reports",
           href: `/hostel/${hostelId}/reports`,
           icon: <BarChart3 size={20} />,
+          permRequired: "reports_view",
         },
         {
           label: "Import / Export",
           href: `/hostel/${hostelId}/import-export`,
           icon: <Upload size={20} />,
+          roles: ["TENANT_ADMIN"],
         },
       ]
     : [];
@@ -424,6 +467,13 @@ export default function Sidebar({ isOpen, onClose, hostelId, collapsed = false, 
   navigation = navigation.filter(
     (item) => !item.roles || (role && item.roles.includes(role))
   );
+
+  // Filter by manager permissions (only for HOSTEL_MANAGER with restricted perms)
+  if (role === "HOSTEL_MANAGER" && managerPerms !== null) {
+    navigation = navigation.filter(
+      (item) => !item.permRequired || managerPerms.includes(item.permRequired)
+    );
+  }
 
   const isActive = (href: string) => {
     if (href === "#") return false;

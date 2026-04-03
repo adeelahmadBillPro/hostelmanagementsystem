@@ -15,10 +15,28 @@ export async function GET(
       where: { bill: { hostelId } },
       include: {
         bill: {
-          select: { month: true, year: true, totalAmount: true, balance: true },
+          select: {
+            id: true,
+            month: true,
+            year: true,
+            totalAmount: true,
+            balance: true,
+            roomRent: true,
+            foodCharges: true,
+            otherCharges: true,
+            meterCharges: true,
+            parkingFee: true,
+            discount: true,
+            discountReason: true,
+            notes: true,
+            dueDate: true,
+          },
         },
         resident: {
-          include: { user: { select: { name: true, email: true } } },
+          select: {
+            id: true,
+            user: { select: { name: true, email: true } },
+          },
         },
         resolvedBy: { select: { name: true } },
       },

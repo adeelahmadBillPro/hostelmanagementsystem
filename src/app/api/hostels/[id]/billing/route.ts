@@ -95,6 +95,14 @@ export async function GET(
         dinnerEnd: (hostel as any).dinnerEnd ?? 21,
         snackStart: (hostel as any).snackStart ?? 10,
         snackEnd: (hostel as any).snackEnd ?? 22,
+        // Payment methods
+        jazzCashNumber: (hostel as any).jazzCashNumber || "",
+        jazzCashTitle: (hostel as any).jazzCashTitle || "",
+        easyPaisaNumber: (hostel as any).easyPaisaNumber || "",
+        easyPaisaTitle: (hostel as any).easyPaisaTitle || "",
+        bankName: (hostel as any).bankName || "",
+        bankIBAN: (hostel as any).bankIBAN || "",
+        bankTitle: (hostel as any).bankTitle || "",
       },
       stats: { totalBilled, totalCollected, totalPending, totalOverdue },
     });
@@ -133,6 +141,12 @@ export async function POST(
     const { month, year, cycle, selectedResidentIds } = body;
     const billingCycle = cycle || (hostel as any).billingCycle || "MONTHLY";
 
+    // Flexible billing: allow excluding certain components
+    const includeRent = body.includeRent !== false;
+    const includeFood = body.includeFood !== false;
+    const includeMess = body.includeMess !== false;
+    const includeUtilities = body.includeUtilities !== false;
+
     if (!month || !year) {
       return NextResponse.json({ error: "Month and year are required" }, { status: 400 });
     }
@@ -149,7 +163,13 @@ export async function POST(
     let weekNumber: number | null = null;
     let rentMultiplier = 1; // For prorating monthly rent to weekly
 
-    if (billingCycle === "WEEKLY") {
+    if (billingCycle === "DAILY") {
+      // Daily: bill for a specific date (body.date) or today
+      const billDate = body.date ? new Date(body.date) : new Date();
+      periodStart = new Date(billDate.getFullYear(), billDate.getMonth(), billDate.getDate(), 0, 0, 0);
+      periodEnd = new Date(billDate.getFullYear(), billDate.getMonth(), billDate.getDate(), 23, 59, 59);
+      rentMultiplier = 1 / 30; // 1 day out of 30
+    } else if (billingCycle === "WEEKLY") {
       weekNumber = body.weekNumber || getWeekNumber(new Date());
       const range = getWeekRange(year, weekNumber!);
       periodStart = range.start;
@@ -184,6 +204,12 @@ export async function POST(
       },
     });
 
+    // Fetch active extra charges for this hostel
+    const extraCharges = await prisma.hostelExtraCharge.findMany({
+      where: { hostelId: params.id, isActive: true },
+    });
+    const extraChargesTotal = extraCharges.reduce((sum, c) => sum + c.amount, 0);
+
     // Get existing bills for this period
     const existingWhere: any = { hostelId: params.id, month, year };
     if (weekNumber) existingWhere.weekNumber = weekNumber;
@@ -213,39 +239,66 @@ export async function POST(
     const prevYear = month === 1 ? year - 1 : year;
 
     const billsToCreate = [];
+    const daysInMonth = new Date(year, month, 0).getDate();
 
     for (const resident of newResidents) {
-      // Rent: free room = 0, override = custom amount, else room's rentPerBed
+      // --- Pro-rating: if resident joined mid-month, only charge for days resided ---
+      let residentMultiplier = rentMultiplier; // for WEEKLY/BIWEEKLY already fractional
+      let proRatedDays = billingCycle === "MONTHLY" ? daysInMonth : null;
+      let proRateNote = "";
+
+      if (billingCycle === "MONTHLY" && (resident as any).startDate) {
+        const startDate = new Date((resident as any).startDate);
+        // Check if resident joined during THIS billing month
+        if (
+          startDate.getFullYear() === year &&
+          startDate.getMonth() + 1 === month
+        ) {
+          const joinDay = startDate.getDate();
+          const daysResided = daysInMonth - joinDay + 1;
+          residentMultiplier = daysResided / daysInMonth;
+          proRatedDays = daysResided;
+          proRateNote = `Pro-rated: ${daysResided}/${daysInMonth} days (joined ${startDate.toLocaleDateString("en-PK")})`;
+        }
+      }
+
+      // Rent: freeRoom = 0, rentOverride = custom, else room's rentPerBed
       const baseRent = (resident as any).freeRoom ? 0 : ((resident as any).rentOverride ?? resident.room.rentPerBed);
-      const roomRent = Math.round(baseRent * rentMultiplier);
+      const roomRent = includeRent ? Math.round(baseRent * residentMultiplier) : 0;
 
-      // Food order charges for this period (exclude cancelled orders)
-      const foodOrders = await prisma.foodOrder.findMany({
-        where: {
-          residentId: resident.id,
-          hostelId: params.id,
-          orderDate: { gte: periodStart, lte: periodEnd },
-          status: { not: "CANCELLED" },
-        },
-      });
-      const foodCharges = foodOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+      // Food order charges for this period (actual orders — not pro-rated, reflects real usage)
+      let foodCharges = 0;
+      if (includeFood) {
+        const foodOrders = await prisma.foodOrder.findMany({
+          where: {
+            residentId: resident.id,
+            hostelId: params.id,
+            orderDate: { gte: periodStart, lte: periodEnd },
+            status: { not: "CANCELLED" },
+          },
+        });
+        foodCharges = foodOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+      }
 
-      // Parking fee (prorated)
-      const parkingFee = Math.round(
-        resident.parking.reduce((sum, p) => sum + p.monthlyFee, 0) * rentMultiplier
-      );
+      // Parking fee (pro-rated same as rent)
+      const parkingFee = includeUtilities
+        ? Math.round(resident.parking.reduce((sum, p) => sum + p.monthlyFee, 0) * residentMultiplier)
+        : 0;
 
-      // Meter charges
-      const meterReadings = await prisma.meterReading.findMany({
-        where: {
-          roomId: resident.roomId,
-          hostelId: params.id,
-          readingDate: { gte: periodStart, lte: periodEnd },
-        },
-      });
-      const meterCharges = meterReadings.reduce((sum, m) => sum + m.amount, 0);
+      // Meter charges (actual readings — not pro-rated)
+      let meterCharges = 0;
+      if (includeUtilities) {
+        const meterReadings = await prisma.meterReading.findMany({
+          where: {
+            roomId: resident.roomId,
+            hostelId: params.id,
+            readingDate: { gte: periodStart, lte: periodEnd },
+          },
+        });
+        meterCharges = meterReadings.reduce((sum, m) => sum + m.amount, 0);
+      }
 
-      // Previous balance (only for monthly or first week of month)
+      // Previous balance carry-forward
       let previousBalance = 0;
       if (billingCycle === "MONTHLY" || (weekNumber && weekNumber <= 5)) {
         const lastBill = await prisma.monthlyBill.findFirst({
@@ -267,21 +320,35 @@ export async function POST(
         advanceDeduction = resident.advancePaid;
       }
 
-      // Food plan: FULL_MESS gets hostel's fixed charge, NO_MESS gets 0, CUSTOM gets their own fee
+      // Food plan: FULL_MESS = fixed hostel charge (pro-rated), NO_MESS = 0, CUSTOM = resident's own fee
       const foodPlan = (resident as any).foodPlan || "FULL_MESS";
       let fixedFoodFee = 0;
-      if (foodPlan === "FULL_MESS") {
-        fixedFoodFee = hostelFixedFoodCharge;
-      } else if (foodPlan === "CUSTOM") {
-        fixedFoodFee = ((resident as any).customFoodFee || 0) * rentMultiplier;
+      if (includeMess) {
+        if (foodPlan === "FULL_MESS") {
+          fixedFoodFee = Math.round(((hostel as any).fixedFoodCharge || 0) * residentMultiplier);
+        } else if (foodPlan === "CUSTOM") {
+          fixedFoodFee = Math.round(((resident as any).customFoodFee || 0) * residentMultiplier);
+        }
       }
-      // NO_MESS = 0 fixed fee, only app orders charged
+      // NO_MESS = 0 fixed fee — only actual food orders are charged
 
+      const otherCharges = Math.round(extraChargesTotal * residentMultiplier);
       const grossAmount = roomRent + foodCharges + fixedFoodFee + parkingFee +
-        meterCharges + previousBalance;
-      // Only deduct advance up to the gross amount (don't over-deduct)
+        meterCharges + otherCharges + previousBalance;
       const actualDeduction = Math.min(advanceDeduction, grossAmount);
       const totalAmount = grossAmount - actualDeduction;
+
+      // Build partial billing notes
+      const partialNotes: string[] = [];
+      if (proRateNote) partialNotes.push(proRateNote);
+      if (!includeRent) partialNotes.push("Rent excluded.");
+      if (!includeFood) partialNotes.push("Food orders excluded.");
+      if (!includeMess) partialNotes.push("Mess fee excluded.");
+      if (!includeUtilities) partialNotes.push("Utilities excluded.");
+      if (extraCharges.length > 0 && otherCharges > 0) {
+        partialNotes.push(`Extra charges: ${extraCharges.map(c => c.name).join(', ')}.`);
+      }
+      const finalNotes = partialNotes.join(" ") || undefined;
 
       billsToCreate.push({
         residentId: resident.id,
@@ -295,7 +362,7 @@ export async function POST(
         roomRent,
         foodCharges,
         fixedFoodFee,
-        otherCharges: 0,
+        otherCharges,
         meterCharges,
         parkingFee,
         previousBalance,
@@ -305,6 +372,7 @@ export async function POST(
         balance: Math.max(0, totalAmount),
         status: (Math.max(0, totalAmount) === 0 ? "PAID" : "UNPAID") as any,
         dueDate,
+        notes: finalNotes,
       });
     }
 

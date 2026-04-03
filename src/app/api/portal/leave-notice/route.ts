@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/session";
+import { getPortalSession } from "@/lib/session";
 import { rateLimit } from "@/lib/rate-limit";
 
 const VALID_REASONS = [
@@ -16,7 +16,7 @@ const VALID_REASONS = [
 // GET: fetch my own leave notices
 export async function GET() {
   try {
-    const session = await getSession();
+    const session = await getPortalSession();
     if (!session || (session.user.role !== "RESIDENT" && session.user.role !== "STAFF")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
   if (limited) return limited;
 
   try {
-    const session = await getSession();
+    const session = await getPortalSession();
     if (!session || (session.user.role !== "RESIDENT" && session.user.role !== "STAFF")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -125,7 +125,7 @@ export async function POST(req: NextRequest) {
 // DELETE: cancel my own pending leave notice
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await getSession();
+    const session = await getPortalSession();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

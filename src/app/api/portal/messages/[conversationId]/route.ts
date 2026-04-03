@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSession } from "@/lib/session";
+import { getPortalSession } from "@/lib/session";
 
 export async function GET(
   _request: NextRequest,
   { params }: { params: { conversationId: string } }
 ) {
   try {
-    const session = await getSession();
+    const session = await getPortalSession();
     if (!session || session.user.role !== "RESIDENT" && session.user.role !== "STAFF") {
       return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
     }
@@ -61,7 +61,7 @@ export async function POST(
   { params }: { params: { conversationId: string } }
 ) {
   try {
-    const session = await getSession();
+    const session = await getPortalSession();
     if (!session || session.user.role !== "RESIDENT" && session.user.role !== "STAFF") {
       return NextResponse.json({ error: "Please login to continue" }, { status: 401 });
     }

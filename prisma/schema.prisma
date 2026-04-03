@@ -28,6 +28,12 @@ enum RoomType {
   DOUBLE
   TRIPLE
   QUAD
+  PENTA
+  HEXA
+  HEPTA
+  OCTA
+  NONA
+  DECA
 }
 
 enum BedStatus {
@@ -133,6 +139,7 @@ model User {
   cnic          String?
   password      String
   role          UserRole
+  isActive      Boolean   @default(true)  // false = portal access revoked (e.g. after checkout)
   image         String?
   emailVerified DateTime?
   salary        Float?       // Manager salary (monthly)
@@ -163,6 +170,8 @@ model User {
   acknowledgedNotices LeaveNotice[] @relation("LeaveNoticeAck")
   settlementsCompleted Settlement[] @relation("SettlementCompleter")
   upgradeReviews PlanUpgradeRequest[] @relation("UpgradeReviewer")
+  adminMessagesSent     AdminMessage[]          @relation("AdminMsgSender")
+  adminMessagesReceived AdminMessageRecipient[] @relation("AdminMsgRecipient")
 
   @@index([tenantId])
   @@index([role])
@@ -189,6 +198,7 @@ model Tenant {
   users           User[]
   hostels         Hostel[]
   upgradeRequests PlanUpgradeRequest[]
+  adminMessages   AdminMessage[]
 }
 
 model PlanUpgradeRequest {
@@ -252,6 +262,15 @@ model Hostel {
   billingDueDays    Int     @default(7) // Days after generation for payment due
   lateFeePercent    Float   @default(0) // Late fee percentage on overdue
 
+  // Payment methods (JazzCash / EasyPaisa)
+  jazzCashNumber    String?  // Account/mobile number
+  jazzCashTitle     String?  // Account title
+  easyPaisaNumber   String?  // Account/mobile number
+  easyPaisaTitle    String?  // Account title
+  bankName          String?  // Bank name for direct transfer
+  bankIBAN          String?  // IBAN
+  bankTitle         String?  // Account title
+
   // Meal ordering time windows (24-hour format, e.g. 6 = 6AM, 18 = 6PM)
   breakfastStart    Int     @default(6)
   breakfastEnd      Int     @default(9)
@@ -291,6 +310,7 @@ model Hostel {
   settlements      Settlement[]
   amenities         HostelAmenity[]
   staffAttendance   StaffAttendance[]
+  extraCharges      HostelExtraCharge[]
 
   @@index([tenantId])
 }
@@ -316,6 +336,10 @@ model ManagerHostel {
   id       String @id @default(cuid())
   userId   String
   hostelId String
+
+  // Custom permissions for this manager on this hostel (JSON array of permission strings)
+  // e.g. ["billing_view","billing_manage","residents_view","residents_manage",...]
+  permissions String @default("[]")
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   hostel Hostel @relation(fields: [hostelId], references: [id], onDelete: Cascade)
@@ -381,6 +405,7 @@ model Room {
   roomInventory RoomInventory[]
   meterReadings MeterReading[]
   roomTransfers RoomTransfer[]
+  noticesTargeted Notice[] @relation("NoticeTargetRoom")
 
   @@index([floorId])
 }
@@ -457,6 +482,7 @@ model Resident {
   conversations Conversation[]
   leaveNotices  LeaveNotice[]
   settlements   Settlement[]
+  noticesTargeted Notice[] @relation("NoticeTargetResident")
 
   @@index([hostelId])
   @@index([userId])
@@ -674,11 +700,38 @@ model Notice {
   title   String
   content String
 
+  // Targeting: ALL = everyone, RESIDENT = specific resident, ROOM = specific room
+  targetType       String  @default("ALL") // ALL | RESIDENT | ROOM
+  targetResidentId String?
+  targetResident   Resident? @relation("NoticeTargetResident", fields: [targetResidentId], references: [id], onDelete: SetNull)
+  targetRoomId     String?
+  targetRoom       Room?     @relation("NoticeTargetRoom", fields: [targetRoomId], references: [id], onDelete: SetNull)
+
   hostelId String
   hostel   Hostel @relation(fields: [hostelId], references: [id], onDelete: Cascade)
 
   createdById String
   createdBy   User @relation("NoticeCreator", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([hostelId])
+  @@index([targetResidentId])
+}
+
+// ==================== HOSTEL EXTRA CHARGES ====================
+
+model HostelExtraCharge {
+  id          String  @id @default(cuid())
+  name        String  // e.g. "AC Charge", "Laundry", "Generator"
+  amount      Float   // Amount per billing cycle
+  isActive    Boolean @default(true)
+  applyToAll  Boolean @default(true) // false = apply only to certain residents (future)
+  description String?
+
+  hostelId String
+  hostel   Hostel @relation(fields: [hostelId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1105,4 +1158,66 @@ model LeaveNotice {
   @@index([hostelId])
   @@index([userId])
   @@index([status])
+}
+
+
+// ==================== ADMIN → MANAGER MESSAGES ====================
+
+model AdminMessage {
+  id        String   @id @default(cuid())
+  subject   String
+  body      String
+  targetAll Boolean  @default(false) // true = broadcast to all managers
+
+  tenantId  String
+  tenant    Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  senderId  String
+  sender    User   @relation("AdminMsgSender", fields: [senderId], references: [id])
+
+  recipients AdminMessageRecipient[]
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([senderId])
+}
+
+model AdminMessageRecipient {
+  id        String @id @default(cuid())
+
+  messageId String
+  message   AdminMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  userId    String
+  user      User   @relation("AdminMsgRecipient", fields: [userId], references: [id])
+
+  isRead    Boolean  @default(false)
+  readAt    DateTime?
+
+  @@unique([messageId, userId])
+  @@index([userId])
+}
+
+// ==================== PLATFORM SETTINGS ====================
+
+model PlatformSettings {
+  id               String   @id @default("singleton")
+  // Bank Transfer
+  bankName         String?
+  bankTitle        String?
+  bankAccount      String?
+  bankIban         String?
+  bankQrImage      String?
+  // JazzCash
+  jazzcashNumber   String?
+  jazzcashName     String?
+  jazzcashQrImage  String?
+  // EasyPaisa
+  easypaisaNumber  String?
+  easypaisaName    String?
+  easypaisaQrImage String?
+  // Other
+  cashInstructions String?
+  updatedAt        DateTime @updatedAt
 }

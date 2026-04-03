@@ -19,6 +19,15 @@ export async function GET(
         createdBy: {
           select: { name: true },
         },
+        targetResident: {
+          select: {
+            id: true,
+            user: { select: { name: true } },
+          },
+        },
+        targetRoom: {
+          select: { id: true, roomNumber: true },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -30,6 +39,11 @@ export async function GET(
       authorName: n.createdBy?.name || 'Unknown',
       createdAt: n.createdAt.toISOString(),
       updatedAt: n.updatedAt.toISOString(),
+      targetType: n.targetType || 'ALL',
+      targetResidentId: n.targetResidentId || null,
+      targetResidentName: n.targetResident?.user?.name || null,
+      targetRoomId: n.targetRoomId || null,
+      targetRoomNumber: n.targetRoom?.roomNumber || null,
     }));
 
     return NextResponse.json({ notices: formattedNotices });
@@ -56,6 +70,14 @@ export async function POST(
     }
 
     const { title, content } = parsed.data;
+    const targetType: string = body.targetType || 'ALL';
+    const targetResidentId: string | null = body.targetResidentId || null;
+    const targetRoomId: string | null = body.targetRoomId || null;
+
+    // Validate targetType value
+    if (!['ALL', 'RESIDENT', 'ROOM'].includes(targetType)) {
+      return NextResponse.json({ error: 'Invalid targetType' }, { status: 400 });
+    }
 
     const notice = await prisma.notice.create({
       data: {
@@ -63,6 +85,9 @@ export async function POST(
         createdById: session.user.id,
         title,
         content,
+        targetType,
+        targetResidentId: targetType === 'RESIDENT' ? targetResidentId : null,
+        targetRoomId: targetType === 'ROOM' ? targetRoomId : null,
       },
     });
 

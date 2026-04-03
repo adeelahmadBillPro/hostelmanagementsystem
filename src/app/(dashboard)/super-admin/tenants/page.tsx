@@ -103,14 +103,18 @@ export default function TenantsPage() {
         return;
       }
 
+      // Show credentials — close form first to avoid modal overlap
+      if (data.loginCredentials) {
+        setModalOpen(false);
+        setFormData({ name: "", email: "", phone: "", planId: "" });
+        fetchTenants();
+        setCreatedCreds({ ...data.loginCredentials, phone: formData.phone || undefined });
+        return;
+      }
+
       setModalOpen(false);
       setFormData({ name: "", email: "", phone: "", planId: "" });
       fetchTenants();
-
-      // Show credentials
-      if (data.loginCredentials) {
-        setCreatedCreds({ ...data.loginCredentials, phone: formData.phone || undefined });
-      }
     } catch (error) {
       setFormError("An error occurred. Please try again.");
     } finally {

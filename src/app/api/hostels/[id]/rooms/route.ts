@@ -45,10 +45,21 @@ export async function GET(
       where.status = status as any;
     }
 
-    const rooms = await prisma.room.findMany({
+    const rooms: any[] = await prisma.room.findMany({
       where,
       include: {
-        beds: true,
+        beds: {
+          include: {
+            residents: {
+              where: { status: "ACTIVE" },
+              select: {
+                id: true,
+                photo: true,
+                user: { select: { name: true } },
+              },
+            },
+          },
+        },
         floor: {
           include: {
             building: { select: { id: true, name: true } },
@@ -70,21 +81,21 @@ export async function GET(
 
     // Compute stats
     const totalRooms = rooms.length;
-    const totalBeds = rooms.reduce((sum, r) => sum + r.beds.length, 0);
+    const totalBeds = rooms.reduce((sum: number, r: any) => sum + r.beds.length, 0);
     const occupiedBeds = rooms.reduce(
-      (sum, r) => sum + r.beds.filter((b) => b.status === "OCCUPIED").length,
+      (sum: number, r: any) => sum + r.beds.filter((b: any) => b.status === "OCCUPIED").length,
       0
     );
     const vacantBeds = rooms.reduce(
-      (sum, r) => sum + r.beds.filter((b) => b.status === "VACANT").length,
+      (sum: number, r: any) => sum + r.beds.filter((b: any) => b.status === "VACANT").length,
       0
     );
     const occupancyRate = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
     const revenuePotential = rooms.reduce((sum, r) => sum + r.rentPerBed * r.totalBeds, 0);
 
-    const roomsData = rooms.map((room) => {
-      const occupied = room.beds.filter((b) => b.status === "OCCUPIED").length;
-      const vacant = room.beds.filter((b) => b.status === "VACANT").length;
+    const roomsData = rooms.map((room: any) => {
+      const occupied = room.beds.filter((b: any) => b.status === "OCCUPIED").length;
+      const vacant = room.beds.filter((b: any) => b.status === "VACANT").length;
       const total = room.beds.length;
 
       let occupancyStatus: string;
@@ -108,10 +119,16 @@ export async function GET(
         status: room.status,
         floorId: room.floorId,
         floor: room.floor,
-        beds: room.beds.map((b) => ({
+        beds: room.beds.map((b: any) => ({
           id: b.id,
           bedNumber: b.bedNumber,
           status: b.status,
+          residents: (b as any).residents?.map((r: any) => ({
+            id: r.id,
+            name: r.user?.name || "",
+            photo: r.photo,
+            cnic: r.cnic,
+          })) || [],
         })),
         occupiedBeds: occupied,
         vacantBeds: vacant,

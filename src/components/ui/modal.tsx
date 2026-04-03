@@ -32,20 +32,21 @@ export default function Modal({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onMouseDown={onClose}>
       <div
         className={`modal-content ${maxWidth} animate-slide-up`}
-        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between pb-4 border-b border-border dark:border-[#1E2D42] mb-5">
-          <h2 className="text-lg font-semibold text-text-primary dark:text-white">
+          <h2 className="text-lg font-semibold text-text-primary dark:text-white pr-3">
             {title}
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-[#0B1222] transition-all duration-200 group"
+            className="flex-shrink-0 w-8 h-8 rounded-xl hover:bg-slate-100 dark:hover:bg-[#0B1222] transition-all duration-200 flex items-center justify-center group"
+            aria-label="Close"
           >
-            <X size={18} className="text-text-muted group-hover:text-text-primary dark:group-hover:text-white transition-colors" />
+            <X size={18} className="text-text-muted group-hover:text-danger transition-colors" />
           </button>
         </div>
         {children}

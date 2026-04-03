@@ -18,6 +18,16 @@ export async function PATCH(
     if (body.title !== undefined) updateData.title = body.title;
     if (body.content !== undefined) updateData.content = body.content;
 
+    if (body.targetType !== undefined) {
+      const validTypes = ['ALL', 'RESIDENT', 'ROOM'];
+      if (!validTypes.includes(body.targetType)) {
+        return NextResponse.json({ error: 'Invalid targetType' }, { status: 400 });
+      }
+      updateData.targetType = body.targetType;
+      updateData.targetResidentId = body.targetType === 'RESIDENT' ? (body.targetResidentId || null) : null;
+      updateData.targetRoomId = body.targetType === 'ROOM' ? (body.targetRoomId || null) : null;
+    }
+
     const notice = await prisma.notice.update({
       where: { id: params.noticeId, hostelId: params.id },
       data: updateData,

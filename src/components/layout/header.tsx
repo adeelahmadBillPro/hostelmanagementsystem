@@ -179,7 +179,7 @@ export default function Header({ title, onMenuClick, onToggleCollapse, sidebarCo
           </button>
 
           {showNotifications && (
-            <div className="absolute right-0 top-12 w-80 bg-white dark:bg-[#111C2E] border border-border dark:border-[#1E2D42] rounded-2xl shadow-dropdown animate-slide-up overflow-hidden z-50">
+            <div className="fixed sm:absolute inset-x-2 sm:inset-auto sm:right-0 top-[68px] sm:top-12 sm:w-80 bg-white dark:bg-[#111C2E] border border-border dark:border-[#1E2D42] rounded-2xl shadow-dropdown animate-slide-up overflow-hidden z-50">
               <div className="px-4 py-3 border-b border-border dark:border-[#1E2D42] flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-text-primary dark:text-white">
                   Notifications
@@ -245,7 +245,7 @@ export default function Header({ title, onMenuClick, onToggleCollapse, sidebarCo
             onClick={() => setShowDropdown(!showDropdown)}
             className="flex items-center gap-1.5 py-1 px-1.5 sm:px-2 rounded-xl hover:bg-bg-main dark:hover:bg-[#0B1222] transition-all duration-200"
           >
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
               {session?.user?.name
                 ?.split(" ")
                 .map((n) => n[0])

@@ -86,6 +86,7 @@ export default function ExpensesPage() {
     description: '',
     receiptUrl: '',
   });
+  const [customCategory, setCustomCategory] = useState('');
 
   const fetchExpenses = useCallback(async () => {
     try {
@@ -117,16 +118,22 @@ export default function ExpensesPage() {
     e.preventDefault();
     setSaving(true);
     try {
+      const finalCategory = form.category === 'CUSTOM'
+        ? (customCategory.trim().toUpperCase() || 'MISCELLANEOUS')
+        : form.category;
+
       const res = await fetch(`/api/hostels/${hostelId}/expenses`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
+          category: finalCategory,
           amount: parseFloat(form.amount),
         }),
       });
       if (res.ok) {
         setShowModal(false);
+        setCustomCategory('');
         setForm({
           category: 'UTILITIES',
           amount: '',
@@ -351,7 +358,19 @@ export default function ExpensesPage() {
                   {EXPENSE_CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
+                  <option value="CUSTOM">✏️ Custom (type your own)</option>
                 </select>
+                {form.category === 'CUSTOM' && (
+                  <input
+                    type="text"
+                    value={customCategory}
+                    onChange={(e) => setCustomCategory(e.target.value)}
+                    className="input mt-2"
+                    placeholder="e.g., Gas Bill, Paint, Generator Fuel..."
+                    required
+                    autoFocus
+                  />
+                )}
               </div>
               <div>
                 <label className="label">Amount (PKR) *</label>
@@ -404,8 +423,8 @@ export default function ExpensesPage() {
               <div className="p-3 bg-red-50/50 dark:bg-red-900/10 rounded-xl border border-red-100 dark:border-red-800/20">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold ring-1 ${CATEGORY_COLORS[form.category] || ""}`}>
-                      {form.category}
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold ring-1 ${CATEGORY_COLORS[form.category] || "bg-slate-50 text-slate-700 ring-slate-600/10 dark:bg-slate-900/30 dark:text-slate-300"}`}>
+                      {form.category === 'CUSTOM' ? (customCategory || 'CUSTOM') : form.category}
                     </span>
                     <p className="text-sm text-text-secondary dark:text-gray-400 mt-1 truncate max-w-[280px]">{form.description}</p>
                   </div>

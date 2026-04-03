@@ -106,13 +106,19 @@ export async function PATCH(
     if (contact !== undefined) updateData.contact = contact;
     // Billing settings
     if (body.billingCycle !== undefined) {
-      if (["WEEKLY", "BIWEEKLY", "MONTHLY"].includes(body.billingCycle)) {
+      if (["DAILY", "WEEKLY", "BIWEEKLY", "MONTHLY"].includes(body.billingCycle)) {
         updateData.billingCycle = body.billingCycle;
       }
     }
     if (body.fixedFoodCharge !== undefined) updateData.fixedFoodCharge = parseFloat(body.fixedFoodCharge) || 0;
     if (body.billingDueDays !== undefined) updateData.billingDueDays = parseInt(body.billingDueDays) || 7;
     if (body.lateFeePercent !== undefined) updateData.lateFeePercent = parseFloat(body.lateFeePercent) || 0;
+
+    // Payment method fields
+    const paymentFields = ["jazzCashNumber", "jazzCashTitle", "easyPaisaNumber", "easyPaisaTitle", "bankName", "bankIBAN", "bankTitle"];
+    for (const field of paymentFields) {
+      if (body[field] !== undefined) updateData[field] = body[field] || null;
+    }
 
     // Meal ordering time windows (0-23 hour values)
     const mealFields = [
